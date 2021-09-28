@@ -1,0 +1,25 @@
+This program has three parts.
+
+The left part lists all the mimetypes listed known by the distro
+(if it follows the freedesktop rules).
+
+The upper right part.
+This part lists the extensions (if any) and the executables (if any) 
+associates to the selected mimetype in the left part.
+Regarding the executables, if one of them is the default program for that 
+mimetype it will be marked with (*). All the custom associations made in 
+the mimeapps.list (placed in the HOME/.config folder) will be shown 
+as follow: those added will be marken with (+) or (+*); those removed 
+will be marked with (-).
+
+The lower right part.
+Three buttons: the "Make default" button will make the selected executable 
+the default application for the mimetype selected; the "Add" button will 
+show a dialog that let user choose which installed application 
+(through the desktop files) will be added as executable for the selected 
+mimetype (it will be marked with (+)); the "Remove" button removes first 
+the "*" if the executable is marked with (+*) and the second time the 
+executable from the right list, also whether it is marked with (-).
+
+This program can only make changes in the mimeapps.list file located 
+in the "HOME/.config" folder.
