@@ -6,8 +6,8 @@ Requirements:
 - pyqt5
 - python3-dbus.mainloop.pyqt5
 - python3-xdg
-- pdftocairo - ffmpegthumbnailer (optional - needed for thumbnailers)
-- md5sum - sha256sum - sha1sum - 7z - tar - xterm (optional - needed for custom actions)
+- pdftocairo - ffmpegthumbnailer (optionals - needed for thumbnailers)
+- md5sum - sha256sum - sha1sum - 7z - tar - xterm (optionals - needed for custom actions)
 
 Features:
 - thumbnailers
