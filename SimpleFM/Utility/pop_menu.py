@@ -10,6 +10,7 @@ import locale
 
 class getMenu():
     
+    #def __init__(self, app_dirs_user, app_dirs_system):
     def __init__(self):
         # the dirs of the application files
         app_dirs_user = [os.path.expanduser("~")+"/.local/share/applications"]
@@ -87,6 +88,8 @@ class getMenu():
         
     # return the lists
     def retList(self):
+        #list_one = sorted(self.lists, key=lambda x: x[1].lower(), reverse=False)
+        #return list_one
         return self.lists
     
 #############################
@@ -111,9 +114,13 @@ class getMenu():
                             continue
                         # item.name
                         fname = entry.getName()
+                        # item.path
+                        # fpath
                         # category
                         ccat = entry.getCategories()
                         fcategory = self.get_category(ccat)
+                        ## item.name.lower()
+                        # fname_lower = fname.lower()
                         # pexec (executable)
                         fexec = entry.getExec()
                         if fexec[0:5] == "$HOME":
@@ -124,6 +131,10 @@ class getMenu():
                         for aargs in self.execArgs:
                             if aargs in fexec:
                                 fexec = fexec.strip(aargs)
+                        # # icon
+                        # ficon = entry.getIcon()
+                        # # comment
+                        # fcomment = entry.getComment()
                         ###
                         self.lists.append([fname, fcategory or "Missed", fexec])
                     except:

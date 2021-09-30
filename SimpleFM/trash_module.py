@@ -21,12 +21,7 @@ class mountPoint():
     def find_trash_path(self):
         trash_path = ""
         if self.path == "HOME":
-            #
-            try:
-                trash_path = os.path.join(os.environ['XDG_DATA_HOME'], "Trash")
-            except:
-                # if XDG_DATA_HOME is not set
-                trash_path = os.path.join(os.path.expanduser("~"), ".local/share/Trash")
+            trash_path = os.path.join(os.path.expanduser("~"), ".local/share/Trash")
         else:
             user_id = os.getuid()
             trash_path = os.path.join(self.path, ".Trash-"+str(user_id))

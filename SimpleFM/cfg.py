@@ -13,30 +13,30 @@ USE_THUMB = 0
 USE_FOL_CI = 0
 # icon cell width - greater than ICON_SIZE
 ITEM_WIDTH = 160
-# icon cell height
-ITEM_HEIGHT = 100
-# icon size
-ICON_SIZE = 96
-# other icons size: link and permissions
-ICON_SIZE2 = 48
-# space between items
-ITEM_SPACE = 25
 # icon cell width alternative view - greater than ICON_SIZE
 ITEM_WIDTH_ALT = 100
+# icon cell height
+ITEM_HEIGHT = 100
 # icon cell height alternative view
 ITEM_HEIGHT_ALT = 100
+# icon size
+ICON_SIZE = 64
 # icon size alternative view
 ICON_SIZE_ALT = 64
-# other icons size alternative view: link and permissions
-ICON_SIZE2_ALT = 24
 # thumb size: greater than ICON_SIZE - same size of ICON_SIZE to disable bigger thumbnailers
 THUMB_SIZE = 100
+# other icons size: link and permissions
+ICON_SIZE2 = 48
+# other icons size alternative view: link and permissions
+ICON_SIZE2_ALT = 24
+# space between items
+ITEM_SPACE = 25
 # font size to use
 FONT_SIZE = 10
 # button size: 0 to disable
 BUTTON_SIZE=0
 # show delete context menu entry that bypass the trashcan: 0 no - 1 yes
-USE_DELETE = 0
+USE_DELETE = 1
 # load the trash module: 0 no - 1 yes
 USE_TRASH = 1
 # load the media module: 0 no - 1 yes
@@ -47,7 +47,7 @@ USE_MEDIA = 1
 # in the form _yy.mm.dd_hh.mm.ss
 USE_DATE = 1
 # use background colour in the listview widgets: 0 no - 1 yes
-USE_BACKGROUND_COLOUR = 0
+USE_BACKGROUND_COLOUR = 1
 # listview background color: red, green, blue
 ORED = 235
 OGREEN = 235
