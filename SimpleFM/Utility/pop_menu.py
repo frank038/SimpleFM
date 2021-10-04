@@ -135,15 +135,17 @@ class getMenu():
                         # ficon = entry.getIcon()
                         # # comment
                         # fcomment = entry.getComment()
+                        #
+                        fmimetypes = entry.getMimeTypes()
                         ###
-                        self.lists.append([fname, fcategory or "Missed", fexec])
+                        self.lists.append([fname, fcategory or "Other", fexec, fpath, fmimetypes])
                     except:
                         pass
 
     #
     def get_category(self, ccat):
         if ccat == []:
-            return "Missed"
+            return "Other"
         for cccat in ccat:
             # search in the main categories first
             if cccat in self.freedesktop_main_categories:
