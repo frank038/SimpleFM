@@ -1,5 +1,5 @@
 #!/bin/bash
 thisdir=$(dirname "$0")
 cd $thisdir
-./SimpleFM.py
+./SimpleFM.py &
 cd $HOME
