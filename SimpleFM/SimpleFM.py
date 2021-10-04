@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.2
+# version 0.2.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -897,7 +897,6 @@ class propertyDialog(QDialog):
         # repopulate
         self.tab()
 
-
     def fgetPermissions(self):
         perms = QFile(self.itemPath).permissions()
         # 
@@ -1102,7 +1101,7 @@ class pasteNmergeDialog(QDialog):
         overwriteButton.setToolTip("Folders will be merged and files will be overwritten.")
         hbox.addWidget(overwriteButton)
         overwriteButton.clicked.connect(lambda:self.fsetValue(2))
-        # add a preformatted extension to the items
+        # add an preformatted extension to the items
         automaticButton = QPushButton("Automatic")
         automaticButton.setToolTip("A suffix will be added to files an folders.")
         hbox.addWidget(automaticButton)
@@ -1251,8 +1250,6 @@ class copyThread2(QThread):
             # one signal for each element in the list
             self.sig.emit(["mSending", os.path.basename(dfile)])
             #
-            # dir
-            #el
             if os.path.isdir(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
                 #
@@ -2215,9 +2212,6 @@ class MainWin(QWidget):
         new_w = self.size().width()
         new_h = self.size().height()
         if new_w != int(WINW) or new_h != int(WINH):
-            # WINW = width
-            # WINH = height
-            # WINM = maximized
             isMaximized = self.isMaximized()
             if isMaximized == True and WINM == "True":
                 qApp.quit()
@@ -2231,8 +2225,8 @@ class MainWin(QWidget):
                 else:
                     ifile.write("{};{};False".format(new_w, new_h))
                 ifile.close()
-            except:
-                pass
+            except Exception as E:
+                print(str(E))
         qApp.quit()
     
     
@@ -2370,7 +2364,6 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
 
-
 # for LView
 class QFileSystemModel2(QFileSystemModel):
     
@@ -2428,6 +2421,7 @@ class LView(QBoxLayout):
         self.pathbtnsb.setWidgetResizable(True)
         self.pathbtnsb.setWidget(self.sawidget)
         self.pathbtnsb.horizontalScrollBar().rangeChanged.connect( lambda x,y: self.pathbtnsb.horizontalScrollBar().setValue( 9999 ) )
+        #
         self.insertWidget(0, self.pathbtnsb)
         # populate the path buttons box
         self.on_box_pb(self.lvDir)
@@ -2550,7 +2544,6 @@ class LView(QBoxLayout):
         #
         new_dir_idx = ppath.index(self.sender().text())
         new_path = os.path.join(*ppath[0:new_dir_idx+1])
-        # 
         if new_path != self.lvDir:
             ret = self.on_change_dir(new_path)
             if ret == 0:
@@ -2568,7 +2561,7 @@ class LView(QBoxLayout):
                 self.box_pb.removeItem(item)
             else:
                 item.widget().deleteLater()
-        # 
+        # repopulate
         if ddir == "/":
             ppath = ["/"]
         else:
@@ -3306,7 +3299,6 @@ class LView(QBoxLayout):
     def fbcustomAction(self, el):
         el.ModuleCustom(self)
     
-
     # from contextual menu
     def wrename2(self, ditem, dest_path):
         ret = ditem
@@ -3376,7 +3368,6 @@ class LView(QBoxLayout):
             self.listview.selectionModel().select(index, QItemSelectionModel.Select)
             self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
             #
-            #if SHOW_HISTORY:
             self.hicombo.insertItem(0, self.lvDir)
             self.hicombo.setCurrentIndex(0)
             #
@@ -3530,7 +3521,6 @@ class getAppsByMime():
                                 # replace ~ with home path
                                 elif mimeProg2[0:1] == "~":
                                     mimeProg2 = os.path.expanduser("~")+"/"+mimeProg2[1:]
-                                # # mimeprog2 gimp-2.10 %U
                                 if mimeProg2:
                                     mimeProg = mimeProg2.split()[0]
                                 else:
@@ -3553,7 +3543,6 @@ class getAppsByMime():
                             print("error 1 appByMime::", str(E))
         # from the lAdded list
         for idesktop in lAdded:
-            # skip the removed associations
             if idesktop in lRemoved:
                 continue
             desktopPath = ""
@@ -4502,15 +4491,19 @@ class openDisks(QBoxLayout):
                 vendor = bd2.Get('org.freedesktop.UDisks2.Drive', 'Vendor', dbus_interface='org.freedesktop.DBus.Properties')
                 model = bd2.Get('org.freedesktop.UDisks2.Drive', 'Model', dbus_interface='org.freedesktop.DBus.Properties')
                 #
-                item = QStandardItem(15,1)
-                if label:
+                if str(label):
                     disk_name = str(label)
                 else:
                     if str(vendor) and str(model):
                         disk_name = str(vendor)+" - "+str(model)
                     elif str(vendor):
                         disk_name = str(vendor)+" - "+str(self.convert_size(size))
-                # 
+                    elif str(model):
+                        disk_name = str(model)#+" - "+str(self.convert_size(size))
+                    else:
+                        disk_name = str(pdevice_dec)#+" - "+str(self.convert_size(size))
+                #
+                item = QStandardItem(15,1)
                 item.setData(disk_name, Qt.DisplayRole)
                 item.setData(pdevice_dec, Qt.UserRole)
                 if is_optical:
@@ -4669,7 +4662,7 @@ class openDisks(QBoxLayout):
             return "DVD/CD Rom"
         #
         return "Unknown Disk"
-
+    
     # an item is selected
     def flist(self, index):
         # needed for operations
@@ -4683,7 +4676,11 @@ class openDisks(QBoxLayout):
         elif iro == 1:
             self.label7.setText(index.data(Qt.UserRole+3)+" - "+"Read Only")
         mmedia = self.nameMedia(index.data(Qt.UserRole+6), index.data(Qt.UserRole+1), index.data(Qt.UserRole))
-        self.label9.setText(mmedia)
+        mpt = ""
+        if index.data(Qt.UserRole+5) != "N":
+            mpt = " - "+index.data(Qt.UserRole+5)
+        self.label9.setText(mmedia+" - "+index.data(Qt.UserRole)+mpt)
+        # self.label9.setText(mmedia+" - "+index.data(Qt.UserRole))
         
         ssize = self.convert_size(index.data(Qt.UserRole+2))
         ddevice = index.data(Qt.UserRole)
@@ -4698,7 +4695,7 @@ class openDisks(QBoxLayout):
                 self.label10.setText(ssize)
         else:
             self.label10.setText(ssize)
-        
+        #
         self.button1.setEnabled(True)
         self.button2.setEnabled(True)
         self.button3.setEnabled(True)
@@ -4721,7 +4718,7 @@ class openDisks(QBoxLayout):
             self.button3.setEnabled(False)
             if mount_point == "/" or mount_point[0:5] == "/boot" or mount_point[0:6] == "/home/":
                 self.button1.setEnabled(False)
-    
+
     # self.flist
     def on_get_mounted(self, ddev):
         path = os.path.join('/org/freedesktop/UDisks2/block_devices/', ddev)
@@ -4961,13 +4958,6 @@ class cTView(QBoxLayout):
         # default model
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
-        self.window.fileModel = self.tmodel
-        # bindings
-        # # reset the filter
-        # if self.window.fileModel:
-            # if self.window.searchBtn.isChecked():
-                # self.window.fileModel.setNameFilters(["*.*"])
-                # self.window.fileModel.setNameFilterDisables(True)
         self.window.fileModel = self.tmodel
         # 
         self.tmodel.setIconProvider(IconProvider())
@@ -5560,7 +5550,6 @@ class cTView(QBoxLayout):
             index = self.tmodel.index(upperdir)
             self.tview.selectionModel().select(index, QItemSelectionModel.Select)
             self.tview.scrollTo(index, QAbstractItemView.EnsureVisible)
-
 
     def fhidbtn(self):
         if self.fmf == 0:
