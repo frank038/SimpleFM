@@ -22,4 +22,4 @@ Features:
 - and more...
 
 
-![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.jpg)
+![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
