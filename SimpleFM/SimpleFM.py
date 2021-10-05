@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.3.0
+# version 0.3.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -756,7 +756,7 @@ class propertyDialog(QDialog):
                 ret = self.AW.getValue()
                 if ret:
                     self.btnOpenWithPopulate()
-    
+        
     # set or unset the immutable flag
     def ibtn_pkexec(self):
         # unset
@@ -1406,7 +1406,6 @@ class copyThread2(QThread):
             self.sig.emit(["mSending", os.path.basename(dfile)])
             #
             # dir
-            #el
             if os.path.isdir(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
                 #
@@ -2184,21 +2183,17 @@ class IconProvider(QFileIconProvider):
                                     for el in dcontent:
                                         if "Icon=" in el:
                                             icon_name = el.split("=")[1].strip("\n")
-                                            # remove the . as first character
-                                            if icon_name[0] == ".":
-                                                icon_name = icon_name[1:]
                                             break
                                 except:
                                     icon_name = None
                             #
                             if icon_name:
-                                # if really custom icon
-                                if icon_name[0] == "/":
-                                    if os.path.exists(icon_name):
-                                        if os.access(icon_name, os.R_OK):
-                                            return QIcon(icon_name)
+                                icon_name_path = os.path.join(ireal_path, icon_name)
+                                if os.path.exists(icon_name_path):
+                                    return QIcon(icon_name_path)
                                 else:
-                                    return QIcon.fromTheme(icon_name, QIcon.fromTheme("folder"))
+                                    return QIcon.fromTheme("folder")
+                    # else:
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
@@ -2322,7 +2317,7 @@ class MainWin(QWidget):
         rootbtn.clicked.connect(lambda:self.openDir("/", 1))
         #
         self.obox1.addWidget(rootbtn, 0, Qt.AlignLeft)
-        
+        #
         # home button
         hbtn = QPushButton(QIcon.fromTheme("user-home"), None)
         if BUTTON_SIZE:
@@ -2372,6 +2367,9 @@ class MainWin(QWidget):
         new_w = self.size().width()
         new_h = self.size().height()
         if new_w != int(WINW) or new_h != int(WINH):
+            # WINW = width
+            # WINH = height
+            # WINM = maximized
             isMaximized = self.isMaximized()
             if isMaximized == True and WINM == "True":
                 qApp.quit()
@@ -2434,7 +2432,6 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-    
     #
     def keyPressEvent(self, event):
         if event.modifiers() ==  Qt.ControlModifier:
@@ -2485,7 +2482,6 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
         
-    
     #
     def closeTab(self, index):
         if self.mtab.count() > 1:
@@ -2755,6 +2751,8 @@ class LView(QBoxLayout):
                     self.hicombo.insertItem(0, self.lvDir)
                     self.hicombo.setCurrentIndex(0)
                     #
+                    #self.on_box_pb(self.lvDir)
+                    #
                     return 1
                 except Exception as E:
                     MyDialog("ERROR", str(E), self.window)
@@ -2778,7 +2776,6 @@ class LView(QBoxLayout):
         if new_path != self.lvDir:
             ret = self.on_change_dir(new_path)
             if ret == 0:
-                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -3003,7 +3000,6 @@ class LView(QBoxLayout):
                 self.label7.setText(imime.name())
             except: pass
         #
-        # solve graphical artifact when select other items
         self.listview.viewport().update()
     
     #
@@ -3294,6 +3290,19 @@ class LView(QBoxLayout):
                     paction.triggered.connect(lambda checked, index=ii:self.fbcustomAction(listActions[index+1]))
                     subm_customAction.addAction(paction)
                     ii += 2
+            # bookmarks
+            menu.addSeparator()
+            if os.path.isdir(self.lvDir):
+                with open("Bookmarks", "r") as fb:
+                    fbdata = fb.readlines()
+                if self.lvDir+"\n" in fbdata:
+                    baction = QAction("Remove Bookmark", self)
+                    baction.triggered.connect(lambda:self.window.unsetBtnBookmarks(self.lvDir))
+                    menu.addAction(baction)
+                else:
+                    baction = QAction("Add Bookmark", self)
+                    baction.triggered.connect(lambda:self.window.setBtnBookmarks(self.lvDir))
+                    menu.addAction(baction)
             #
             menu.exec_(self.listview.mapToGlobal(position))
     
@@ -3690,7 +3699,7 @@ class thumbThread(threading.Thread):
                         self.event.wait(0.05)
             
             self.event.set()
-
+        
 
 # find the applications installed for a given mimetype
 class getAppsByMime():
@@ -3713,6 +3722,7 @@ class getAppsByMime():
         # the action for the mimetype also depends on the file mimeapps.list in the home folder 
         #lAdded,lRemoved,lDefault = self.addMime(mimetype)
         lAdded,lRemoved = self.addMime(mimetype)
+        # print("ladded-lremoved::",lAdded,lRemoved)
         #
         for ddir in xdgDataDirs:
             applicationsPath = os.path.join(ddir, "applications")
@@ -3734,7 +3744,7 @@ class getAppsByMime():
                                 # replace ~ with home path
                                 elif mimeProg2[0:1] == "~":
                                     mimeProg2 = os.path.expanduser("~")+"/"+mimeProg2[1:]
-                                # 
+                                #
                                 if mimeProg2:
                                     mimeProg = mimeProg2.split()[0]
                                 else:
@@ -3755,9 +3765,9 @@ class getAppsByMime():
                                             listPrograms.append("None")
                         except Exception as E:
                             print("error 1 appByMime::", str(E))
+        # 
         # from the lAdded list
         for idesktop in lAdded:
-            # skip the removed associations
             if idesktop in lRemoved:
                 continue
             desktopPath = ""
@@ -4641,7 +4651,6 @@ class openDisks(QBoxLayout):
         iface = dbus.Interface(proxy, "org.freedesktop.DBus.ObjectManager")
         mobject = iface.GetManagedObjects()
         for k in mobject:
-            #
             if "loop" in k:
                 continue
             if 'ram' in k:
@@ -4674,7 +4683,6 @@ class openDisks(QBoxLayout):
                 file_system =  bd.Get('org.freedesktop.UDisks2.Block', 'IdType', dbus_interface='org.freedesktop.DBus.Properties')
                 #
                 read_only = bd.Get('org.freedesktop.UDisks2.Block', 'ReadOnly', dbus_interface='org.freedesktop.DBus.Properties')
-                #
                 if 'org.freedesktop.UDisks2.Filesystem' in kmobject.keys():
                     mountpoint = bd.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints', dbus_interface='org.freedesktop.DBus.Properties')
                     if mountpoint:
@@ -4693,7 +4701,6 @@ class openDisks(QBoxLayout):
                 is_optical = bd2.Get('org.freedesktop.UDisks2.Drive', 'Optical', dbus_interface='org.freedesktop.DBus.Properties')
                 #
                 media_available = bd2.Get('org.freedesktop.UDisks2.Drive', 'MediaAvailable', dbus_interface='org.freedesktop.DBus.Properties')
-                # 
                 if media_available == 0:
                     if not is_optical:
                         continue
@@ -4912,7 +4919,7 @@ class openDisks(QBoxLayout):
                 self.label10.setText(ssize)
         else:
             self.label10.setText(ssize)
-        #
+        
         self.button1.setEnabled(True)
         self.button2.setEnabled(True)
         self.button3.setEnabled(True)
@@ -4937,7 +4944,6 @@ class openDisks(QBoxLayout):
             self.button3.setEnabled(False)
             if mount_point == "/" or mount_point[0:5] == "/boot" or mount_point[0:6] == "/home/":
                 self.button1.setEnabled(False)
-
     
     # self.flist
     def on_get_mounted(self, ddev):
@@ -5148,6 +5154,7 @@ class cTView(QBoxLayout):
                     self.lvFile = os.path.basename(TLVDIR)
                 else:
                     self.lvDir = os.path.dirname(TLVDIR)
+        #
         # the filter for show/hide hidden items
         self.fmf = 0
         # the item selected
@@ -5178,6 +5185,12 @@ class cTView(QBoxLayout):
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
         self.window.fileModel = self.tmodel
+        # bindings
+        # # reset the filter
+        # if self.window.fileModel:
+            # if self.window.searchBtn.isChecked():
+                # self.window.fileModel.setNameFilters(["*.*"])
+                # self.window.fileModel.setNameFilterDisables(True)
         # 
         self.tmodel.setIconProvider(IconProvider())
         self.tmodel.setReadOnly(False)
@@ -5544,7 +5557,6 @@ class cTView(QBoxLayout):
             else:
                 MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
 
-    
     #
     def fcopycutAction(self, action):
         if action == "copy":
@@ -5769,6 +5781,7 @@ class cTView(QBoxLayout):
             index = self.tmodel.index(upperdir)
             self.tview.selectionModel().select(index, QItemSelectionModel.Select)
             self.tview.scrollTo(index, QAbstractItemView.EnsureVisible)
+
 
     def fhidbtn(self):
         if self.fmf == 0:
