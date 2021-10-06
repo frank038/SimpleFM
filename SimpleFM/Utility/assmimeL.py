@@ -648,7 +648,7 @@ show a menu that let user choose which installed application
 (through the desktop files) will be added as executable for the  
 mimetype (it will be marked with (+)); the "Remove" button removes first 
 the "*" if the executable is marked with (+*) and the second time the 
-executable from the right list, also if it is marked with (-).
+executable from the list, also if it is marked with (-).
 The 'Help' button will show this help.
 """
         else:
