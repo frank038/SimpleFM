@@ -17,7 +17,14 @@ def mmodule_name():
 # 1 : one item selected - 2 : more than one item selected - 3 : one or more items selected- 4 on background - 5 always
 # action type
 def mmodule_type(mainLView):
-    return 1
+    if mainLView.selection:
+        index = mainLView.selection[0]
+        path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
+        if os.path.isfile(path) and not os.path.islink(path):
+            return 1
+        else:
+            return 0
+
 
 class checkSum(QDialog):
     def __init__(self, path, parent=None):
