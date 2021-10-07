@@ -31,8 +31,6 @@ ICON_SIZE2 = 48
 ICON_SIZE2_ALT = 24
 # space between items
 ITEM_SPACE = 25
-# font size to use
-FONT_SIZE = 10
 # button size: 0 to disable
 BUTTON_SIZE=0
 # show delete context menu entry that bypass the trashcan: 0 no - 1 yes

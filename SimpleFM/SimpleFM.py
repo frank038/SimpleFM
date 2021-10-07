@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.4.0
+# version 0.4.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -37,10 +37,6 @@ if THUMB_SIZE > ICON_SIZE:
 #
 if ICON_SIZE > ITEM_WIDTH:
     ITEM_WIDTH = ICON_SIZE
-
-## set the font used in the application
-thefont = QFont()
-thefont.setPointSize(FONT_SIZE)
 
 # max number of items - 1 to show in the message dialog
 ITEMSDELETED = 30
@@ -202,7 +198,6 @@ class MyDialog(QDialog):
         self.setWindowTitle(args[0])
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(dialWidth,300)
-        self.setFont(thefont)
         #
         grid = QGridLayout()
         grid.setContentsMargins(5,5,5,5)
@@ -229,7 +224,6 @@ class MyMessageBox(QMessageBox):
         self.setInformativeText(args[2])
         self.setDetailedText("The details are as follows:\n\n"+args[3])
         self.setStandardButtons(QMessageBox.Ok)
-        self.setFont(thefont)
         retval = self.exec_()
     
     def event(self, e):
@@ -326,7 +320,6 @@ class MyDialogRename3(QDialog):
         self.setWindowTitle("Set a new name")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(dialWidth,300)
-        self.setFont(thefont)
         #
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -380,7 +373,6 @@ class otherApp(QDialog):
         self.setWindowTitle("Other application")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(dialWidth,100)
-        self.setFont(thefont)
         #
         grid = QGridLayout()
         grid.setContentsMargins(5,5,5,5)
@@ -555,7 +547,6 @@ class propertyDialog(QDialog):
         self.setWindowTitle("Property")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(600, 300)
-        self.setFont(thefont)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -1111,7 +1102,6 @@ class propertyDialogMulti(QDialog):
         self.setWindowTitle("Property")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(600, 100)
-        self.setFont(thefont)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         self.setLayout(vbox)
@@ -1139,7 +1129,6 @@ class execfileDialog(QDialog):
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(600, 100)
-        self.setFont(thefont)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -1191,7 +1180,6 @@ class retDialogBox(QMessageBox):
         self.setInformativeText(args[2])
         self.setDetailedText("The details are as follows:\n\n"+args[3])
         self.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
-        self.setFont(thefont)
         #
         self.Value = None
         retval = self.exec_()
@@ -1239,7 +1227,6 @@ class pasteNmergeDialog(QDialog):
         self.setWindowTitle("Paste and Merge")
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(dialWidth, 100)
-        self.setFont(thefont)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -3154,13 +3141,11 @@ class LView(QBoxLayout):
             #
             itemName = self.fileModel.data(pointedItem2, Qt.DisplayRole)
             menu = QMenu("Menu", self.listview)
-            menu.setFont(thefont)
             ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
             if self.selection != None:
                 if len(self.selection) == 1:
                     if os.path.isfile(os.path.join(self.lvDir, itemName)):
                         subm_openwithAction= menu.addMenu("Open with...")
-                        subm_openwithAction.setFont(thefont)
                         listPrograms = getAppsByMime(os.path.join(self.lvDir, itemName)).appByMime()
                         #
                         ii = 0
@@ -3227,7 +3212,6 @@ class LView(QBoxLayout):
             #
             menu.addSeparator()
             subm_customAction = menu.addMenu("Custom Actions")
-            subm_customAction.setFont(thefont)
             #
             if len(list_custom_modules) > 0:
                 listActions = []
@@ -3288,7 +3272,6 @@ class LView(QBoxLayout):
         else:
             self.listview.clearSelection()
             menu = QMenu("Menu", self.listview)
-            menu.setFont(thefont)
             #
             if self.flag == 1 or self.flag == 3:
                 newFolderAction = QAction("New Folder", self)
@@ -3311,7 +3294,6 @@ class LView(QBoxLayout):
                         if os.path.exists(templateDir):
                             menu.addSeparator()
                             subm_templatesAction= menu.addMenu("Templates")
-                            subm_templatesAction.setFont(thefont)
                             listTemplate = os.listdir(templateDir)
                             #
                             progActionList = []
@@ -3331,7 +3313,6 @@ class LView(QBoxLayout):
             #
             menu.addSeparator()
             subm_customAction = menu.addMenu("Custom Actions")
-            subm_customAction.setFont(thefont)
             #
             if len(list_custom_modules) > 0:
                 listActions = []
@@ -5381,13 +5362,11 @@ class cTView(QBoxLayout):
         if vr:
             itemName = self.tmodel.data(pointedItem2, Qt.DisplayRole)
             menu = QMenu("Menu", self.tview)
-            menu.setFont(thefont)
             
             if self.selection != None:
                 if len(self.selection) == 1:
                     if os.path.isfile(os.path.join(self.lvDir, itemName)):
                         subm_openwithAction= menu.addMenu("Open with...")
-                        subm_openwithAction.setFont(thefont)
                         listPrograms = getAppsByMime(os.path.join(self.lvDir, itemName)).appByMime()
                         ii = 0
                         defApp = getDefaultApp(os.path.join(self.lvDir, itemName)).defaultApplication()
@@ -5440,7 +5419,6 @@ class cTView(QBoxLayout):
                         if os.path.exists(templateDir):
                             menu.addSeparator()
                             subm_templatesAction= menu.addMenu("Templates")
-                            subm_templatesAction.setFont(thefont)
                             listTemplate = os.listdir(templateDir)
 
                             progActionList = []
@@ -5497,7 +5475,6 @@ class cTView(QBoxLayout):
             
             menu.addSeparator()
             subm_customAction = menu.addMenu("Custom Actions")
-            subm_customAction.setFont(thefont)
 
             if len(list_custom_modules) > 0:
                 listActions = []
@@ -5862,7 +5839,6 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
     window = MainWin()
-    window.setFont(thefont)
     window.show()
     ret = app.exec_()
     sys.exit(ret)
