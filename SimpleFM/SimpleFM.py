@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.3.5
+# version 0.4.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -474,7 +474,6 @@ class PlistMenu(QDialog):
         #
         import Utility.pop_menu as pop_menu
         THE_MENU = pop_menu.getMenu().retList()
-        #for el in self.menu:
         for el in THE_MENU:
             cat = el[1]
             if cat == "Development":
@@ -733,7 +732,6 @@ class propertyDialog(QDialog):
         self.exec_()
     
     #
-    # def comboOpenWithPopulate(self):
     def btnOpenWithPopulate(self):
         self.defApp = getDefaultApp(self.itemPath).defaultApplication()
         listPrograms_temp = getAppsByMime(self.itemPath).appByMime()
@@ -746,6 +744,7 @@ class propertyDialog(QDialog):
                     self.btnOpenWith.setText(self.listPrograms[i][1])
         else:
             self.btnOpenWith.setText("----------")
+
     
     # see comboOpenWithPopulate
     def fbtnOpenWith(self):
@@ -756,6 +755,7 @@ class propertyDialog(QDialog):
                 ret = self.AW.getValue()
                 if ret:
                     self.btnOpenWithPopulate()
+        
         
     # set or unset the immutable flag
     def ibtn_pkexec(self):
@@ -1223,13 +1223,17 @@ class retDialogBox(QMessageBox):
         #
         return result
 
-# dialog - Paste-n-Merge
+# dialog - Paste-n-Merge - choose the default action
+# if an item at destination has the same name
+# as the item to be copied
 class pasteNmergeDialog(QDialog):
     
-    def __init__(self, parent, overwrite, ltitle=""):
+    def __init__(self, parent, destination, ltitle, item_type):
         super(pasteNmergeDialog, self).__init__(parent)
         # 
-        self.overwrite = overwrite
+        self.destination = destination
+        self.ltitle = ltitle
+        self.item_type = item_type
         #
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Paste and Merge")
@@ -1241,7 +1245,10 @@ class pasteNmergeDialog(QDialog):
         vbox.setContentsMargins(5,5,5,5)
         self.setLayout(vbox)
         #
-        label1 = QLabel("Some files and folders have the same name.\nPlease choose the default action for all files and folders.\nThe choise cannot be changed afterwards.\n")
+        if self.item_type == "folder":
+            label1 = QLabel("The folder\n"+self.ltitle+"\nexists in\n{}.".format(os.path.dirname(self.destination))+"\nPlease choose the default action for all folders.\nThis choise cannot be changed afterwards.\n")
+        elif self.item_type == "file":
+            label1 = QLabel("The file\n"+self.ltitle+"\nexists in\n{}.".format(self.destination)+"\nPlease choose the default action for all files.\nThis choise cannot be changed afterwards.\n")
         vbox.addWidget(label1)
         #
         hbox = QBoxLayout(QBoxLayout.LeftToRight)
@@ -1251,9 +1258,13 @@ class pasteNmergeDialog(QDialog):
         skipButton.setToolTip("File and folders with the same name will be skipped.")
         hbox.addWidget(skipButton)
         skipButton.clicked.connect(lambda:self.fsetValue(1))
-        # overwrite all the items
-        overwriteButton = QPushButton("Merge/Overwrite")
-        overwriteButton.setToolTip("Folders will be merged and files will be overwritten.")
+        # merge or overwrite all the items
+        if self.item_type == "folder":
+            overwriteButton = QPushButton("Merge")
+            overwriteButton.setToolTip("All the folders will be merged.")
+        elif self.item_type == "file":
+            overwriteButton = QPushButton("Overwrite")
+            overwriteButton.setToolTip("All the files will be overwritten.")
         hbox.addWidget(overwriteButton)
         overwriteButton.clicked.connect(lambda:self.fsetValue(2))
         # add an preformatted extension to the items
@@ -1268,7 +1279,7 @@ class pasteNmergeDialog(QDialog):
         backupButton.clicked.connect(lambda:self.fsetValue(5))
         # abort the operation
         cancelButton = QPushButton("Cancel")
-        cancelButton.setToolTip("Cancel all.")
+        cancelButton.setToolTip("Abort.")
         hbox.addWidget(cancelButton)
         cancelButton.clicked.connect(self.fcancel)
         #
@@ -1312,7 +1323,7 @@ class copyThread2(QThread):
         self.reqNewNm = ""
     
     def getdatasygnal(self, l=None):
-        if l[0] == "SendNewAtype":
+        if l[0] == "SendNewAtype" or l[0] == "SendNewDtype":
             self.reqNewNm = l[1]
 
     def run(self):
@@ -1386,7 +1397,7 @@ class copyThread2(QThread):
         newList = self.newList
         total_size = 1
         incr_size = 1
-        # common suffix if date - the same date for all the items
+        # common suffix if date - the same date for all items
         commSfx = ""
         if USE_DATE:
             z = datetime.datetime.now()
@@ -1395,6 +1406,9 @@ class copyThread2(QThread):
         
         self.sig.emit(["Starting...", 0, total_size])
         #
+        # the default action for all files in the dir to be copied...
+        # ... if an item with the same name already exist at destination
+        dirfile_dcode = 0
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -1405,19 +1419,17 @@ class copyThread2(QThread):
             # one signal for each element in the list
             self.sig.emit(["mSending", os.path.basename(dfile)])
             #
-            # dir
-            if os.path.isdir(dfile):
+            # item is dir and not link to dir
+            if os.path.isdir(dfile) and not os.path.islink(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
                 #
-                # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
-                dcode = 0
-                # if not the exactly same item
+                # it isnt the exactly same item
                 if dfile != tdest:
                     #
                     # the dir doesnt exist at destination or it is a broken link
                     if not os.path.exists(tdest):
                         try:
-                            # link
+                            # check broken link
                             if os.path.islink(tdest):
                                 ret = ""
                                 if USE_DATE:
@@ -1436,11 +1448,11 @@ class copyThread2(QThread):
                             # reset
                             self.reqNewNm = ""
                     #
-                    # exists at destination an item with the same name
+                    # exists at destination a folder with the same name
                     elif os.path.exists(tdest):
-                        # get the default choise (one choise for all the folders to copy in the main dir)
+                        # get the default choise (one choise for all folders to copy in the main dir)
                         if self.atypeDir == -4:
-                            self.sig.emit(["ReqNewAtype", tdest, "The folder {} exists.\n".format(os.path.basename(tdest))])
+                            self.sig.emit(["ReqNewDtype", tdest, os.path.basename(tdest)])
                             while self.reqNewNm == "":
                                 time.sleep(1)
                             else:
@@ -1449,11 +1461,11 @@ class copyThread2(QThread):
                                 # reset
                                 self.reqNewNm = ""
                         #
-                        # abort if cancel
+                        # -1 abort if cancelled
                         if self.atypeDir == -1:
-                            # items_skipped += "{}:\n{}\n------------\n".format(dfile, "Operation aborted by the user.")
+                            items_skipped += "Operation aborted by the user.\n"
                             break
-                        # skip
+                        # 1 skip
                         elif self.atypeDir == 1:
                             # items_skipped += "{}:\n{}\n------------\n".format(dfile, "Folder skipped by the user.")
                             continue
@@ -1461,7 +1473,63 @@ class copyThread2(QThread):
                         # new dir name if an item exists at destination with the same name
                         newDestDir = ""
                         #
-                        # 2 overwrite - broken link or not folder
+                        # 4 automatic - rename the item to copy
+                        if self.atypeDir == 4:
+                            if USE_DATE:
+                                newDestDir = self.faddSuffix2(commSfx, tdest)
+                            else:
+                                newDestDir = self.faddSuffix(tdest)
+                            # first create the dir
+                            try:
+                                os.makedirs(newDestDir)
+                            except Exception as E:
+                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                continue
+                            # copy or move
+                            try:
+                                for sdir,ddir,ffile in os.walk(dfile):
+                                    if action == 1:
+                                        for dr in ddir:
+                                            shutil.copytree(os.path.join(sdir, dr), os.path.join(newDestDir, dr), symlinks=True, ignore=None, copy_function=shutil.copy2, ignore_dangling_symlinks=False)
+                                        for ff in ffile:
+                                            shutil.copy2(os.path.join(sdir, ff), newDestDir, follow_symlinks=False)
+                                    elif action == 2:
+                                        for dr in ddir:
+                                            shutil.move(os.path.join(sdir, dr), newDestDir)
+                                        for ff in ffile:
+                                            shutil.move(os.path.join(sdir, ff), newDestDir)
+                            except Exception as E:
+                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                continue
+                            try:
+                                shutil.rmtree(dfile)
+                            except Exception as E:
+                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                continue
+                        # 5 backup - rename the item at destination and copy
+                        elif self.atypeDir == 5:
+                            # rename the dir
+                            try:
+                                ret = ""
+                                if USE_DATE:
+                                    ret = self.faddSuffix2(commSfx, tdest)
+                                else:
+                                    ret = self.faddSuffix(tdest)
+                                os.rename(tdest, os.path.join(os.path.dirname(tdest),ret))
+                            except Exception as E:
+                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
+                                continue
+                            # copy or move
+                            try:
+                                if action == 1:
+                                    shutil.copytree(dfile, tdest, symlinks=True, ignore=None, copy_function=shutil.copy2, ignore_dangling_symlinks=False)
+                                elif action == 2:
+                                    shutil.move(dfile, tdest)
+                            except Exception as E:
+                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                continue
+                        #
+                        # 2 merge - broken link or not folder
                         if self.atypeDir == 2:
                             try:
                                 if os.path.islink(tdest):
@@ -1471,164 +1539,124 @@ class copyThread2(QThread):
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
-                        # 4 automatic - rename the item to copy
-                        elif self.atypeDir == 4:
-                            try:
-                                newDestDir = ""
-                                if USE_DATE:
-                                    newDestDir = self.faddSuffix2(commSfx, tdest)
-                                else:
-                                    newDestDir = self.faddSuffix(tdest)
-                                # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(dfile, newDestDir)
-                            except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
-                                continue
-                        # 5 backup - rename the item at destination
-                        elif self.atypeDir == 5:
-                            try:
-                                ret = ""
-                                if USE_DATE:
-                                    ret = self.faddSuffix2(commSfx, tdest)
-                                else:
-                                    ret = self.faddSuffix(tdest)
-                                os.rename(tdest, os.path.join(os.path.dirname(tdest),ret))
-                                # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(tdest, ret)
-                            except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
-                                continue
-                        #
-                        # the new dir name - make the dir
-                        if newDestDir != "":
-                            try:
-                                os.makedirs(newDestDir)
-                                destdir = newDestDir
-                            except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
-                                continue
-                        else:
-                            destdir = tdest
-                        #
-                        # make the dirs and copy the relatives files into them
-                        for sdir,ddir,ffile in os.walk(dfile):
-                            todest = os.path.join(destdir, sdir[len(dfile)+1:])
-                            #
-                            for dr in ddir:
-                                # lenght of destdir - base paht in common at destination
-                                len_destdir = len(destdir)
-                                todest2 = os.path.join(todest,dr)
-                                if not os.path.exists(todest2):
-                                    # require python >= 3.3
-                                    os.makedirs(todest2, exist_ok=True)
-                            #
-                            # copy all the non-folder items from the base dir
-                            for sitem in ffile:
-                                fileToDest = os.path.join(todest,sitem)
-                                
-                                # exists one item at destination at least or it is a broken link
-                                if os.path.exists(fileToDest) or os.path.islink(fileToDest):
-                                    # exist at destination - atype is needed
-                                    # file to copy from the origin folder - full path
-                                    fpsitem = os.path.join(sdir,sitem)
-                                    # atype choosing dialog if dcode is 0 (no choises previously made)
-                                    if dcode == 0:
-                                        self.sig.emit(["ReqNewAtype", tdest, "The file\n{}\nexists in the folder\n{}.\n".format(os.path.basename(fileToDest), sdir)])
-                                        while self.reqNewNm == "":
-                                            time.sleep(1)
-                                        else:
-                                            # dcode
-                                            dcode = self.reqNewNm
-                                            # reset
-                                            self.reqNewNm = ""
-                                    #
-                                    # -1 means cancelled from the rename dialog
-                                    if dcode == -1:
-                                        items_skipped += "Operation cancelled by the user\n------------\n"
-                                        break
-                                    # 1 skip
-                                    elif dcode == 1:
-                                        # items_skipped += "{}:\n{}\n------------\n".format(fpsitem, "Skipped.")
-                                        continue
-                                    # 2 overwrite
-                                    elif dcode == 2:
-                                        try:
-                                            # link
-                                            if os.path.islink(fileToDest):
-                                                os.unlink(fileToDest)
-                                            # dir
-                                            elif os.path.isdir(fileToDest):
-                                                shutil.rmtree(fileToDest)
-                                            # copy or overwrite
-                                            if action == 1:
-                                                shutil.copy2(fpsitem, fileToDest, follow_symlinks=False)
-                                            elif action == 2:
-                                                shutil.move(fpsitem, fileToDest)
-                                            #
-                                        except Exception as E:
-                                            items_skipped += "{}:\n{}\n------------\n".format(fpsitem, str(E))
-                                    # 3 new name - 4 automatic
-                                    elif dcode == 3 or dcode == 4:
-                                        try:
-                                            ret = ""
-                                            if USE_DATE:
-                                                ret = self.faddSuffix2(commSfx, fileToDest)
-                                            else:
-                                                ret = self.faddSuffix(fileToDest)
-                                            iNewName = os.path.join(os.path.dirname(fileToDest),ret)
-                                            if action == 1:
-                                                shutil.copy2(fpsitem, iNewName, follow_symlinks=False)
-                                            elif action == 2:
-                                                shutil.move(fpsitem, iNewName)
-                                            # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(fpsitem, ret)
-                                            #
-                                        except Exception as E:
-                                            items_skipped += "{}:\n{}\n------------\n".format(fpsitem, str(E))
-                                    # 5 backup the existent file
-                                    elif dcode == 5:
-                                        try:
-                                            ret = ""
-                                            if USE_DATE:
-                                                ret = self.faddSuffix2(commSfx, fileToDest)
-                                            else:
-                                                ret = self.faddSuffix(fileToDest)
-                                            shutil.move(fileToDest, ret)
-                                            if action == 1:
-                                                shutil.copy2(fpsitem, fileToDest, follow_symlinks=False)
-                                            elif action == 2:
-                                                shutil.move(fpsitem, fileToDest)
-                                            # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(fileToDest, ret)
-                                        except Exception as E:
-                                            items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                            # tdest = os.path.join(self.pathdest, os.path.basename(dfile))
+                            todest = tdest
+                            # 
+                            # sdir has full path
+                            for sdir,ddir,ffile in os.walk(dfile):
+                                temp_dir = os.path.relpath(sdir, dfile)
+                                # 1 - create the subdirs if the case
+                                for dr in ddir:
+                                    todest2 = os.path.join(todest, temp_dir, dr)
+                                    if not os.path.exists(todest2):
+                                        # require python >= 3.3
+                                        os.makedirs(todest2, exist_ok=True)
                                 #
-                                # nothing at destination
-                                else:
-                                    try:
-                                        if action == 1:
-                                            shutil.copy2(os.path.join(sdir,sitem), fileToDest, follow_symlinks=False)
-                                        elif action == 2:
-                                            shutil.move(os.path.join(sdir,sitem), fileToDest)
-                                    except Exception as E:
-                                        items_skipped += "{}:\n{}\n------------\n".format(os.path.join(sdir,sitem), str(E))
+                                # 2 - copy the files
+                                for item_file in ffile:
+                                    # the item at destination
+                                    dest_item = os.path.join(todest, temp_dir, item_file)
+                                    #
+                                    # at destination exists or is a broken link
+                                    if os.path.exists(dest_item) or os.path.islink(dest_item):
+                                        # eventually the source file - it could not exist
+                                        source_item = os.path.join(dfile, sdir, item_file)
+                                        source_item_skipped = os.path.join(os.path.basename(dfile), sdir, item_file)
+                                        # atype choosing dialog if dirfile_dcode is 0 (no choises previously made)
+                                        if dirfile_dcode == 0:
+                                            self.sig.emit(["ReqNewAtype", tdest, os.path.basename(dest_item)])
+                                            while self.reqNewNm == "":
+                                                time.sleep(1)
+                                            else:
+                                                # dcode
+                                                dirfile_dcode = self.reqNewNm
+                                                # also for files outside this folder
+                                                self.atype = dirfile_dcode
+                                                # reset
+                                                self.reqNewNm = ""
+                                        #
+                                        # -1 means cancelled from the rename dialog
+                                        if dirfile_dcode == -1:
+                                            items_skipped += "Operation cancelled by the user\n------------\n"
+                                            break
+                                        # 1 skip
+                                        elif dirfile_dcode == 1:
+                                            # items_skipped += "{}:\n{}\n------------\n".format(fpsitem, "Skipped.")
+                                            continue
+                                        # 2 overwrite
+                                        elif dirfile_dcode == 2:
+                                            try:
+                                                # link
+                                                if os.path.islink(dest_item):
+                                                    os.unlink(dest_item)
+                                                # dir
+                                                elif os.path.isdir(dest_item):
+                                                    shutil.rmtree(dest_item)
+                                                # copy or overwrite
+                                                if action == 1:
+                                                    shutil.copy2(source_item, dest_item, follow_symlinks=False)
+                                                elif action == 2:
+                                                    shutil.move(source_item, dest_item)
+                                            except Exception as E:
+                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                        # 4 automatic
+                                        elif dirfile_dcode == 4:
+                                            try:
+                                                ret = ""
+                                                if USE_DATE:
+                                                    ret = self.faddSuffix2(commSfx, dest_item)
+                                                else:
+                                                    ret = self.faddSuffix(dest_item)
+                                                iNewName = os.path.join(os.path.dirname(dest_item),ret)
+                                                if action == 1:
+                                                    shutil.copy2(source_item, iNewName, follow_symlinks=False)
+                                                elif action == 2:
+                                                    shutil.move(source_item, iNewName)
+                                            except Exception as E:
+                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                        # 5 backup the existent file
+                                        elif dirfile_dcode == 5:
+                                            try:
+                                                ret = ""
+                                                if USE_DATE:
+                                                    ret = self.faddSuffix2(commSfx, dest_item)
+                                                else:
+                                                    ret = self.faddSuffix(dest_item)
+                                                shutil.move(dest_item, ret)
+                                                if action == 1:
+                                                    shutil.copy2(source_item, dest_item, follow_symlinks=False)
+                                                elif action == 2:
+                                                    shutil.move(source_item, dest_item)
+                                            except Exception as E:
+                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                    # doesnt exist at destination
+                                    else:
+                                        try:
+                                            if action == 1:
+                                                shutil.copy2(os.path.join(sdir,item_file), dest_item, follow_symlinks=False)
+                                            elif action == 2:
+                                                shutil.move(os.path.join(sdir,item_file), dest_item)
+                                        except Exception as E:
+                                            items_skipped += "{}:\n{}\n------------\n".format(os.path.join(sdir,item_file), str(E))
                         #
-                        # action 2: delete the origin dir if empty
-                        if action == 2:
-                            if os.path.exists(dfile):
-                                if len(os.listdir(dfile)) == 0:
-                                    shutil.rmtree(dfile)
-                                else:
-                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, "This dir is not empty.")
+                        #############
                 #
                 # origin and destination are the exactly same directory
                 else:
                     if action == 1:
                         try:
-                            ret = self.faddSuffix(dfile)
+                            ret = ""
+                            if USE_DATE:
+                                ret = self.faddSuffix2(commSfx, dfile)
+                            else:
+                                ret = self.faddSuffix(dfile)
                             shutil.copytree(dfile, ret, symlinks=True, ignore=None, copy_function=shutil.copy2, ignore_dangling_symlinks=False)
                             # items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(os.path.basename(tdest), os.path.basename(ret))
                         except Exception as E:
                             items_skipped += "{}:\n{}\n------------\n".format(os.path.basename(dfile), str(E))
                     # elif action == 2:
-                        # items_skipped += "{}:\n{}\n------------\n".format(os.path.basename(dfile), "Exactly the same folder.")
-            # file or link/broken link or else
+                        # pass
+            # item is file or link/broken link or else
             else:
                 # check for an item with the same name at destination
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
@@ -1636,12 +1664,14 @@ class copyThread2(QThread):
                 if dfile != tdest:
                     if os.path.exists(tdest):
                         if self.atype == -4:
-                            self.sig.emit(["ReqNewAtype", tdest, "The file {} exists.\n".format(os.path.basename(tdest))])
+                            self.sig.emit(["ReqNewAtype", tdest, os.path.basename(tdest)])
                             while self.reqNewNm == "":
                                 time.sleep(1)
                             else:
                                 # 
                                 self.atype = self.reqNewNm
+                                # also for files isside folders
+                                dirfile_dcode = self.atype
                                 # reset
                                 self.reqNewNm = ""
                         # -1 cancel
@@ -1674,36 +1704,21 @@ class copyThread2(QThread):
                                     shutil.copy2(dfile, ret, follow_symlinks=False)
                                 elif action == 2:
                                     shutil.move(dfile, ret)
-                                # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(dfile, ret)
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                         # 5 backup the existent files
                         elif self.atype == 5:
                             try:
-                                if dfile == tdest:
-                                    if action == 1:
-                                        ret = ""
-                                        if USE_DATE:
-                                            ret = self.faddSuffix2(commSfx, tdest)
-                                        else:
-                                            ret = self.faddSuffix(tdest)
-                                        shutil.move(tdest, ret)
-                                        shutil.copy2(ret, dfile, follow_symlinks=False)
-                                        # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(tdest, ret)
-                                    elif action == 2:
-                                        items_skipped += "Same file:\n{}\n------------\n".format(dfile)
+                                ret = ""
+                                if USE_DATE:
+                                    ret = self.faddSuffix2(commSfx, tdest)
                                 else:
-                                    ret = ""
-                                    if USE_DATE:
-                                        ret = self.faddSuffix2(commSfx, tdest)
-                                    else:
-                                        ret = self.faddSuffix(tdest)
-                                    shutil.move(tdest, ret)
-                                    if action == 1:
-                                        shutil.copy2(dfile, tdest, follow_symlinks=False)
-                                    elif action == 2:
-                                        shutil.move(dfile, tdest)
-                                    # items_skipped += "{}:\nRenamed:\n{}\n------------\n".format(tdest, ret)
+                                    ret = self.faddSuffix(tdest)
+                                shutil.move(tdest, ret)
+                                if action == 1:
+                                    shutil.copy2(dfile, tdest, follow_symlinks=False)
+                                elif action == 2:
+                                    shutil.move(dfile, tdest)
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                     # it doesnt exist at destination
@@ -1738,7 +1753,7 @@ class copyThread2(QThread):
                             else:
                                 ret = self.faddSuffix(tdest)
                             shutil.copy2(dfile, ret, follow_symlinks=False)
-                            # items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(tdest, ret)
+                            items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(tdest, ret)
                         except Exception as E:
                             items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                     elif action == 2:
@@ -1757,6 +1772,7 @@ class copyItems2():
         self.pathdest = pathdest
         self.window = window
         #
+        self.newDtype = ""
         self.newAtype = ""
         self.myDialog()
 
@@ -1820,9 +1836,16 @@ class copyItems2():
         return sfsize    
     
     def threadslot(self, aa):
-        if aa[0] == "ReqNewAtype":
+        # from directories
+        if aa[0] == "ReqNewDtype":
             # 1 skip - 2 overwrite - 4 automatic - 5 backup
-            sNewAtype = pasteNmergeDialog(self.window, aa[1], aa[2]).getValue()
+            sNewDtype = pasteNmergeDialog(self.window, aa[1], aa[2], "folder").getValue()
+            self.mythread.sig.emit(["SendNewDtype", sNewDtype])
+            self.newDtype = sNewDtype
+        # from any files
+        elif aa[0] == "ReqNewAtype":
+            # 1 skip - 2 overwrite - 4 automatic - 5 backup
+            sNewAtype = pasteNmergeDialog(self.window, aa[1], aa[2], "file").getValue()
             self.mythread.sig.emit(["SendNewAtype", sNewAtype])
             self.newAtype = sNewAtype
         # copying process
@@ -2133,7 +2156,6 @@ class IconProvider(QFileIconProvider):
     # set the icon theme
     QIcon.setThemeName(ICON_THEME)
     
-    
     def evaluate_pixbuf(self, ifull_path, imime):
         hmd5 = "Null"
         hmd5 = create_thumbnail(ifull_path, imime)
@@ -2164,6 +2186,7 @@ class IconProvider(QFileIconProvider):
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if file_icon:
                                     return file_icon
+                        # except Exception as E:
                         except:
                             pass
                 #
@@ -2203,6 +2226,7 @@ class IconProvider(QFileIconProvider):
                         return QIcon.fromTheme("folder-publicshare", QIcon.fromTheme("folder"))
                     else:
                         return QIcon.fromTheme("folder")
+                        # return QIcon.fromTheme(fileInfo.fileName(), QIcon.fromTheme("folder"))
         return super(IconProvider, self).icon(fileInfo)
 
 ########################### MAIN WINDOW ############################
@@ -2317,7 +2341,7 @@ class MainWin(QWidget):
         rootbtn.clicked.connect(lambda:self.openDir("/", 1))
         #
         self.obox1.addWidget(rootbtn, 0, Qt.AlignLeft)
-        #
+        
         # home button
         hbtn = QPushButton(QIcon.fromTheme("user-home"), None)
         if BUTTON_SIZE:
@@ -2432,6 +2456,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
+
     #
     def keyPressEvent(self, event):
         if event.modifiers() ==  Qt.ControlModifier:
@@ -2482,6 +2507,7 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
         
+    
     #
     def closeTab(self, index):
         if self.mtab.count() > 1:
@@ -2520,6 +2546,7 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
 
+
 # for LView
 class QFileSystemModel2(QFileSystemModel):
     
@@ -2535,6 +2562,7 @@ class QFileSystemModel2(QFileSystemModel):
             if role == (34):
                 return fcit(index.data(Qt.UserRole + 1))
         return super(QFileSystemModel2, self).data(index, role)
+
 
 # path button box
 class FlowLayout(QLayout):
@@ -2761,7 +2789,7 @@ class LView(QBoxLayout):
                 MyDialog("ERROR", path+"\n\n   Not readable", self.window)
                 return 0
     
-    # vedo sotto
+    # see on_box_pb
     def btn_change_dir(self):
         ppath = []
         for i in range(self.box_pb.count()):
@@ -2771,11 +2799,25 @@ class LView(QBoxLayout):
                 if item.widget().text() == self.sender().text():
                     break
         #
-        new_dir_idx = ppath.index(self.sender().text())
+        new_dir = self.sender().text()
+        if new_dir in ppath:
+            new_dir_idx = ppath.index(new_dir)
+        else:
+            MyDialog("Info", new_dir+"\n\n   Directory missed.\n", self.window)
+            return
         new_path = os.path.join(*ppath[0:new_dir_idx+1])
+        if os.path.exists(new_path):
+            self.on_btn_change_dir(new_path)
+        else:
+            MyDialog("Error", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+            
+        
+    # see btn_change_dir
+    def on_btn_change_dir(self, new_path):
         if new_path != self.lvDir:
             ret = self.on_change_dir(new_path)
             if ret == 0:
+                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -2783,9 +2825,9 @@ class LView(QBoxLayout):
     # populate the path buttons box
     def on_box_pb(self, ddir):
         # empty the box
-        for i in range(self.box_pb.count()):
-            item = self.box_pb.itemAt(0)
-            self.box_pb.takeAt(0)
+        for i in reversed(range(self.box_pb.count())):
+            item = self.box_pb.itemAt(i).widget()
+            item.deleteLater()
         # repopulate
         if ddir == "/":
             ppath = ["/"]
@@ -2802,6 +2844,8 @@ class LView(QBoxLayout):
             pb.setCheckable(True)
             pb.clicked.connect(self.btn_change_dir)
             self.box_pb.addWidget(pb)
+            pb.installEventFilter(self)
+            pb.setObjectName('pbwidget')
             if p == (ppath_len -1):
                 pb.setChecked(True)
                 self.box_pb_btn = pb
@@ -2820,37 +2864,50 @@ class LView(QBoxLayout):
     def eventFilter(self, obj, event):
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.MiddleButton:
+                if obj.objectName() == 'pbwidget':
+                    new_path_temp = []
+                    for i in range(self.box_pb.indexOf(obj)+1):
+                        new_path_temp.append(self.box_pb.itemAt(i).widget().text())
+                    new_path = os.path.join(*new_path_temp)
+                    if os.path.exists(new_path):
+                        self.on_btn_change_dir(new_path)
+                        obj.setChecked(True)
+                    else:
+                        MyDialog("Error", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+                    #
+                    return QObject.event(obj, event)
                 # 
                 itemSelected = self.listview.indexAt(event.pos()).data()
-                itemSelectedPath = os.path.join(self.lvDir, itemSelected)
-                if os.path.isdir(itemSelectedPath):
-                    if os.access(itemSelectedPath, os.R_OK):
-                        if IN_SAME == 1:
-                            try:
-                                # open the selected folder in a new tab
-                                self.fnewtabAction(itemSelectedPath, 1)
-                            except Exception as E:
-                                MyDialog("ERROR", str(E), self.window)
+                if itemSelected:
+                    itemSelectedPath = os.path.join(self.lvDir, itemSelected)
+                    if os.path.isdir(itemSelectedPath):
+                        if os.access(itemSelectedPath, os.R_OK):
+                            if IN_SAME == 1:
+                                try:
+                                    # open the selected folder in a new tab
+                                    self.fnewtabAction(itemSelectedPath, 1)
+                                except Exception as E:
+                                    MyDialog("ERROR", str(E), self.window)
+                            else:
+                                # open the selected folder in the same tab
+                                try:
+                                    self.listview.clearSelection()
+                                    self.lvDir = itemSelectedPath
+                                    self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
+                                    self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+                                    self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
+                                    self.tabLabels()
+                                    # scroll to top
+                                    self.listview.verticalScrollBar().setValue(0)
+                                    # add the path into the history
+                                    self.hicombo.insertItem(0, self.lvDir)
+                                    self.hicombo.setCurrentIndex(0)
+                                    #
+                                    self.on_box_pb(self.lvDir)
+                                except Exception as E:
+                                    MyDialog("ERROR", str(E), self.window)
                         else:
-                            # open the selected folder in the same tab
-                            try:
-                                self.listview.clearSelection()
-                                self.lvDir = itemSelectedPath
-                                self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
-                                self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
-                                self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
-                                self.tabLabels()
-                                # scroll to top
-                                self.listview.verticalScrollBar().setValue(0)
-                                # add the path into the history
-                                self.hicombo.insertItem(0, self.lvDir)
-                                self.hicombo.setCurrentIndex(0)
-                                #
-                                self.on_box_pb(self.lvDir)
-                            except Exception as E:
-                                MyDialog("ERROR", str(E), self.window)
-                    else:
-                        MyDialog("ERROR", itemSelected+"\nNot readable", self.window)
+                            MyDialog("ERROR", itemSelected+"\nNot readable", self.window)
         #
         return QObject.event(obj, event)
 
@@ -2968,9 +3025,9 @@ class LView(QBoxLayout):
                     self.label6.setText("(Not readable)"+"    ")
             # link - broken link
             if not os.path.exists(real_path):
-                self.label8.setText("Broken link")
+                self.label8.setText("Broken link to: {}".format(real_path))
             else:
-                self.label8.setText("Link")
+                self.label8.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Link to</i>: {}".format(real_path))
         elif os.path.isfile(path):
             # mimetype
             imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
@@ -3090,7 +3147,6 @@ class LView(QBoxLayout):
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
         pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
-
         # the items
         if vr:
             # the data of the selected item at the bottom
@@ -3523,6 +3579,7 @@ class LView(QBoxLayout):
     def fbcustomAction(self, el):
         el.ModuleCustom(self)
     
+    
     # from contextual menu
     def wrename2(self, ditem, dest_path):
         ret = ditem
@@ -3699,7 +3756,7 @@ class thumbThread(threading.Thread):
                         self.event.wait(0.05)
             
             self.event.set()
-        
+
 
 # find the applications installed for a given mimetype
 class getAppsByMime():
@@ -3722,7 +3779,6 @@ class getAppsByMime():
         # the action for the mimetype also depends on the file mimeapps.list in the home folder 
         #lAdded,lRemoved,lDefault = self.addMime(mimetype)
         lAdded,lRemoved = self.addMime(mimetype)
-        # print("ladded-lremoved::",lAdded,lRemoved)
         #
         for ddir in xdgDataDirs:
             applicationsPath = os.path.join(ddir, "applications")
@@ -3764,10 +3820,10 @@ class getAppsByMime():
                                         except:
                                             listPrograms.append("None")
                         except Exception as E:
-                            print("error 1 appByMime::", str(E))
-        # 
+                            pass
         # from the lAdded list
         for idesktop in lAdded:
+            # skip the removed associations
             if idesktop in lRemoved:
                 continue
             desktopPath = ""
@@ -3900,7 +3956,7 @@ class getDefaultApp():
             try:
                 associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
             except Exception as E:
-                #MyDialog("Error", str(E), self.window)
+                # MyDialog("Error", str(E), self.window)
                 return "None"
             
             if associatedDesktopProgram:
@@ -4414,6 +4470,7 @@ class openTrash(QBoxLayout):
                     total_size += os.path.getsize(flp)
         return total_size 
 
+
 class RestoreTrashedItems():
     def __init__(self):
         self.fakename = ""
@@ -4651,6 +4708,7 @@ class openDisks(QBoxLayout):
         iface = dbus.Interface(proxy, "org.freedesktop.DBus.ObjectManager")
         mobject = iface.GetManagedObjects()
         for k in mobject:
+            #
             if "loop" in k:
                 continue
             if 'ram' in k:
@@ -4658,7 +4716,6 @@ class openDisks(QBoxLayout):
             self.on_add_partition(k, mobject[k])
     
     # the device is added to the view
-    # def on_add_partition(self, k, bus, kmobject):
     def on_add_partition(self, k, kmobject):
         for ky in kmobject:
             kk = "org.freedesktop.UDisks2.Block"
@@ -4683,6 +4740,7 @@ class openDisks(QBoxLayout):
                 file_system =  bd.Get('org.freedesktop.UDisks2.Block', 'IdType', dbus_interface='org.freedesktop.DBus.Properties')
                 #
                 read_only = bd.Get('org.freedesktop.UDisks2.Block', 'ReadOnly', dbus_interface='org.freedesktop.DBus.Properties')
+                #
                 if 'org.freedesktop.UDisks2.Filesystem' in kmobject.keys():
                     mountpoint = bd.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints', dbus_interface='org.freedesktop.DBus.Properties')
                     if mountpoint:
@@ -4701,6 +4759,7 @@ class openDisks(QBoxLayout):
                 is_optical = bd2.Get('org.freedesktop.UDisks2.Drive', 'Optical', dbus_interface='org.freedesktop.DBus.Properties')
                 #
                 media_available = bd2.Get('org.freedesktop.UDisks2.Drive', 'MediaAvailable', dbus_interface='org.freedesktop.DBus.Properties')
+                # 
                 if media_available == 0:
                     if not is_optical:
                         continue
@@ -4784,6 +4843,7 @@ class openDisks(QBoxLayout):
                 self.button2.setEnabled(True)
             #
             self.button3.setEnabled(False)
+
     
     # self.ftbutton1
     def on_mount_device(self, ddevice, operation):
@@ -4855,6 +4915,7 @@ class openDisks(QBoxLayout):
         except:
             return -1
     
+
     # get the device icon
     def getDevice(self, media_type, drive_type, connection_bus):
         if connection_bus == "usb" and drive_type == 0:
@@ -4905,7 +4966,7 @@ class openDisks(QBoxLayout):
         if index.data(Qt.UserRole+5) != "N":
             mpt = " - "+index.data(Qt.UserRole+5)
         self.label9.setText(mmedia+" - "+index.data(Qt.UserRole)+mpt)
-        
+        #
         ssize = self.convert_size(index.data(Qt.UserRole+2))
         ddevice = index.data(Qt.UserRole)
         ddev = ddevice.split("/")[-1]
@@ -4919,7 +4980,7 @@ class openDisks(QBoxLayout):
                 self.label10.setText(ssize)
         else:
             self.label10.setText(ssize)
-        
+        #
         self.button1.setEnabled(True)
         self.button2.setEnabled(True)
         self.button3.setEnabled(True)
@@ -4930,7 +4991,6 @@ class openDisks(QBoxLayout):
             if can_eject == 1:
                 self.button2.setEnabled(True)
                 self.button3.setEnabled(False)
-                
                 can_poweroff = index.data(Qt.UserRole+8)
                 if can_poweroff == 0:
                     self.button3.setEnabled(False)
@@ -4944,6 +5004,7 @@ class openDisks(QBoxLayout):
             self.button3.setEnabled(False)
             if mount_point == "/" or mount_point[0:5] == "/boot" or mount_point[0:6] == "/home/":
                 self.button1.setEnabled(False)
+
     
     # self.flist
     def on_get_mounted(self, ddev):
@@ -4994,6 +5055,7 @@ class openDisks(QBoxLayout):
             sfsize = str(round(fsize2/1099511627776, 3))+" GiB"
         
         return sfsize  
+
 
 class MediaItemDelegate(QItemDelegate):
 
@@ -5680,8 +5742,8 @@ class cTView(QBoxLayout):
         if inew_name != -1:
             try:
                 shutil.move(ipath, inew_name)
-                # update the comments and emblems files
-                fupdateCommEmbl(ipath, os.path.join(idirname, inew_name))
+                # # update the comments and emblems files
+                # (ipath, os.path.join(idirname, inew_name))
             except Exception as E:
                 MyDialog("Error", str(E), self.window)
 
