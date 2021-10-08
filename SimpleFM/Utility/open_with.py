@@ -18,7 +18,6 @@ class listMenu(QWidget):
     def __init__(self, infile=None):
         super().__init__()
         self.infile = infile
-        
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Menu")
         self.setWindowModality(Qt.ApplicationModal)
@@ -152,6 +151,7 @@ class listMenu(QWidget):
         dialog = QMessageBox()
         dialog.setWindowTitle("Info")
         dialog.setModal(True)
+        dialog.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         dialog.setText(msg)
         dialog.exec()
 

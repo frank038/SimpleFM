@@ -2,7 +2,7 @@
 
 from PyQt5.QtCore import (QMargins,QEvent,QObject,Qt)
 from PyQt5.QtWidgets import (QDialog, QListWidgetItem, QListWidget, QTreeWidget, QTreeWidgetItem, qApp,QBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QTabWidget,QWidget,QListView)
-from PyQt5.QtGui import (QPixmap,QFont)
+from PyQt5.QtGui import (QIcon,QPixmap,QFont)
 
 import sys
 import os
@@ -41,6 +41,7 @@ class MainWin(QDialog):
         self.mimetype = mimetype
         self.resize(int(WINW), int(WINH))
         self.setWindowTitle("Manage the mimetype")
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         # top container
         self.obox = QBoxLayout(QBoxLayout.LeftToRight)
         self.obox.setContentsMargins(QMargins(2,2,2,2))
@@ -512,6 +513,7 @@ class listMenu(QDialog):
         #
         self.setWindowTitle("Menu")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.resize(600, 600)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -656,6 +658,7 @@ The 'Help' button will show this help.
         #
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.resize(600, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)

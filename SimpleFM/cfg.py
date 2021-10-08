@@ -6,7 +6,7 @@ ALTERNATE_VIEW = 1
 # Open with... dialog: 0 simple - 1 list installed applications
 OPEN_WITH = 1
 # mouse middle button behaviour: 0 open the folder in the same view - 1 open the folder in another tab
-IN_SAME = 0
+IN_SAME = 1
 # thumbnailers: 0 no - 1 yes
 USE_THUMB = 0
 # use custom icons for folders: 0 no - 1 yes
@@ -37,7 +37,7 @@ BUTTON_SIZE=0
 USE_DELETE = 1
 # load the trash module: 0 no - 1 yes
 USE_TRASH = 1
-# load the media module: 0 no - 1 yes
+# load the media: 0 no - 1 yes
 USE_MEDIA = 1
 # Paste and Merge, how to backup the new files: 0 add progressive number
 # in the form _(#) - 1 add date and time (without checking eventually

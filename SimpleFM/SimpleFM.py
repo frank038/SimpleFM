@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.4.1
+# version 0.4.8
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -65,7 +65,7 @@ class firstMessage(QWidget):
         title = args[0]
         message = args[1]
         self.setWindowTitle(title)
-
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         box = QBoxLayout(QBoxLayout.TopToBottom)
         box.setContentsMargins(5,5,5,5)
         self.setLayout(box)
@@ -417,6 +417,7 @@ class PlistMenu(QDialog):
         #
         self.setWindowTitle("Open with...")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.resize(600, 600)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -466,6 +467,7 @@ class PlistMenu(QDialog):
         #
         import Utility.pop_menu as pop_menu
         THE_MENU = pop_menu.getMenu().retList()
+        #for el in self.menu:
         for el in THE_MENU:
             cat = el[1]
             if cat == "Development":
@@ -568,7 +570,6 @@ class propertyDialog(QDialog):
         labelName = QLabel("Name")
         font = labelName.font()
         font.setItalic(True)
-        labelName.setFont(font)
         self.grid1.addWidget(labelName, 0, 0, 1, 1, Qt.AlignRight)
         self.labelName2 = QLabel()
         self.labelName2.setWordWrap(True)
@@ -576,14 +577,12 @@ class propertyDialog(QDialog):
         self.grid1.addWidget(self.labelName2, 0, 1, 1, 4, Qt.AlignLeft)
         #
         labelMime = QLabel("MimeType")
-        labelMime.setFont(font)
         self.grid1.addWidget(labelMime, 2, 0, 1, 1, Qt.AlignRight)
         self.labelMime2 = QLabel()
         self.grid1.addWidget(self.labelMime2, 2, 1, 1, 4, Qt.AlignLeft)
         #
         if os.path.isfile(itemPath) or os.path.isdir(itemPath):
             labelOpenWith = QLabel("Open With...")
-            labelOpenWith.setFont(font)
             self.grid1.addWidget(labelOpenWith, 3, 0, 1, 1, Qt.AlignRight)
             self.btnOpenWith = QPushButton("----------")
             self.btnOpenWith.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -592,7 +591,6 @@ class propertyDialog(QDialog):
             self.btnOpenWithPopulate()
         #
         labelSize = QLabel("Size")
-        labelSize.setFont(font)
         self.grid1.addWidget(labelSize, 4, 0, 1, 1, Qt.AlignRight)
         #self.labelSize2 = clabel2()
         self.labelSize2 = QLabel()
@@ -600,7 +598,6 @@ class propertyDialog(QDialog):
         #
         if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
             label_real_link = QLabel("To Path")
-            label_real_link.setFont(font)
             self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
             label_real_link2 = QLabel()
             label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -610,7 +607,6 @@ class propertyDialog(QDialog):
         elif os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
                 label_real_link = QLabel("To Path")
-                label_real_link.setFont(font)
                 self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
                 label_real_link2 = QLabel()
                 label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
@@ -619,19 +615,16 @@ class propertyDialog(QDialog):
                 self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
             #
             labelCreation = QLabel("Creation")
-            labelCreation.setFont(font)
             self.grid1.addWidget(labelCreation, 6, 0, 1, 1, Qt.AlignRight)
             self.labelCreation2 = QLabel()
             self.grid1.addWidget(self.labelCreation2, 6, 1, 1, 4, Qt.AlignLeft)
             #
             labelModification = QLabel("Modification")
-            labelModification.setFont(font)
             self.grid1.addWidget(labelModification, 7, 0, 1, 1, Qt.AlignRight)
             self.labelModification2 = QLabel()
             self.grid1.addWidget(self.labelModification2, 7, 1, 1, 4, Qt.AlignLeft)
             #
             labelAccess = QLabel("Access")
-            labelAccess.setFont(font)
             self.grid1.addWidget(labelAccess, 8, 0, 1, 1, Qt.AlignRight)
             self.labelAccess2 = QLabel()
             self.grid1.addWidget(self.labelAccess2, 8, 1, 1, 4, Qt.AlignLeft)
@@ -648,13 +641,11 @@ class propertyDialog(QDialog):
             gBox1.setLayout(self.grid2)
             #
             labelgb11 = QLabel("Owner")
-            labelgb11.setFont(font)
             self.grid2.addWidget(labelgb11, 0, 0, 1, 1, Qt.AlignRight)
             self.labelgb12 = QLabel()
             self.grid2.addWidget(self.labelgb12, 0, 1, 1, 5, Qt.AlignLeft)
             #
             labelgb21 = QLabel("Group")
-            labelgb21.setFont(font)
             self.grid2.addWidget(labelgb21, 1, 0, 1, 1, Qt.AlignRight)
             self.labelgb22 = QLabel()
             self.grid2.addWidget(self.labelgb22, 1, 1, 1, 5, Qt.AlignLeft)
@@ -668,21 +659,18 @@ class propertyDialog(QDialog):
                 gBox2.setEnabled(False)
             #
             labelOwnerPerm = QLabel("Owner")
-            labelOwnerPerm.setFont(font)
             self.grid3.addWidget(labelOwnerPerm, 0, 0, 1, 1, Qt.AlignRight)
             self.combo1 = QComboBox()
             self.combo1.addItems(["Read and Write", "Read", "Forbidden"])
             self.grid3.addWidget(self.combo1, 0, 1, 1, 5, Qt.AlignLeft)
             #
             labelGroupPerm = QLabel("Group")
-            labelGroupPerm.setFont(font)
             self.grid3.addWidget(labelGroupPerm, 1, 0, 1, 1, Qt.AlignRight)
             self.combo2 = QComboBox()
             self.combo2.addItems(["Read and Write", "Read", "Forbidden"])
             self.grid3.addWidget(self.combo2, 1, 1, 1, 5, Qt.AlignLeft)
             #
             labelOtherPerm = QLabel("Others")
-            labelOtherPerm.setFont(font)
             self.grid3.addWidget(labelOtherPerm, 2, 0, 1, 1, Qt.AlignRight)
             self.combo3 = QComboBox()
             self.combo3.addItems(["Read and Write", "Read", "Forbidden"])
@@ -723,6 +711,7 @@ class propertyDialog(QDialog):
         self.exec_()
     
     #
+    # def comboOpenWithPopulate(self):
     def btnOpenWithPopulate(self):
         self.defApp = getDefaultApp(self.itemPath).defaultApplication()
         listPrograms_temp = getAppsByMime(self.itemPath).appByMime()
@@ -1396,6 +1385,8 @@ class copyThread2(QThread):
         # the default action for all files in the dir to be copied...
         # ... if an item with the same name already exist at destination
         dirfile_dcode = 0
+        # # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
+        # dcode = 0
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -1526,11 +1517,12 @@ class copyThread2(QThread):
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
-                            # tdest = os.path.join(self.pathdest, os.path.basename(dfile))
+                            #
                             todest = tdest
                             # 
                             # sdir has full path
                             for sdir,ddir,ffile in os.walk(dfile):
+                                # temp_dir = sdir[len(dfile)+1:]
                                 temp_dir = os.path.relpath(sdir, dfile)
                                 # 1 - create the subdirs if the case
                                 for dr in ddir:
@@ -2143,6 +2135,7 @@ class IconProvider(QFileIconProvider):
     # set the icon theme
     QIcon.setThemeName(ICON_THEME)
     
+    
     def evaluate_pixbuf(self, ifull_path, imime):
         hmd5 = "Null"
         hmd5 = create_thumbnail(ifull_path, imime)
@@ -2155,6 +2148,7 @@ class IconProvider(QFileIconProvider):
                 file_icon = QIcon(QPixmap(XDG_CACHE_LARGE+"/"+str(hmd5)+".png"))
         #
         return file_icon
+    
     
     def icon(self, fileInfo):
         if isinstance(fileInfo, QFileInfo):
@@ -2173,7 +2167,6 @@ class IconProvider(QFileIconProvider):
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if file_icon:
                                     return file_icon
-                        # except Exception as E:
                         except:
                             pass
                 #
@@ -2213,7 +2206,6 @@ class IconProvider(QFileIconProvider):
                         return QIcon.fromTheme("folder-publicshare", QIcon.fromTheme("folder"))
                     else:
                         return QIcon.fromTheme("folder")
-                        # return QIcon.fromTheme(fileInfo.fileName(), QIcon.fromTheme("folder"))
         return super(IconProvider, self).icon(fileInfo)
 
 ########################### MAIN WINDOW ############################
@@ -2260,6 +2252,24 @@ class MainWin(QWidget):
         qbtn.clicked.connect(self.close)
         self.obox1.addWidget(qbtn, 1, Qt.AlignRight)
         #
+        ## a new device has been added or removed
+        if USE_MEDIA:
+            # box for media devices
+            self.disk_box = QBoxLayout(QBoxLayout.RightToLeft)
+            self.disk_box.setContentsMargins(QMargins(0,0,0,0))
+            self.obox1.addLayout(self.disk_box)#, Qt.AlignRight)
+            #
+            DBusQtMainLoop(set_as_default=True)
+            self.bus = dbus.SystemBus()
+            #
+            self.proxy = self.bus.get_object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
+            #
+            self.iface = dbus.Interface(self.proxy, "org.freedesktop.DBus.ObjectManager")
+            #
+            self.iface.connect_to_signal('InterfacesAdded', self.device_added_callback)
+            self.iface.connect_to_signal('InterfacesRemoved', self.device_removed_callback)
+            #
+            self.on_pop_devices()
         ### the bookmark menu
         self.bookmarkBtn = QPushButton(QIcon("icons/bookmarks.svg"), "")
         if BUTTON_SIZE:
@@ -2303,23 +2313,6 @@ class MainWin(QWidget):
             else:
                 tbtn.clicked.connect(lambda:openTrash(self, "HOME"))
         #
-        ## a new device has been added or removed
-        if USE_MEDIA:
-            DBusQtMainLoop(set_as_default=True)
-            bus = dbus.SystemBus()
-            #
-            proxy = bus.get_object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
-            #
-            iface = dbus.Interface(proxy, "org.freedesktop.DBus.ObjectManager")
-            #
-            # media button
-            dbtn = QPushButton(QIcon.fromTheme("drive-harddisk"), None)
-            if BUTTON_SIZE:
-                dbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-            dbtn.setToolTip("Media")
-            self.obox1.addWidget(dbtn, 0, Qt.AlignLeft)
-            dbtn.clicked.connect(lambda:openDisks(self, iface, bus))
-        
         # root button
         rootbtn = QPushButton(QIcon.fromTheme("computer"), None)
         if BUTTON_SIZE:
@@ -2368,6 +2361,288 @@ class MainWin(QWidget):
                     # path = os.path.dirname(path)
                 # #
                 # self.openDir(path, 1)
+    
+    # add a new connected device
+    def device_added_callback(self, *args):
+        for k in args[1]:
+            kk = "org.freedesktop.UDisks2.Filesystem"
+            if k == kk:
+                mobject = self.iface.GetManagedObjects()
+                self.on_add_partition(args[0], mobject[args[0]])
+    
+    
+    # remove the disconnected device
+    def device_removed_callback(self, *args):
+        for k in args[1]:
+            kk = "org.freedesktop.UDisks2.Filesystem"
+            if k == kk:
+                for i in range(self.disk_box.count()):
+                    item = self.disk_box.itemAt(i).widget()
+                    if isinstance(item, QPushButton):
+                        if item.menu().block_device == args[0]:
+                            item.deleteLater()
+                            break
+                
+    
+    # get all the partitions
+    def on_pop_devices(self):
+        mobject = self.iface.GetManagedObjects()
+        for k in mobject:
+            #
+            if "loop" in k:
+                continue
+            if 'ram' in k:
+                continue
+            #
+            self.on_add_partition(k, mobject[k])
+    
+    # the device is added to the view
+    def on_add_partition(self, k, kmobject):
+        for ky in kmobject:
+            kk = "org.freedesktop.UDisks2.Block"
+            if  str(ky) == kk:
+                bd = self.bus.get_object('org.freedesktop.UDisks2', k)
+                #
+                drive = bd.Get('org.freedesktop.UDisks2.Block', 'Drive', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                if str(drive) == "/":
+                    continue
+                # 
+                if "org.freedesktop.UDisks2.PartitionTable" in kmobject.keys():
+                    continue
+                #
+                pdevice = bd.Get('org.freedesktop.UDisks2.Block', 'Device', dbus_interface='org.freedesktop.DBus.Properties')
+                pdevice_dec = bytearray(pdevice).replace(b'\x00', b'').decode('utf-8')
+                #
+                # do not show the disk in which the OS has been installed, and the boot partition
+                ret_mountpoint = self.get_device_mountpoint(str(pdevice_dec))
+                if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot":
+                    continue
+                #
+                label = bd.Get('org.freedesktop.UDisks2.Block', 'IdLabel', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                size = bd.Get('org.freedesktop.UDisks2.Block', 'Size', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                ### 
+                bd2 = self.bus.get_object('org.freedesktop.UDisks2', drive)
+                #
+                media_type = bd2.Get('org.freedesktop.UDisks2.Drive', 'Media', dbus_interface='org.freedesktop.DBus.Properties')
+                if not media_type:
+                    media_type = "N"
+                #
+                is_optical = bd2.Get('org.freedesktop.UDisks2.Drive', 'Optical', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                media_available = bd2.Get('org.freedesktop.UDisks2.Drive', 'MediaAvailable', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                if media_available == 0:
+                    if not is_optical:
+                        continue
+                #
+                conn_bus = bd2.Get('org.freedesktop.UDisks2.Drive', 'ConnectionBus', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                vendor = bd2.Get('org.freedesktop.UDisks2.Drive', 'Vendor', dbus_interface='org.freedesktop.DBus.Properties')
+                model = bd2.Get('org.freedesktop.UDisks2.Drive', 'Model', dbus_interface='org.freedesktop.DBus.Properties')
+                #
+                if str(label):
+                    disk_name = str(label)
+                else:
+                    if str(vendor) and str(model):
+                        disk_name = str(vendor)+" - "+str(model)+" - "+str(self.convert_size(size))
+                    elif str(vendor):
+                        disk_name = str(vendor)+" - "+str(self.convert_size(size))
+                    elif str(model):
+                        disk_name = str(model)+" - "+str(self.convert_size(size))
+                    else:
+                        disk_name = str(pdevice_dec)+" - "+str(self.convert_size(size))
+                #
+                if is_optical:
+                    drive_type = 5 # 0 disk - 5 optical
+                else:
+                    drive_type = 0 # 0 disk - 5 optical
+                #
+                dicon = self.getDevice(media_type, drive_type, conn_bus)
+                #
+                media_btn = QPushButton(QIcon(dicon),"")
+                self.disk_box.addWidget(media_btn)
+                media_btn.setToolTip(disk_name)
+                media_btn_menu = QMenu()
+                media_btn_menu.block_device = k
+                media_btn_menu.device = str(pdevice_dec)
+                media_btn_menu.drive = drive
+                media_btn.setMenu(media_btn_menu)
+                media_btn_menu.aboutToShow.connect(self.btn_menu_open)
+
+    
+    # before the menu open
+    def btn_menu_open(self):
+        self.on_populate_mediaBtn()
+
+    
+    # populate the media button
+    def on_populate_mediaBtn(self):
+        self.sender().clear()
+        # get the device mount point
+        ddevice = self.sender().device
+        ddrive = self.sender().drive
+        block_device = self.sender().block_device
+        ret_mountpoint = self.get_device_mountpoint(ddevice)
+        # if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot":
+            # baction = self.sender().addAction("Property", lambda:self.media_property(block_device, ret_mountpoint, ddrive, ddevice))
+            # return
+        if ret_mountpoint == "N":
+            baction = self.sender().addAction("Mount", lambda:self.mount_device(ret_mountpoint, ddevice))
+        else:
+            baction = self.sender().addAction("Open", lambda:self.open_device(ret_mountpoint))
+            baction = self.sender().addAction("Unmount", lambda:self.mount_device(ret_mountpoint, ddevice))
+        # the device is ejectable
+        ret_eject = self.get_device_can_eject(ddrive)
+        if ret_eject:
+            baction = self.sender().addAction("Eject", lambda:self.eject_media(ddrive, ret_mountpoint, ddevice))
+        # power off
+        # pass
+        # property
+        baction = self.sender().addAction("Property", lambda:self.media_property(block_device, ret_mountpoint, ddrive, ddevice))
+    
+    # open the folder
+    def open_device(self, mountpoint):
+        self.openDir(mountpoint, 1)
+    
+    # mount - unmount the device
+    def mount_device(self, mountpoint, ddevice):
+        if mountpoint == "N":
+            ret = self.on_mount_device(ddevice, 'Mount')
+            if ret == -1:
+                MyDialog("Info", "The device cannot be mounted.", self.window)
+                return 
+        else:
+            ret = self.on_mount_device(ddevice, 'Unmount')
+            if ret == -1:
+                MyDialog("Info", "Device busy.", self.window)
+                return
+    
+    # self.mount_device
+    def on_mount_device(self, ddevice, operation):
+        ddev = ddevice.split("/")[-1]
+        progname = 'org.freedesktop.UDisks2'
+        objpath = os.path.join('/org/freedesktop/UDisks2/block_devices', ddev)
+        intfname = 'org.freedesktop.UDisks2.Filesystem'
+        try:
+            obj  = self.bus.get_object(progname, objpath)
+            intf = dbus.Interface(obj, intfname)
+            ret = intf.get_dbus_method(operation, dbus_interface='org.freedesktop.UDisks2.Filesystem')([])
+        except:
+            return -1
+    
+    # eject the media
+    def eject_media(self, ddrive, mountpoint, ddevice):
+        # first unmount if the case
+        ret_mountpoint = self.get_device_mountpoint(ddevice)
+        if ret_mountpoint != "N":
+            ret = self.mount_device(ret_mountpoint, ddevice)
+            if ret == -1:
+                MyDialog("Info", "Device busy.", self.window)
+                return
+        # 
+        ret = self.on_eject(ddrive)
+        if ret == -1:
+            MyDialog("Error", "The device cannot be ejected.", self.window)
+            return
+    
+    # self.ftbutton2
+    def on_eject(self, ddrive):
+        progname = 'org.freedesktop.UDisks2'
+        objpath  = ddrive
+        intfname = 'org.freedesktop.UDisks2.Drive'
+        try:
+            bus = dbus.SystemBus()
+            methname = 'Eject'
+            obj  = bus.get_object(progname, objpath)
+            intf = dbus.Interface(obj, intfname)
+            ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
+            return ret
+        except:
+            return -1
+    
+    # get the device mount point
+    def get_device_mountpoint(self, ddevice):
+        ddev = ddevice.split("/")[-1]
+        mount_point = self.on_get_mounted(ddev)
+        return mount_point
+    
+    # the device is ejectable
+    def get_device_can_eject(self, drive):
+        bd2 = self.bus.get_object('org.freedesktop.UDisks2', drive)
+        can_eject = bd2.Get('org.freedesktop.UDisks2.Drive', 'Ejectable', dbus_interface='org.freedesktop.DBus.Properties')
+        return can_eject
+    
+    # get the mount point or return N
+    def on_get_mounted(self, ddev):
+        path = os.path.join('/org/freedesktop/UDisks2/block_devices/', ddev)
+        bd = self.bus.get_object('org.freedesktop.UDisks2', path)
+        try:
+            mountpoint = bd.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints', dbus_interface='org.freedesktop.DBus.Properties')
+            if mountpoint:
+                mountpoint = bytearray(mountpoint[0]).replace(b'\x00', b'').decode('utf-8')
+                return mountpoint
+            else:
+                return "N"
+        except:
+            return "N"
+    
+    # the device properties
+    def media_property(self, k, mountpoint, ddrive, ddevice):
+        bd = self.bus.get_object('org.freedesktop.UDisks2', k)
+        label = bd.Get('org.freedesktop.UDisks2.Block', 'IdLabel', dbus_interface='org.freedesktop.DBus.Properties')
+        bd2 = self.bus.get_object('org.freedesktop.UDisks2', ddrive)
+        vendor = bd2.Get('org.freedesktop.UDisks2.Drive', 'Vendor', dbus_interface='org.freedesktop.DBus.Properties')
+        model = bd2.Get('org.freedesktop.UDisks2.Drive', 'Model', dbus_interface='org.freedesktop.DBus.Properties')
+        size = bd.Get('org.freedesktop.UDisks2.Block', 'Size', dbus_interface='org.freedesktop.DBus.Properties')
+        file_system =  bd.Get('org.freedesktop.UDisks2.Block', 'IdType', dbus_interface='org.freedesktop.DBus.Properties')
+        read_only = bd.Get('org.freedesktop.UDisks2.Block', 'ReadOnly', dbus_interface='org.freedesktop.DBus.Properties')
+        ### 
+        media_type = bd2.Get('org.freedesktop.UDisks2.Drive', 'Media', dbus_interface='org.freedesktop.DBus.Properties')
+        if not media_type:
+            media_type = "N"
+        #
+        data = [label, vendor, model, str(self.convert_size(size)), file_system, bool(read_only), mountpoint, ddevice, media_type]
+        devicePropertyDialog(data, self)
+        
+        
+    # get the device icon
+    def getDevice(self, media_type, drive_type, connection_bus):
+        if connection_bus == "usb" and drive_type == 0:
+            return "icons/media-removable.svg"
+        #
+        if "flash" in media_type:
+            return "icons/media-flash.svg"
+        elif "optical" in media_type:
+            return "icons/media-optical.svg"
+        #
+        if drive_type == 0:
+            return "icons/drive-harddisk.svg"
+        #
+        elif drive_type == 5:
+            return "icons/media-optical.svg"
+        #
+        return "icons/drive-harddisk.svg"
+    
+    
+    
+    def convert_size(self, fsize2):
+        if fsize2 == 0 or fsize2 == 1:
+            sfsize = str(fsize2)+" byte"
+        elif fsize2//1024 == 0:
+            sfsize = str(fsize2)+" bytes"
+        elif fsize2//1048576 == 0:
+            sfsize = str(round(fsize2/1024, 3))+" KB"
+        elif fsize2//1073741824 == 0:
+            sfsize = str(round(fsize2/1048576, 3))+" MB"
+        elif fsize2//1099511627776 == 0:
+            sfsize = str(round(fsize2/1073741824, 3))+" GiB"
+        else:
+            sfsize = str(round(fsize2/1099511627776, 3))+" GiB"
+        return sfsize  
+
     
     #
     def closeEvent(self, event):
@@ -2534,6 +2809,72 @@ class MainWin(QWidget):
         self.mtab.setCurrentIndex(self.mtab.count()-1)
 
 
+# simple info dialog
+class devicePropertyDialog(QDialog):
+    def __init__(self, data, parent):
+        super(devicePropertyDialog, self).__init__(parent)
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        self.setWindowTitle("Device Properties")
+        self.setWindowModality(Qt.ApplicationModal)
+        self.resize(300,300)
+        # data = [label, vendor, model, size, file_system, read_only, mountpoint, ddevice, media_type]
+        self.data = data
+        #
+        grid = QGridLayout()
+        grid.setContentsMargins(5,5,5,5)
+        #
+        label0 = QLabel("<i>Label</i>")
+        grid.addWidget(label0, 1, 0, Qt.AlignLeft)
+        label0_data = QLabel(data[0])
+        grid.addWidget(label0_data, 1, 1, Qt.AlignLeft)
+        #
+        label1 = QLabel("<i>Vendor</i>")
+        grid.addWidget(label1, 2, 0, Qt.AlignLeft)
+        label1_data = QLabel(data[1])
+        grid.addWidget(label1_data, 2, 1, Qt.AlignLeft)
+        #
+        label2 = QLabel("<i>Model</i>")
+        grid.addWidget(label2, 3, 0, Qt.AlignLeft)
+        label2_data = QLabel(data[2])
+        grid.addWidget(label2_data, 3, 1, Qt.AlignLeft)
+        #
+        label3 = QLabel("<i>Size</i>")
+        grid.addWidget(label3, 4, 0, Qt.AlignLeft)
+        label3_data = QLabel(data[3])
+        grid.addWidget(label3_data, 4, 1, Qt.AlignLeft)
+        #
+        label4 = QLabel("<i>File System</i>")
+        grid.addWidget(label4, 5, 0, Qt.AlignLeft)
+        label4_data = QLabel(data[4])
+        grid.addWidget(label4_data, 5, 1, Qt.AlignLeft)
+        #
+        label5 = QLabel("<i>Read Only</i>")
+        grid.addWidget(label5, 6, 0, Qt.AlignLeft)
+        label5_data = QLabel(str(data[5]))
+        grid.addWidget(label5_data, 6, 1, Qt.AlignLeft)
+        #
+        label6 = QLabel("<i>Mount Point</i>")
+        grid.addWidget(label6, 7, 0, Qt.AlignLeft)
+        label6_data = QLabel(data[6])
+        grid.addWidget(label6_data, 7, 1, Qt.AlignLeft)
+        #
+        label7 = QLabel("<i>Device</i>")
+        grid.addWidget(label7, 8, 0, Qt.AlignLeft)
+        label7_data = QLabel(data[7])
+        grid.addWidget(label7_data, 8, 1, Qt.AlignLeft)
+        #
+        label8 = QLabel("<i>Media Type</i>")
+        grid.addWidget(label8, 9, 0, Qt.AlignLeft)
+        label8_data = QLabel(data[8])
+        grid.addWidget(label8_data, 9, 1, Qt.AlignLeft)
+        #
+        button_ok = QPushButton("     Ok     ")
+        grid.addWidget(button_ok, 12, 0, 1, 2, Qt.AlignHCenter)
+        self.setLayout(grid)
+        button_ok.clicked.connect(self.close)
+        self.exec_()
+
+
 # for LView
 class QFileSystemModel2(QFileSystemModel):
     
@@ -2555,12 +2896,9 @@ class QFileSystemModel2(QFileSystemModel):
 class FlowLayout(QLayout):
     def __init__(self, parent=None, margin=0, spacing=1):
         super(FlowLayout, self).__init__(parent)
-
         if parent is not None:
             self.setContentsMargins(margin, margin, margin, margin)
-
         self.setSpacing(spacing)
-
         self.itemList = []
 
     def __del__(self):
@@ -2577,13 +2915,11 @@ class FlowLayout(QLayout):
     def itemAt(self, index):
         if index >= 0 and index < len(self.itemList):
             return self.itemList[index]
-
         return None
 
     def takeAt(self, index):
         if index >= 0 and index < len(self.itemList):
             return self.itemList.pop(index)
-
         return None
 
     def expandingDirections(self):
@@ -2605,12 +2941,9 @@ class FlowLayout(QLayout):
 
     def minimumSize(self):
         size = QSize()
-
         for item in self.itemList:
             size = size.expandedTo(item.minimumSize())
-
         margin, _, _, _ = self.getContentsMargins()
-
         size += QSize(2 * margin, 2 * margin)
         return size
 
@@ -2618,7 +2951,7 @@ class FlowLayout(QLayout):
         x = rect.x()
         y = rect.y()
         lineHeight = 0
-
+        #
         for item in self.itemList:
             wid = item.widget()
             if wid == None:
@@ -2631,13 +2964,12 @@ class FlowLayout(QLayout):
                 y = y + lineHeight + spaceY
                 nextX = x + item.sizeHint().width() + spaceX
                 lineHeight = 0
-
+            #
             if not testOnly:
                 item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
-
+            #
             x = nextX
             lineHeight = max(lineHeight, item.sizeHint().height())
-
         return y + lineHeight - rect.y()
         
 
@@ -2765,9 +3097,6 @@ class LView(QBoxLayout):
                     # add the path into the history
                     self.hicombo.insertItem(0, self.lvDir)
                     self.hicombo.setCurrentIndex(0)
-                    #
-                    #self.on_box_pb(self.lvDir)
-                    #
                     return 1
                 except Exception as E:
                     MyDialog("ERROR", str(E), self.window)
@@ -2793,6 +3122,7 @@ class LView(QBoxLayout):
             MyDialog("Info", new_dir+"\n\n   Directory missed.\n", self.window)
             return
         new_path = os.path.join(*ppath[0:new_dir_idx+1])
+        #
         if os.path.exists(new_path):
             self.on_btn_change_dir(new_path)
         else:
@@ -2803,6 +3133,7 @@ class LView(QBoxLayout):
     def on_btn_change_dir(self, new_path):
         if new_path != self.lvDir:
             ret = self.on_change_dir(new_path)
+            # if not change directory the previous button will be rechecked
             if ret == 0:
                 # 
                 self.box_pb_btn.setChecked(True)
@@ -2851,6 +3182,7 @@ class LView(QBoxLayout):
     def eventFilter(self, obj, event):
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.MiddleButton:
+                # button box
                 if obj.objectName() == 'pbwidget':
                     new_path_temp = []
                     for i in range(self.box_pb.indexOf(obj)+1):
@@ -2863,7 +3195,7 @@ class LView(QBoxLayout):
                         MyDialog("Error", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
                     #
                     return QObject.event(obj, event)
-                # 
+                # folders
                 itemSelected = self.listview.indexAt(event.pos()).data()
                 if itemSelected:
                     itemSelectedPath = os.path.join(self.lvDir, itemSelected)
@@ -2983,7 +3315,6 @@ class LView(QBoxLayout):
     #
     def singleClick(self, index):
         time.sleep(0.1)
-        #
         self.label2.setText("")
         self.label3.setText("")
         self.label6.setText("") #size
@@ -3560,7 +3891,6 @@ class LView(QBoxLayout):
     def fbcustomAction(self, el):
         el.ModuleCustom(self)
     
-    
     # from contextual menu
     def wrename2(self, ditem, dest_path):
         ret = ditem
@@ -3720,23 +4050,17 @@ class thumbThread(threading.Thread):
     
     def run(self):
         list_dir = os.listdir(self.fpath)
-        
         while not self.event.is_set():
             for iitem in list_dir:
                 item_fpath = os.path.join(self.fpath, iitem)
-
                 if os.path.exists(item_fpath):
-                    
                     if stat.S_ISREG(os.stat(item_fpath).st_mode):
-                        
                         hmd5 = "Null"
-                        
                         imime = QMimeDatabase().mimeTypeForFile(iitem, QMimeDatabase.MatchDefault)
                         hmd5 = create_thumbnail(item_fpath, imime.name())
-
                         self.event.wait(0.05)
-            
             self.event.set()
+        #self.listview.viewport().update()
 
 
 # find the applications installed for a given mimetype
@@ -3774,6 +4098,8 @@ class getAppsByMime():
                         # consinstency - do not crash if the desktop file is malformed
                         try:
                             if mimetype in DesktopEntry(desktopPath).getMimeTypes():
+                                # 
+                                # mimet:: image/png /usr/share/applications/gimp.desktop
                                 mimeProg2 = DesktopEntry(desktopPath).getExec()
                                 # replace $HOME with home path
                                 if mimeProg2[0:5].upper() == "$HOME":
@@ -3801,7 +4127,8 @@ class getAppsByMime():
                                         except:
                                             listPrograms.append("None")
                         except Exception as E:
-                            pass
+                            MyDialog("Error", str(E), self.window)
+        # 
         # from the lAdded list
         for idesktop in lAdded:
             # skip the removed associations
@@ -3839,6 +4166,7 @@ class getAppsByMime():
                          listPrograms.append("None")
         #
         return listPrograms
+
 
     # function that return mimetypes added and removed (and default applications) in the mimeappss.list
     def addMime(self, mimetype):
@@ -3919,6 +4247,7 @@ class getAppsByMime():
 
 
 # find the default application for a given mimetype if any
+# using xdg-mime
 class getDefaultApp():
     
     def __init__(self, path):
@@ -3937,7 +4266,7 @@ class getDefaultApp():
             try:
                 associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
             except Exception as E:
-                # MyDialog("Error", str(E), self.window)
+                #MyDialog("Error", str(E), self.window)
                 return "None"
             
             if associatedDesktopProgram:
@@ -4020,6 +4349,7 @@ class PastenMerge():
                 # execute the copying copy/cut operations
                 # self.action: 1 copy - 2 cut - 4 make link
                 copyItems2(self.action, self.dlist, -4, self.lvDir, self.window)
+
 
 ###################### THE HOME TRASHCAN #######################
 
@@ -4195,6 +4525,7 @@ class openTrash(QBoxLayout):
                     i += 1
         else:
             pass
+    
     
     def iconItem(self, item):
         path = item
@@ -4451,7 +4782,6 @@ class openTrash(QBoxLayout):
                     total_size += os.path.getsize(flp)
         return total_size 
 
-
 class RestoreTrashedItems():
     def __init__(self):
         self.fakename = ""
@@ -4561,540 +4891,6 @@ class TrashModule():
 
 ###################### END TRASHCAN #####################
 
-#################### DISKS ####################
-
-class openDisks(QBoxLayout):
-    def __init__(self, window, iface, bus, parent=None):
-        super(openDisks, self).__init__(QBoxLayout.TopToBottom, parent)
-        self.window = window
-        self.iface = iface
-        self.bus = bus
-        self.selected_index = None
-        self.setContentsMargins(QMargins(0,0,0,0))
-        
-        global TCOMPUTER
-        if TCOMPUTER == 0:
-            page = QWidget()
-            #
-            self.ilist = QListView()
-            self.ilist.setViewMode(QListView.IconMode)
-            self.ilist.setSpacing(50)
-            self.ilist.setMovement(QListView.Static)
-            self.ilist.setFlow(QListView.LeftToRight)
-            # the background color
-            if USE_BACKGROUND_COLOUR == 1:
-                palette = self.ilist.palette()
-                palette.setColor(QPalette.Base, QColor(ORED,OGREEN,OBLUE))
-                self.ilist.setPalette(palette)
-            
-            self.ilist.clicked.connect(self.flist)
-            self.ilist.doubleClicked.connect(self.flist2)
-            
-            self.addWidget(self.ilist, 0)
-            
-            self.ilist.setEditTriggers(QAbstractItemView.NoEditTriggers)
-            self.ilist.setResizeMode(QListView.Adjust)
-            self.model = QStandardItemModel(self.ilist)
-            self.ilist.setModel(self.model)
-            self.ilist.setItemDelegate(MediaItemDelegate())
-            #
-            obox = QBoxLayout(QBoxLayout.LeftToRight)
-            obox.setContentsMargins(QMargins(5,5,5,5))
-            self.insertLayout(1, obox)
-            layout = QFormLayout()
-            layout.setLabelAlignment(Qt.AlignRight)
-            #
-            self.label1 = QLabel("<i>Name</i>")
-            self.label2 = QLabel("<i>Type</i>")
-            self.label4 = QLabel("<i>Media</i>")
-            self.label5 = QLabel("<i>Size</i>")
-            self.label6 = clabel()
-            self.label7 = QLabel("")
-            self.label9 = QLabel("")
-            self.label10 = QLabel("")
-            layout.addRow(self.label1, self.label6)
-            layout.addRow(self.label2, self.label7)
-            layout.addRow(self.label4, self.label9)
-            layout.addRow(self.label5, self.label10)
-            #
-            obox.insertLayout(1, layout, 1)
-            box2 = QBoxLayout(QBoxLayout.TopToBottom)
-            box2.setContentsMargins(QMargins(0,0,0,0))
-            obox.insertLayout(1, box2, 0)
-            #
-            self.button1 = QPushButton("M")
-            self.button1.setToolTip("Mount/Unmount the device")
-            self.button1.clicked.connect(lambda:self.ftbutton1(self.selected_index))
-            box2.addWidget(self.button1)
-            #
-            self.button2 = QPushButton("E")
-            self.button2.setToolTip("Eject the device")
-            self.button2.clicked.connect(lambda:self.ftbutton2(self.selected_index))
-            box2.addWidget(self.button2)
-            #
-            self.button3 = QPushButton("P")
-            self.button3.setToolTip("Turn off the device")
-            self.button3.clicked.connect(lambda:self.ftbutton3(self.selected_index))
-            box2.addWidget(self.button3)
-            #
-            self.button1.setEnabled(False)
-            self.button2.setEnabled(False)
-            self.button3.setEnabled(False)
-            #
-            self.window.mtab.addTab(page, "Media")
-            #
-            page.setLayout(self)
-            self.window.mtab.setCurrentIndex(self.window.mtab.count()-1)
-            #
-            TCOMPUTER = 1
-            # get all the partition 
-            self.on_open_partitions()
-            #
-            self.iface.connect_to_signal('InterfacesAdded', self.device_added_callback)
-            self.iface.connect_to_signal('InterfacesRemoved', self.device_removed_callback)
-        
-    #
-    def device_added_callback(self, *args):
-        for k in args[1]:
-            kk = "org.freedesktop.UDisks2.Filesystem"
-            if k == kk:
-                mobject = self.iface.GetManagedObjects()
-                self.on_add_partition(args[0], mobject[args[0]])
-    
-    #
-    def device_removed_callback(self, *args):
-        for k in args[1]:
-            kk = "org.freedesktop.UDisks2.Filesystem"
-            if k == kk:
-                num_model_row = self.model.rowCount()
-                #
-                for inx in range(num_model_row):
-                    iindex = self.model.index(inx, 0)
-                    ddrive = iindex.data(Qt.UserRole+13)
-                    if ddrive == args[0]:
-                        self.model.removeRow(iindex.row())
-                        self.button1.setText("M")
-                        self.button1.setEnabled(False)
-                        self.button2.setEnabled(False)
-                        self.button3.setEnabled(False)
-                        self.label6.setText("", self.window.width())
-                        self.label7.setText("")
-                        self.label9.setText("")
-                        self.label10.setText("")
-                        self.ilist.clearSelection()
-            
-    #
-    def on_open_partitions(self):
-        proxy = self.bus.get_object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
-        iface = dbus.Interface(proxy, "org.freedesktop.DBus.ObjectManager")
-        mobject = iface.GetManagedObjects()
-        for k in mobject:
-            #
-            if "loop" in k:
-                continue
-            if 'ram' in k:
-                continue
-            self.on_add_partition(k, mobject[k])
-    
-    # the device is added to the view
-    def on_add_partition(self, k, kmobject):
-        for ky in kmobject:
-            kk = "org.freedesktop.UDisks2.Block"
-            if  str(ky) == kk:
-                bd = self.bus.get_object('org.freedesktop.UDisks2', k)
-                #
-                drive = bd.Get('org.freedesktop.UDisks2.Block', 'Drive', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                if str(drive) == "/":
-                    continue
-                # 
-                if "org.freedesktop.UDisks2.PartitionTable" in kmobject.keys():
-                    continue
-                #
-                pdevice = bd.Get('org.freedesktop.UDisks2.Block', 'Device', dbus_interface='org.freedesktop.DBus.Properties')
-                pdevice_dec = bytearray(pdevice).replace(b'\x00', b'').decode('utf-8')
-                #
-                label = bd.Get('org.freedesktop.UDisks2.Block', 'IdLabel', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                size = bd.Get('org.freedesktop.UDisks2.Block', 'Size', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                file_system =  bd.Get('org.freedesktop.UDisks2.Block', 'IdType', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                read_only = bd.Get('org.freedesktop.UDisks2.Block', 'ReadOnly', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                if 'org.freedesktop.UDisks2.Filesystem' in kmobject.keys():
-                    mountpoint = bd.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints', dbus_interface='org.freedesktop.DBus.Properties')
-                    if mountpoint:
-                        mountpoint_dec = bytearray(mountpoint[0]).replace(b'\x00', b'').decode('utf-8')
-                    else:
-                        mountpoint_dec = "N"
-                else:
-                    mountpoint_dec = "N"
-                ### 
-                bd2 = self.bus.get_object('org.freedesktop.UDisks2', drive)
-                #
-                media_type = bd2.Get('org.freedesktop.UDisks2.Drive', 'Media', dbus_interface='org.freedesktop.DBus.Properties')
-                if not media_type:
-                    media_type = "N"
-                #
-                is_optical = bd2.Get('org.freedesktop.UDisks2.Drive', 'Optical', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                media_available = bd2.Get('org.freedesktop.UDisks2.Drive', 'MediaAvailable', dbus_interface='org.freedesktop.DBus.Properties')
-                # 
-                if media_available == 0:
-                    if not is_optical:
-                        continue
-                #
-                is_removable = bd2.Get('org.freedesktop.UDisks2.Drive', 'Removable', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                can_eject = bd2.Get('org.freedesktop.UDisks2.Drive', 'Ejectable', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                can_poweroff = bd2.Get('org.freedesktop.UDisks2.Drive', 'CanPowerOff', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                conn_bus = bd2.Get('org.freedesktop.UDisks2.Drive', 'ConnectionBus', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                vendor = bd2.Get('org.freedesktop.UDisks2.Drive', 'Vendor', dbus_interface='org.freedesktop.DBus.Properties')
-                model = bd2.Get('org.freedesktop.UDisks2.Drive', 'Model', dbus_interface='org.freedesktop.DBus.Properties')
-                #
-                if str(label):
-                    disk_name = str(label)
-                else:
-                    if str(vendor) and str(model):
-                        disk_name = str(vendor)+" - "+str(model)
-                    elif str(vendor):
-                        disk_name = str(vendor)+" - "+str(self.convert_size(size))
-                    elif str(model):
-                        disk_name = str(model)#+" - "+str(self.convert_size(size))
-                    else:
-                        disk_name = str(pdevice_dec)#+" - "+str(self.convert_size(size))
-                #
-                item = QStandardItem(15,1)
-                item.setData(disk_name, Qt.DisplayRole)
-                item.setData(pdevice_dec, Qt.UserRole)
-                if is_optical:
-                    drive_type = 5 # 0 disk - 5 optical
-                else:
-                    drive_type = 0 # 0 disk - 5 optical
-                item.setData(drive_type, Qt.UserRole+1)
-                item.setData(size, Qt.UserRole+2)
-                item.setData(file_system, Qt.UserRole+3)
-                item.setData(read_only, Qt.UserRole+4)
-                item.setData(mountpoint_dec, Qt.UserRole+5)
-                item.setData(media_type, Qt.UserRole+6)
-                item.setData(can_eject, Qt.UserRole+7)
-                item.setData(can_poweroff, Qt.UserRole+8)
-                item.setData(conn_bus, Qt.UserRole+9)
-                item.setData(vendor, Qt.UserRole+10)
-                item.setData(model, Qt.UserRole+11)
-                item.setData(drive, Qt.UserRole+12)
-                item.setData(k, Qt.UserRole+13)
-                #
-                dicon = self.getDevice(media_type, drive_type, conn_bus)
-                item.setIcon(QIcon(dicon))
-                #
-                self.model.appendRow(item)
-
-    # mount - unmount
-    def ftbutton1(self, index):
-        if index == None:
-            return
-        ddevice = index.data(Qt.UserRole)
-        ddev = ddevice.split("/")[-1]
-        mount_point = self.on_get_mounted(ddev)
-        if mount_point == "N":
-            ret = self.on_mount_device(index.data(Qt.UserRole), 'Mount')
-            if mount_point == -1:
-                MyDialog("Info", "The device cannot be mounted.", self.window)
-                return 
-            #
-            self.button1.setText("Unmount")
-             
-            self.button2.setEnabled(False)
-            self.button3.setEnabled(False)
-        else:
-            ret = self.on_mount_device(index.data(Qt.UserRole), 'Unmount')
-            if ret == -1:
-                MyDialog("Info", "Device busy.", self.window)
-                return
-            #
-            self.button1.setText("Mount")
-            #
-            can_eject = index.data(Qt.UserRole+7)
-            if can_eject == 1:
-                self.button2.setEnabled(True)
-            #
-            self.button3.setEnabled(False)
-
-    
-    # self.ftbutton1
-    def on_mount_device(self, ddevice, operation):
-        ddev = ddevice.split("/")[-1]
-        progname = 'org.freedesktop.UDisks2'
-        objpath = os.path.join('/org/freedesktop/UDisks2/block_devices', ddev)
-        intfname = 'org.freedesktop.UDisks2.Filesystem'
-        try:
-            bus = dbus.SystemBus()
-            obj  = bus.get_object(progname, objpath)
-            intf = dbus.Interface(obj, intfname)
-            ret = intf.get_dbus_method(operation, dbus_interface='org.freedesktop.UDisks2.Filesystem')([])
-        except:
-            return -1
-    
-    
-    # eject button
-    def ftbutton2(self, index):
-        if index == None:
-            return
-        mdrive = index.data(Qt.UserRole+12)
-        ret = self.on_eject(mdrive)
-        if ret == -1:
-            MyDialog("Error", "The device cannot be ejected.", self.window)
-            return
-        self.button1.setEnabled(False)
-        self.button2.setEnabled(False)
-        can_poweroff = index.data(Qt.UserRole+8)
-        if can_poweroff:
-            self.button3.setEnabled(True)
-    
-    # self.ftbutton2
-    def on_eject(self, mdrive):
-        progname = 'org.freedesktop.UDisks2'
-        objpath  = mdrive
-        intfname = 'org.freedesktop.UDisks2.Drive'
-        try:
-            bus = dbus.SystemBus()
-            methname = 'Eject'
-            obj  = bus.get_object(progname, objpath)
-            intf = dbus.Interface(obj, intfname)
-            ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
-            return ret
-        except:
-            return -1
-        
-    # power-off
-    def ftbutton3(self, index):
-        if index == None:
-            return
-        mdrive = index.data(Qt.UserRole+12)
-        ret = self.on_poweroff(mdrive)
-        if ret == -1:
-            MyDialog("Error", "The device cannot be turned off.", self.window)
-        self.button3.setEnabled(False)
-    
-    # self.ftbutton3
-    def on_poweroff(self, mdrive):
-        progname = 'org.freedesktop.UDisks2'
-        objpath  = mdrive
-        intfname = 'org.freedesktop.UDisks2.Drive'
-        try:
-            bus = dbus.SystemBus()
-            methname = 'PowerOff'
-            obj  = bus.get_object(progname, objpath)
-            intf = dbus.Interface(obj, intfname)
-            ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
-            return ret
-        except:
-            return -1
-    
-
-    # get the device icon
-    def getDevice(self, media_type, drive_type, connection_bus):
-        if connection_bus == "usb" and drive_type == 0:
-            return "icons/media-removable.svg"
-        #
-        if "flash" in media_type:
-            return "icons/media-flash.svg"
-        elif "optical" in media_type:
-            return "icons/media-optical.svg"
-        #
-        if drive_type == 0:
-            return "icons/drive-harddisk.svg"
-        #
-        elif drive_type == 5:
-            return "icons/media-optical.svg"
-        #
-        return "icons/drive-harddisk.svg"
-
-    
-    def nameMedia(self, media_type, drive_type, ddevice):
-        if "loop" in ddevice:
-            return "Loop device"
-        #
-        if "optical" in media_type:
-            return "DVD/CD Rom"
-        #
-        if drive_type == 0:
-            return "Disk"
-        elif drive_type == 5:
-            return "DVD/CD Rom"
-        #
-        return "Unknown Disk"
-    
-    # an item is selected
-    def flist(self, index):
-        # needed for operations
-        self.selected_index = index
-        #
-        self.label6.setText(index.data(Qt.DisplayRole), self.window.width())
-        #
-        iro = index.data(Qt.UserRole+4)
-        if iro == 0:
-            self.label7.setText(index.data(Qt.UserRole+3))
-        elif iro == 1:
-            self.label7.setText(index.data(Qt.UserRole+3)+" - "+"Read Only")
-        mmedia = self.nameMedia(index.data(Qt.UserRole+6), index.data(Qt.UserRole+1), index.data(Qt.UserRole))
-        mpt = ""
-        if index.data(Qt.UserRole+5) != "N":
-            mpt = " - "+index.data(Qt.UserRole+5)
-        self.label9.setText(mmedia+" - "+index.data(Qt.UserRole)+mpt)
-        #
-        ssize = self.convert_size(index.data(Qt.UserRole+2))
-        ddevice = index.data(Qt.UserRole)
-        ddev = ddevice.split("/")[-1]
-        mount_point = self.on_get_mounted(ddev)
-        if mount_point != "N":
-            if iro == 0:
-                storageInfo = QStorageInfo(mount_point)
-                sizeFree = storageInfo.bytesFree()
-                self.label10.setText("{} - Free {}".format(ssize, self.convert_size(sizeFree)))
-            else:
-                self.label10.setText(ssize)
-        else:
-            self.label10.setText(ssize)
-        #
-        self.button1.setEnabled(True)
-        self.button2.setEnabled(True)
-        self.button3.setEnabled(True)
-        #
-        if mount_point == "N":
-            self.button1.setText("Mount")
-            can_eject = index.data(Qt.UserRole+7)
-            if can_eject == 1:
-                self.button2.setEnabled(True)
-                self.button3.setEnabled(False)
-                can_poweroff = index.data(Qt.UserRole+8)
-                if can_poweroff == 0:
-                    self.button3.setEnabled(False)
-            else:
-                self.button2.setEnabled(False)
-                self.button3.setEnabled(False)
-            
-        elif mount_point:
-            self.button1.setText("Unmount")
-            self.button2.setEnabled(False)
-            self.button3.setEnabled(False)
-            if mount_point == "/" or mount_point[0:5] == "/boot" or mount_point[0:6] == "/home/":
-                self.button1.setEnabled(False)
-
-    
-    # self.flist
-    def on_get_mounted(self, ddev):
-        path = os.path.join('/org/freedesktop/UDisks2/block_devices/', ddev)
-        bus = dbus.SystemBus()
-        bd = bus.get_object('org.freedesktop.UDisks2', path)
-        try:
-            mountpoint = bd.Get('org.freedesktop.UDisks2.Filesystem', 'MountPoints', dbus_interface='org.freedesktop.DBus.Properties')
-            if mountpoint:
-                mountpoint = bytearray(mountpoint[0]).replace(b'\x00', b'').decode('utf-8')
-                return mountpoint
-            else:
-                return "N"
-        except:
-            return "N"
-    
-    # double click on item
-    def flist2(self, index):
-        ddevice = index.data(Qt.UserRole)
-        ddev = ddevice.split("/")[-1]
-        mount_point = self.on_get_mounted(ddev)
-        read_only = index.data(Qt.UserRole+4)
-        if mount_point != "N":
-            if mount_point == "/" or mount_point[0:6] == "/boot/" or mount_point[0:6] == "/home/":
-                return
-            else:
-                if read_only == 0:
-                    self.window.openDir(mount_point, 3)
-                else:
-                    self.window.openDir(mount_point, 4)
-        else:
-            MyDialog("Info", "This device is not mounted.", self.window)
-
-    
-    def convert_size(self, fsize2):
-        
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        elif fsize2//1099511627776 == 0:
-            sfsize = str(round(fsize2/1073741824, 3))+" GiB"
-        else:
-            sfsize = str(round(fsize2/1099511627776, 3))+" GiB"
-        
-        return sfsize  
-
-
-class MediaItemDelegate(QItemDelegate):
-
-    def __init__(self, parent=None):
-        super(MediaItemDelegate, self).__init__(parent)
-    
-    def paint(self, painter, option, index):
-        
-        ppath = index.data()
-        iicon = index.data(QFileSystemModel.FileIconRole)
-        
-        st1 = index.data()
-        st = QStaticText(st1)
-        
-        painter.save()
-        if option.state & QStyle.State_Selected:
-            
-            if ITEM_WIDTH > st.size().width():
-                xpad = int((ITEM_WIDTH - ICON_SIZE) / 2)
-            else:
-                xpad = int((st.size().width() - ICON_SIZE) / 2)
-            
-            painter.setBrush(option.palette.color(QPalette.Highlight))
-            painter.setPen(option.palette.color(QPalette.Highlight))
-            painter.drawRoundedRect(QRect(option.rect.x()+xpad,option.rect.y(),ICON_SIZE,ICON_SIZE), 3.0, 3.0, Qt.AbsoluteSize)
-        painter.restore()
-        
-        pixmap = iicon.pixmap(ICON_SIZE)
-        
-        if ITEM_WIDTH > st.size().width():
-            xpad = int((ITEM_WIDTH - ICON_SIZE) / 2)
-        else:
-            xpad = int((st.size().width() - ICON_SIZE) / 2)
-        
-        painter.drawPixmap(option.rect.x() + xpad,option.rect.y(), -1,-1, pixmap,0,0,-1,-1)
-        
-        txpad = 0
-        if ITEM_WIDTH > st.size().width():
-            txpad = int((ITEM_WIDTH - st.size().width()) / 2)
-        
-        painter.drawStaticText(option.rect.x() + txpad, option.rect.y()+ICON_SIZE, st)
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        
-    def sizeHint(self, option, index):
-        dicon = ICON_SIZE
-        st1 = index.data()
-        st = QStaticText(st1)
-        dtext = st.size()
-        if ITEM_WIDTH > dtext.width():
-            X = ITEM_WIDTH
-        else:
-            X = dtext.width()
-        Y = ICON_SIZE + dtext.height()
-        return QSize(int(X),int(Y))
-
-
-################### END DISKS ##################
-
 #################### TREEVIEW
 # for treeview
 class itemDelegateT(QItemDelegate):
@@ -5107,12 +4903,12 @@ class itemDelegateT(QItemDelegate):
     def paint(self, painter, option, index):
         column = index.column()
         painter.save()
-        
+        #
         if option.state & QStyle.State_Selected:
             painter.setBrush(option.palette.color(QPalette.Highlight))
             painter.setPen(option.palette.color(QPalette.Highlight))
             painter.drawRect(QRect(option.rect.x(),option.rect.y(),ITEM_WIDTH_ALT+self.max,ITEM_HEIGHT_ALT))
-                        
+        #
         painter.restore()
         #
         if column == 0:
@@ -5146,7 +4942,6 @@ class itemDelegateT(QItemDelegate):
                 painter.drawStaticText(option.rect.x()+ITEM_WIDTH_ALT, option.rect.y()+hh, st)
                 #
                 painter.restore()
-                
                 # permissions icon
                 if not os.path.isdir(ppath):
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
@@ -5156,16 +4951,13 @@ class itemDelegateT(QItemDelegate):
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ExeOwner:
                         ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
                         painter.drawPixmap(option.rect.x(), option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT,-1,-1, ppixmap,0,0,-1,-1)
-                
                 # link icon
                 if os.path.islink(ppath):
                     lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
                     painter.drawPixmap(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT, option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT,-1,-1, lpixmap,0,0,-1,-1)
-        
         else:
             QItemDelegate.paint(self, painter, option, index)
 
-        
     def sizeHint(self, option, index):
         # file name
         qstring = index.data(QFileSystemModel.FileNameRole)
@@ -5322,9 +5114,8 @@ class cTView(QBoxLayout):
                         return
                 elif ret == -1:
                     return
-
+            #
             defApp = getDefaultApp(path).defaultApplication()
-            
             if defApp != "None":
                 try:
                     subprocess.Popen([defApp, path])
@@ -5344,7 +5135,6 @@ class cTView(QBoxLayout):
     def lselectionChanged(self):
         self.selection_temp = self.tview.selectionModel().selectedIndexes()
         self.selection = []
-        
         for el in self.selection_temp:
             if el.column() == 0:
                 self.selection.append(el)
@@ -5357,12 +5147,11 @@ class cTView(QBoxLayout):
         pointedItem = self.tview.indexAt(position)
         vr = self.tview.visualRect(pointedItem)
         pointedItem2 = self.tview.indexAt(QPoint(vr.x(),vr.y()))
-
         # the items
         if vr:
             itemName = self.tmodel.data(pointedItem2, Qt.DisplayRole)
             menu = QMenu("Menu", self.tview)
-            
+            #
             if self.selection != None:
                 if len(self.selection) == 1:
                     if os.path.isfile(os.path.join(self.lvDir, itemName)):
@@ -5396,7 +5185,7 @@ class cTView(QBoxLayout):
                         newtabAction.triggered.connect(lambda:self.fnewtabAction(os.path.join(self.lvDir, itemName), self.flag))
                         menu.addAction(newtabAction)
                         menu.addSeparator()
-            
+            #
             menu.addSeparator()
             if self.flag == 1 or self.flag == 3:
                 newFolderAction = QAction("New Folder", self)
@@ -5405,7 +5194,7 @@ class cTView(QBoxLayout):
                 newFileAction = QAction("New File", self)
                 newFileAction.triggered.connect(self.fnewFileAction)
                 menu.addAction(newFileAction)
-
+                #
                 if shutil.which("xdg-user-dir"):
                     templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
                     if not os.path.exists(templateDir):
@@ -5414,7 +5203,7 @@ class cTView(QBoxLayout):
                            templateDir = optTemplateDir
                         else:
                             templateDir = None
-
+                    #
                     if templateDir:
                         if os.path.exists(templateDir):
                             menu.addSeparator()
@@ -5430,24 +5219,24 @@ class cTView(QBoxLayout):
                                 paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionList[index+1]))
                                 subm_templatesAction.addAction(paction)
                                 ii += 2
-            
+            #
             menu.addSeparator()
             copyAction = QAction("Copy", self)
             copyAction.triggered.connect(lambda:self.fcopycutAction("copy"))
             menu.addAction(copyAction)
-
+            #
             if self.flag == 1 or self.flag == 3:
                 copyAction = QAction("Cut", self)
                 copyAction.triggered.connect(lambda:self.fcopycutAction("cut"))
                 menu.addAction(copyAction)
-
+            #
             if self.flag == 1 or self.flag == 3:
                 pasteNmergeAction = QAction("Paste", self)
                 pasteNmergeAction.triggered.connect(lambda d:PastenMerge(self.lvDir, -3, "", self.window))
                 menu.addAction(pasteNmergeAction)
-
+            #
             menu.addSeparator()
-
+            #
             if USE_TRASH:
                 # only items in the HOME dir or in mass storages
                 len_home = len(os.path.expanduser("~"))
@@ -5457,14 +5246,14 @@ class cTView(QBoxLayout):
                             trashAction = QAction("Trash", self)
                             trashAction.triggered.connect(self.ftrashAction)
                             menu.addAction(trashAction)
-            
+            #
             # delete function
             if USE_DELETE:
                 if self.flag == 1 or self.flag == 3:
                     deleteAction = QAction("Delete", self)
                     deleteAction.triggered.connect(self.fdeleteAction)
                     menu.addAction(deleteAction)
-            
+            #
             if self.flag == 1 or self.flag == 3:
                 if self.selection and len(self.selection) == 1:
                     menu.addSeparator()
@@ -5472,10 +5261,10 @@ class cTView(QBoxLayout):
                     ipath = self.tmodel.fileInfo(self.selection[0]).absoluteFilePath()
                     renameAction.triggered.connect(lambda:self.frenameAction(ipath))
                     menu.addAction(renameAction)
-            
+            #
             menu.addSeparator()
             subm_customAction = menu.addMenu("Custom Actions")
-
+            #
             if len(list_custom_modules) > 0:
                 listActions = []
                 for el in list_custom_modules:
@@ -5499,15 +5288,14 @@ class cTView(QBoxLayout):
                         listActions.append(icustomAction)
                         listActions.append(el)
                         listActions.append(5)
-
                 ii = 0
                 for paction in listActions[::3]:
                     paction.triggered.connect(lambda checked, index=ii:self.ficustomAction(listActions[index+1], listActions[index+2]))
                     subm_customAction.addAction(paction)
                     ii += 3
-
+            #
             menu.addSeparator()
-            #upButton
+            # upButton
             upAction = QAction("Go Up", self)
             upAction.triggered.connect(self.upButton)
             menu.addAction(upAction)
@@ -5515,7 +5303,7 @@ class cTView(QBoxLayout):
             hiddenAction = QAction("Hidden items", self)
             hiddenAction.triggered.connect(self.fhidbtn)
             menu.addAction(hiddenAction)
-            
+            #
             menu.addSeparator()
             if self.selection and len(self.selection) == 1:
                 ipath = self.tmodel.fileInfo(self.selection[0]).absoluteFilePath()
@@ -5595,7 +5383,7 @@ class cTView(QBoxLayout):
                     MyDialog("Error", str(E), self.window)
             else:
                 MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
-
+    
     #
     def fcopycutAction(self, action):
         if action == "copy":
@@ -5634,7 +5422,6 @@ class cTView(QBoxLayout):
             list_items = []
             for item in self.selection:
                 list_items.append(self.tmodel.fileInfo(item).absoluteFilePath())
-            
             # if more than 30 items no list
             if len(self.selection) < ITEMSDELETED:
                 dialogList = ""
@@ -5654,7 +5441,7 @@ class cTView(QBoxLayout):
             list_items = []
             for item in self.selection:
                 list_items.append(self.tmodel.fileInfo(item).absoluteFilePath())
-            
+            #
             # if more than 30 items no list
             if len(self.selection) < ITEMSDELETED:
                 dialogList = ""
@@ -5673,7 +5460,7 @@ class cTView(QBoxLayout):
         #
         # something happened with some items
         items_skipped = ""
-        
+        #
         for item in listItems:
             time.sleep(0.1)
             if os.path.islink(item):
@@ -5702,10 +5489,8 @@ class cTView(QBoxLayout):
     def wrename2(self, ditem, dest_path):
         ret = ditem
         ret = MyDialogRename2(ditem, dest_path, self.window).getValues()
-
         if ret == -1:
                 return ret
-
         elif not ret:
             return -1
         else:
@@ -5715,12 +5500,10 @@ class cTView(QBoxLayout):
         ibasename = os.path.basename(ipath)
         idirname = os.path.dirname(ipath)
         inew_name = self.wrename2(ibasename, idirname)
-
+        #
         if inew_name != -1:
             try:
                 shutil.move(ipath, inew_name)
-                # # update the comments and emblems files
-                # (ipath, os.path.join(idirname, inew_name))
             except Exception as E:
                 MyDialog("Error", str(E), self.window)
 
@@ -5771,7 +5554,6 @@ class cTView(QBoxLayout):
     def fpropertyAction(self, ipath):
         propertyDialog(ipath, self.window)
 
-    
     def convert_size(self, fsize2):
         if fsize2 == 0 or fsize2 == 1:
             sfsize = str(fsize2)+" byte"
@@ -5785,7 +5567,6 @@ class cTView(QBoxLayout):
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize    
 
-    
     def folder_size(self, path):
         total_size = 0
         for dirpath, dirnames, filenames in os.walk(path):
@@ -5830,7 +5611,6 @@ class cTView(QBoxLayout):
             self.tmodel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System)
             self.fmf = 0
 
-
 ############## END TREEVIEW
 
 ###################
@@ -5842,6 +5622,5 @@ if __name__ == '__main__':
     window.show()
     ret = app.exec_()
     sys.exit(ret)
-
 
 ####################
