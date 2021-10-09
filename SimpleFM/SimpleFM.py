@@ -1815,7 +1815,6 @@ class copyItems2():
         return sfsize    
     
     def threadslot(self, aa):
-        # from directories
         if aa[0] == "ReqNewDtype":
             # 1 skip - 2 overwrite - 4 automatic - 5 backup
             sNewDtype = pasteNmergeDialog(self.window, aa[1], aa[2], "folder").getValue()
@@ -3558,9 +3557,9 @@ class LView(QBoxLayout):
                 else:
                     # just a number
                     total_size += 512
-            self.label2.setText("<i>Selected Items</i>")
+            self.label2.setText("<i>Selected Items </i>")
             self.label6.setText(str(len(self.selection)))
-            self.label3.setText("<i>Size</i>")
+            self.label3.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Size </i>")
             self.label7.setText(str(self.convert_size(total_size)))
             self.label8.setText("")
     
