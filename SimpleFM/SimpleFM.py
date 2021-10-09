@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.0
+# version 0.5.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1896,15 +1896,15 @@ class MyQlist(QListView):
                 num_item = len(self.selectionModel().selectedIndexes())
                 poffsetW = X_EXTENDED_DRAG_ICON
                 poffsetH = Y_EXTENDED_DRAG_ICON
-                psizeW = ICON_SIZE + (num_item * poffsetW) - poffsetW
-                psizeH = ICON_SIZE + (num_item * poffsetH) - poffsetH
+                psizeW = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetW) - poffsetW
+                psizeH = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetH) - poffsetH
                 pixmap = QPixmap(psizeW, psizeH)
                 pixmap.fill(QColor(253,253,253,0.0))
                 incr_offsetW = poffsetW
                 incr_offsetH = poffsetH
                 #
                 model = self.model()
-                for i in reversed(range(num_item)):
+                for i in reversed(range(min(NUM_OVERLAY, num_item))):
                     index = self.selectionModel().selectedIndexes()[i]
                     filepath = index.data(Qt.UserRole+1)
                     if stat.S_ISREG(os.stat(filepath).st_mode) or stat.S_ISDIR(os.stat(filepath).st_mode) or stat.S_ISLNK(os.stat(filepath).st_mode):
@@ -1921,6 +1921,8 @@ class MyQlist(QListView):
                                 painter.drawPixmap(psizeW-ICON_SIZE-incr_offsetW, psizeH-ICON_SIZE-incr_offsetH+ioffset, pixmap1)
                                 incr_offsetW += poffsetW
                                 incr_offsetH += poffsetH
+                            else:
+                                break
                     else:
                         continue
                 painter.end()
