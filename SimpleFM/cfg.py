@@ -1,6 +1,14 @@
 ### main program
 # directory to open - full path or HOME
 FOLDER_TO_OPEN = "HOME"
+# multi items drag picture: 0 use simple icon - 1 enable extended icon
+USE_EXTENDED_DRAG_ICON=1
+# x offset of each icon if USE_EXTENDED_DRAG_ICON is enabled
+X_EXTENDED_DRAG_ICON=20
+# y offset of each icon if USE_EXTENDED_DRAG_ICON is enabled
+Y_EXTENDED_DRAG_ICON=5
+# limit the number of icon overlay if USE_EXTENDED_DRAG_ICON is enabled
+NUM_OVERLAY=40
 # show the alternative view button: 0 no - 1 yes
 ALTERNATE_VIEW = 1
 # Open with... dialog: 0 simple - 1 list installed applications

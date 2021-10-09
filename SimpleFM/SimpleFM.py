@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.4.9
+# version 0.5.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1517,6 +1517,7 @@ class copyThread2(QThread):
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
+                            #
                             todest = tdest
                             # 
                             # sdir has full path
@@ -1887,7 +1888,43 @@ class MyQlist(QListView):
         #
         drag = QDrag(self)
         if len(item_list) > 1:
-            pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+            if not USE_EXTENDED_DRAG_ICON:
+                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+            else:
+                painter = None
+                # number of selected items
+                num_item = len(self.selectionModel().selectedIndexes())
+                poffsetW = X_EXTENDED_DRAG_ICON
+                poffsetH = Y_EXTENDED_DRAG_ICON
+                psizeW = ICON_SIZE + (num_item * poffsetW) - poffsetW
+                psizeH = ICON_SIZE + (num_item * poffsetH) - poffsetH
+                pixmap = QPixmap(psizeW, psizeH)
+                pixmap.fill(QColor(253,253,253,0.0))
+                incr_offsetW = poffsetW
+                incr_offsetH = poffsetH
+                #
+                model = self.model()
+                for i in reversed(range(num_item)):
+                    index = self.selectionModel().selectedIndexes()[i]
+                    filepath = index.data(Qt.UserRole+1)
+                    if stat.S_ISREG(os.stat(filepath).st_mode) or stat.S_ISDIR(os.stat(filepath).st_mode) or stat.S_ISLNK(os.stat(filepath).st_mode):
+                        file_icon = model.fileIcon(index)
+                        pixmap1 = file_icon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
+                        if not painter:
+                            painter = QPainter(pixmap)
+                            ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
+                            painter.drawPixmap(psizeW-ICON_SIZE, psizeH-ICON_SIZE+ioffset, pixmap1)
+                        else:
+                            # limit the number of overlays
+                            if i < NUM_OVERLAY:
+                                ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
+                                painter.drawPixmap(psizeW-ICON_SIZE-incr_offsetW, psizeH-ICON_SIZE-incr_offsetH+ioffset, pixmap1)
+                                incr_offsetW += poffsetW
+                                incr_offsetH += poffsetH
+                    else:
+                        continue
+                painter.end()
         elif len(item_list) == 1:
             try:
                 model = self.model()
@@ -2199,6 +2236,8 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
+                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
+                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2379,6 +2418,7 @@ class MainWin(QWidget):
                     if isinstance(item, QPushButton):
                         if item.menu().block_device == args[0]:
                             item.deleteLater()
+                            # do not close the open tabs
                             break
                 
     
@@ -2517,6 +2557,19 @@ class MainWin(QWidget):
         if mountpoint:
             self.openDir(mountpoint, 1)
     
+    # close the open tabs
+    def close_open_tab(self, mountpoint):
+        num_tabs = self.mtab.count()
+        for i in reversed(range(num_tabs)):
+            if self.mtab.tabToolTip(i)[0:len(mountpoint)] == mountpoint:
+                self.mtab.widget(i).deleteLater()
+                self.mtab.removeTab(i)
+        #
+        num_tabs = self.mtab.count()
+        # open one tab if any
+        if num_tabs == 0:
+            self.openDir(os.path.expanduser('~'), 1)
+    
     # mount - unmount the device
     def mount_device(self, mountpoint, ddevice):
         if mountpoint == "N":
@@ -2531,10 +2584,7 @@ class MainWin(QWidget):
                 return
             # close the open tabs
             if ret == None:
-                for i in reversed(range(self.mtab.count())):
-                    if self.mtab.tabToolTip(i)[0:len(mountpoint)] == mountpoint:
-                        self.mtab.widget(i).deleteLater()
-                        self.mtab.removeTab(i)
+                self.close_open_tab(mountpoint)
         #
         return ret
                 
@@ -2567,6 +2617,8 @@ class MainWin(QWidget):
         if ret == -1:
             MyDialog("Error", "The device cannot be ejected.", self.window)
             return
+        # close the open tabs
+        self.close_open_tab(mountpoint)
     
     # self.eject_media
     def on_eject(self, ddrive):
@@ -2624,6 +2676,14 @@ class MainWin(QWidget):
         if not media_type:
             media_type = "N"
         #
+        if not label:
+            label = "(Not set)"
+        if mountpoint == "N":
+            mountpoint = "(Not mounted)"
+        if not vendor:
+            vendor = "(None)"
+        if not model:
+            model = "(None)"
         data = [label, vendor, model, str(self.convert_size(size)), file_system, bool(read_only), mountpoint, ddevice, media_type]
         devicePropertyDialog(data, self)
         
@@ -3181,6 +3241,7 @@ class LView(QBoxLayout):
             ret = self.on_change_dir(new_path)
             # if not change directory the previous button will be rechecked
             if ret == 0:
+                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -3209,6 +3270,7 @@ class LView(QBoxLayout):
             self.box_pb.addWidget(pb)
             pb.installEventFilter(self)
             pb.setObjectName('pbwidget')
+            #
             if p == (ppath_len -1):
                 pb.setChecked(True)
                 self.box_pb_btn = pb
@@ -3530,8 +3592,10 @@ class LView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    progActionList.append(iprog)
+                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    # progActionList.append(iprog)
+                                    progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    progActionList.insert(1, iprog)
                                 else:
                                     progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.append(iprog)
@@ -3672,13 +3736,13 @@ class LView(QBoxLayout):
                             subm_templatesAction= menu.addMenu("Templates")
                             listTemplate = os.listdir(templateDir)
                             #
-                            progActionList = []
+                            progActionListT = []
                             for ifile in listTemplate:
-                                progActionList.append(QAction(ifile))
-                                progActionList.append(ifile)
+                                progActionListT.append(QAction(ifile))
+                                progActionListT.append(ifile)
                             ii = 0
-                            for paction in progActionList[::2]:
-                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionList[index+1]))
+                            for paction in progActionListT[::2]:
+                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
                                 subm_templatesAction.addAction(paction)
                                 ii += 2
             #
@@ -4757,8 +4821,10 @@ class openTrash(QBoxLayout):
                 if listPrograms: #!= []:
                     for iprog in listPrograms[::2]:
                         if iprog == defApp:
-                            progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                            progActionList.append(iprog)
+                            # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                            # progActionList.append(iprog)
+                            progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                            progActionList.insert(1, iprog)
                         else:
                             progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                             progActionList.append(iprog)
@@ -5206,8 +5272,10 @@ class cTView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    progActionList.append(iprog)
+                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    # progActionList.append(iprog)
+                                    progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    progActionList.insert(1, iprog)
                                 else:
                                     progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.append(iprog)
@@ -5253,13 +5321,13 @@ class cTView(QBoxLayout):
                             subm_templatesAction= menu.addMenu("Templates")
                             listTemplate = os.listdir(templateDir)
 
-                            progActionList = []
+                            progActionListT = []
                             for ifile in listTemplate:
-                                progActionList.append(QAction(ifile))
-                                progActionList.append(ifile)
+                                progActionListT.append(QAction(ifile))
+                                progActionListT.append(ifile)
                             ii = 0
-                            for paction in progActionList[::2]:
-                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionList[index+1]))
+                            for paction in progActionListT[::2]:
+                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
                                 subm_templatesAction.addAction(paction)
                                 ii += 2
             #
@@ -5426,6 +5494,13 @@ class cTView(QBoxLayout):
                     MyDialog("Error", str(E), self.window)
             else:
                 MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
+    
+    # open the file
+    def fprogAction(self, iprog, path):
+        try:
+            subprocess.Popen([iprog, path])
+        except Exception as E:
+            MyDialog("Error", str(E), self.window)
     
     #
     def fcopycutAction(self, action):
