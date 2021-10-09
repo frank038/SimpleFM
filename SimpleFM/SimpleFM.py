@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.4.8
+# version 0.4.9
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1517,7 +1517,6 @@ class copyThread2(QThread):
                             except Exception as E:
                                 items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
-                            #
                             todest = tdest
                             # 
                             # sdir has full path
@@ -2240,55 +2239,24 @@ class MainWin(QWidget):
         # self.vbox.setContentsMargins(QMargins(0,0,0,0))
         self.setLayout(self.vbox)
         # tool box - 
-        self.obox1 = QBoxLayout(QBoxLayout.RightToLeft)
+        self.obox1 = QBoxLayout(QBoxLayout.LeftToRight)
         self.obox1.setContentsMargins(QMargins(0,0,0,0))
         self.vbox.addLayout(self.obox1)
         #### buttons
-        # close buttons
-        qbtn = QPushButton(QIcon.fromTheme("window-close"), "")
+        # home button
+        hbtn = QPushButton(QIcon.fromTheme("user-home"), None)
         if BUTTON_SIZE:
-            qbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-        qbtn.setToolTip("Exit")
-        qbtn.clicked.connect(self.close)
-        self.obox1.addWidget(qbtn, 1, Qt.AlignRight)
-        #
-        ## a new device has been added or removed
-        if USE_MEDIA:
-            # box for media devices
-            self.disk_box = QBoxLayout(QBoxLayout.RightToLeft)
-            self.disk_box.setContentsMargins(QMargins(0,0,0,0))
-            self.obox1.addLayout(self.disk_box)#, Qt.AlignRight)
-            #
-            DBusQtMainLoop(set_as_default=True)
-            self.bus = dbus.SystemBus()
-            #
-            self.proxy = self.bus.get_object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
-            #
-            self.iface = dbus.Interface(self.proxy, "org.freedesktop.DBus.ObjectManager")
-            #
-            self.iface.connect_to_signal('InterfacesAdded', self.device_added_callback)
-            self.iface.connect_to_signal('InterfacesRemoved', self.device_removed_callback)
-            #
-            self.on_pop_devices()
-        ### the bookmark menu
-        self.bookmarkBtn = QPushButton(QIcon("icons/bookmarks.svg"), "")
+            hbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+        hbtn.setToolTip("Home")
+        hbtn.clicked.connect(lambda:self.openDir(HOME, 1))
+        self.obox1.addWidget(hbtn, 0, Qt.AlignLeft)
+        # root button
+        rootbtn = QPushButton(QIcon.fromTheme("computer"), None)
         if BUTTON_SIZE:
-            self.bookmarkBtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-        self.obox1.addWidget(self.bookmarkBtn)
-        self.bookmarkBtnMenu = QMenu()
-        self.bookmarkBtnMenu.setToolTipsVisible(True)
-        self.bookmarkBtn.setMenu(self.bookmarkBtnMenu)
-        # populate
-        self.on_setBtnBookmarks()
-        #
-        # show treeview of the current folder
-        if ALTERNATE_VIEW:
-            altBtn = QPushButton(QIcon("icons/alternate.svg"), "")
-            if BUTTON_SIZE:
-                altBtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-            altBtn.setToolTip("Alternate view")
-            altBtn.clicked.connect(self.faltview)
-            self.obox1.addWidget(altBtn, 0, Qt.AlignLeft)
+            rootbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+        rootbtn.setToolTip("Computer")
+        rootbtn.clicked.connect(lambda:self.openDir("/", 1))
+        self.obox1.addWidget(rootbtn, 0, Qt.AlignLeft)
         #
         # trash button
         global USE_TRASH
@@ -2313,22 +2281,53 @@ class MainWin(QWidget):
             else:
                 tbtn.clicked.connect(lambda:openTrash(self, "HOME"))
         #
-        # root button
-        rootbtn = QPushButton(QIcon.fromTheme("computer"), None)
-        if BUTTON_SIZE:
-            rootbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-        rootbtn.setToolTip("Computer")
-        rootbtn.clicked.connect(lambda:self.openDir("/", 1))
+        # show treeview of the current folder
+        if ALTERNATE_VIEW:
+            altBtn = QPushButton(QIcon("icons/alternate.svg"), "")
+            if BUTTON_SIZE:
+                altBtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+            altBtn.setToolTip("Alternate view")
+            altBtn.clicked.connect(self.faltview)
+            self.obox1.addWidget(altBtn, 0, Qt.AlignLeft)
         #
-        self.obox1.addWidget(rootbtn, 0, Qt.AlignLeft)
-        
-        # home button
-        hbtn = QPushButton(QIcon.fromTheme("user-home"), None)
+        ### the bookmark menu
+        self.bookmarkBtn = QPushButton(QIcon("icons/bookmarks.svg"), "")
         if BUTTON_SIZE:
-            hbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-        hbtn.setToolTip("Home")
-        hbtn.clicked.connect(lambda:self.openDir(HOME, 1))
-        self.obox1.addWidget(hbtn, 0, Qt.AlignLeft)
+            self.bookmarkBtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+        self.obox1.addWidget(self.bookmarkBtn)
+        self.bookmarkBtnMenu = QMenu()
+        self.bookmarkBtnMenu.setToolTipsVisible(True)
+        self.bookmarkBtn.setMenu(self.bookmarkBtnMenu)
+        # populate
+        self.on_setBtnBookmarks()
+        #
+        ## a new device has been added or removed
+        if USE_MEDIA:
+            # box for media devices
+            self.disk_box = QBoxLayout(QBoxLayout.LeftToRight)
+            self.disk_box.setContentsMargins(QMargins(0,0,0,0))
+            self.obox1.addLayout(self.disk_box) #, Qt.AlignRight)
+            #
+            DBusQtMainLoop(set_as_default=True)
+            self.bus = dbus.SystemBus()
+            #
+            self.proxy = self.bus.get_object("org.freedesktop.UDisks2", "/org/freedesktop/UDisks2")
+            #
+            self.iface = dbus.Interface(self.proxy, "org.freedesktop.DBus.ObjectManager")
+            #
+            #
+            self.iface.connect_to_signal('InterfacesAdded', self.device_added_callback)
+            self.iface.connect_to_signal('InterfacesRemoved', self.device_removed_callback)
+            #
+            self.on_pop_devices()
+        # close buttons
+        qbtn = QPushButton(QIcon.fromTheme("window-close"), "")
+        if BUTTON_SIZE:
+            qbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+        qbtn.setToolTip("Exit")
+        qbtn.clicked.connect(self.close)
+        self.obox1.addWidget(qbtn, 1, Qt.AlignRight)
+        ####
         self.mtab = QTabWidget()
         self.mtab.setContentsMargins(QMargins(0,0,0,0))
         self.mtab.setMovable(True)
@@ -2337,8 +2336,7 @@ class MainWin(QWidget):
         self.mtab.tabCloseRequested.connect(self.closeTab)
         #
         self.vbox.addWidget(self.mtab)
-        #
-        #
+        ####
         parg = ""
         # if len(sys.argv) > 1:
             # for i in range(1, len(sys.argv) -1):
@@ -2397,6 +2395,7 @@ class MainWin(QWidget):
             self.on_add_partition(k, mobject[k])
     
     # the device is added to the view
+    # def on_add_partition(self, k, bus, kmobject):
     def on_add_partition(self, k, kmobject):
         for ky in kmobject:
             kk = "org.freedesktop.UDisks2.Block"
@@ -2416,7 +2415,7 @@ class MainWin(QWidget):
                 #
                 # do not show the disk in which the OS has been installed, and the boot partition
                 ret_mountpoint = self.get_device_mountpoint(str(pdevice_dec))
-                if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot":
+                if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot" or ret_mountpoint[0:5] == "/home":
                     continue
                 #
                 label = bd.Get('org.freedesktop.UDisks2.Block', 'IdLabel', dbus_interface='org.freedesktop.DBus.Properties')
@@ -2486,13 +2485,14 @@ class MainWin(QWidget):
         ddrive = self.sender().drive
         block_device = self.sender().block_device
         ret_mountpoint = self.get_device_mountpoint(ddevice)
-        # if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot":
+        # if ret_mountpoint == "/" or ret_mountpoint[0:5] == "/boot" or ret_mountpoint[0:5] == "/home":
             # baction = self.sender().addAction("Property", lambda:self.media_property(block_device, ret_mountpoint, ddrive, ddevice))
             # return
         if ret_mountpoint == "N":
+            baction = self.sender().addAction("Open", lambda:self.open_device(ret_mountpoint, ddevice))
             baction = self.sender().addAction("Mount", lambda:self.mount_device(ret_mountpoint, ddevice))
         else:
-            baction = self.sender().addAction("Open", lambda:self.open_device(ret_mountpoint))
+            baction = self.sender().addAction("Open", lambda:self.open_device(ret_mountpoint, ddevice))
             baction = self.sender().addAction("Unmount", lambda:self.mount_device(ret_mountpoint, ddevice))
         # the device is ejectable
         ret_eject = self.get_device_can_eject(ddrive)
@@ -2504,8 +2504,18 @@ class MainWin(QWidget):
         baction = self.sender().addAction("Property", lambda:self.media_property(block_device, ret_mountpoint, ddrive, ddevice))
     
     # open the folder
-    def open_device(self, mountpoint):
-        self.openDir(mountpoint, 1)
+    def open_device(self, mountpoint, ddevice):
+        # first mount the device
+        if mountpoint == "N":
+            ret = self.mount_device(mountpoint, ddevice)
+            if ret == -1:
+                MyDialog("Info", "The device cannot be mounted.", self.window)
+                return
+            else:
+                mountpoint = ret
+        #
+        if mountpoint:
+            self.openDir(mountpoint, 1)
     
     # mount - unmount the device
     def mount_device(self, mountpoint, ddevice):
@@ -2517,8 +2527,17 @@ class MainWin(QWidget):
         else:
             ret = self.on_mount_device(ddevice, 'Unmount')
             if ret == -1:
-                MyDialog("Info", "Device busy.", self.window)
+                MyDialog("Info", "The device cannot be unmounted.", self.window)
                 return
+            # close the open tabs
+            if ret == None:
+                for i in reversed(range(self.mtab.count())):
+                    if self.mtab.tabToolTip(i)[0:len(mountpoint)] == mountpoint:
+                        self.mtab.widget(i).deleteLater()
+                        self.mtab.removeTab(i)
+        #
+        return ret
+                
     
     # self.mount_device
     def on_mount_device(self, ddevice, operation):
@@ -2529,16 +2548,17 @@ class MainWin(QWidget):
         try:
             obj  = self.bus.get_object(progname, objpath)
             intf = dbus.Interface(obj, intfname)
+            # return the mount point or None if unmount
             ret = intf.get_dbus_method(operation, dbus_interface='org.freedesktop.UDisks2.Filesystem')([])
+            return ret
         except:
             return -1
     
     # eject the media
     def eject_media(self, ddrive, mountpoint, ddevice):
         # first unmount if the case
-        ret_mountpoint = self.get_device_mountpoint(ddevice)
-        if ret_mountpoint != "N":
-            ret = self.mount_device(ret_mountpoint, ddevice)
+        if mountpoint != "N":
+            ret = self.mount_device(mountpoint, ddevice)
             if ret == -1:
                 MyDialog("Info", "Device busy.", self.window)
                 return
@@ -2548,7 +2568,7 @@ class MainWin(QWidget):
             MyDialog("Error", "The device cannot be ejected.", self.window)
             return
     
-    # self.ftbutton2
+    # self.eject_media
     def on_eject(self, ddrive):
         progname = 'org.freedesktop.UDisks2'
         objpath  = ddrive
@@ -2627,6 +2647,32 @@ class MainWin(QWidget):
         return "icons/drive-harddisk.svg"
     
     
+    # # NON IMPLEMENTATO
+    # # power-off
+    # def ftbutton3(self, index):
+        # if index == None:
+            # return
+        # mdrive = index.data(Qt.UserRole+12)
+        # #ret = media_module.devPoweroff(mdrive).fdevpoweroff()
+        # ret = self.on_poweroff(mdrive)
+        # if ret == -1:
+            # MyDialog("Error", "The device cannot be turned off.", self.window)
+        # self.button3.setEnabled(False)
+    
+    # # self.ftbutton3
+    # def on_poweroff(self, mdrive):
+        # progname = 'org.freedesktop.UDisks2'
+        # objpath  = mdrive
+        # intfname = 'org.freedesktop.UDisks2.Drive'
+        # try:
+            # bus = dbus.SystemBus()
+            # methname = 'PowerOff'
+            # obj  = bus.get_object(progname, objpath)
+            # intf = dbus.Interface(obj, intfname)
+            # ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
+            # return ret
+        # except:
+            # return -1
     
     def convert_size(self, fsize2):
         if fsize2 == 0 or fsize2 == 1:
@@ -3135,7 +3181,6 @@ class LView(QBoxLayout):
             ret = self.on_change_dir(new_path)
             # if not change directory the previous button will be rechecked
             if ret == 0:
-                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -4099,7 +4144,6 @@ class getAppsByMime():
                         try:
                             if mimetype in DesktopEntry(desktopPath).getMimeTypes():
                                 # 
-                                # mimet:: image/png /usr/share/applications/gimp.desktop
                                 mimeProg2 = DesktopEntry(desktopPath).getExec()
                                 # replace $HOME with home path
                                 if mimeProg2[0:5].upper() == "$HOME":
@@ -4525,7 +4569,6 @@ class openTrash(QBoxLayout):
                     i += 1
         else:
             pass
-    
     
     def iconItem(self, item):
         path = item
