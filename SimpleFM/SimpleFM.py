@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.2
+# version 0.5.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -3310,7 +3310,7 @@ class LView(QBoxLayout):
                 else:
                     if self.static_items == True:
                         self.static_items = False
-                        self.listview.setSelectionMode(QAbstractItemView.SingleSelection)
+                        self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
             # 
             elif event.button() == Qt.MiddleButton:
                 # button box
