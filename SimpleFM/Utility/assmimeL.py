@@ -24,7 +24,8 @@ for ppath in xdgDataDirs[:]:
         xdgDataDirs.remove(ppath)
 
 # full path of the mimeapps.list file
-MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+# MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+MIMEAPPSLIST = "mimeapps.list"
 
 # create the menu: name - categoty - exec - desktop file
 THE_MENU = pop_menu.getMenu().retList()
@@ -86,7 +87,7 @@ class MainWin(QDialog):
         self.vbox2.addLayout(self.buttonBox)
         # the mimetype of the item
         self.imime = mimetype
-        ### applications added or removed or default in mimeappss.list
+        ### applications added or removed or default in mimeapps.list
         self.lA = []
         self.lR = []
         self.lD = []
@@ -107,8 +108,8 @@ class MainWin(QDialog):
         self.accept()
         self.close()
         
-    
-    # function that the mimetypes added, removed and default lidt from the mimeappss.list
+    # 1
+    # function that found the mimetypes added, removed and default in the mimeapps.list
     def fillLARD(self):
         # mimeapps.list can have up to three not mandatory sectors
         #intest = ["[Added Associations]","[Removed Associations]","[Default Applications]"]
@@ -162,52 +163,31 @@ class MainWin(QDialog):
             lA1.append("[Added Associations]\n")
             lA1.append("\n")
         if lR1 == []:
-            lA1.append("[Removed Associations]\n")
-            lA1.append("\n")
+            lR1.append("[Removed Associations]\n")
+            lR1.append("\n")
         #
         self.lA = lA1
         self.lR = lR1
         self.lD = lD1
-        
     
-    # find the default or removed or default applications of the mimetype
-    def addMime(self, imime):
-        imime = imime+"="
-        lAdded = []
-        lRemoved = []
-        lDefault = []
-        for item in self.lA:
-            if item[0:len(imime)] == imime:
-                lAdded = item.strip(";\n").split("=")[1].split(";")
-        for item in self.lD:
-            if item[0:len(imime)] == imime:
-                lDefault = item.strip(";\n").split("=")[1].split(";")
-        for item in self.lR:
-            if item[0:len(imime)] == imime:
-                lRemoved = item.strip(";\n").split("=")[1].split(";")
-        # consinstency: remove from the lRemoved list the items already in the lAdded or lDefault list
-        for item in lRemoved[:]:
-            if item in lAdded or item in lDefault:
-                lRemoved.remove(item)
-        #
-        return lAdded,lRemoved,lDefault
-    
+    # 2
     # populate
     def fitem_first(self):
         self.extLabel2.setText(self.mimetype)
         self.fitem2(self.mimetype)
     
-    # populate
-    def fitem(self, item, col):
-        ##### find the index of the item in the category
-        p = item.parent()
-        if p:
-            # clear the plist
-            self.plist.clear()
-            self.extLabel2.setText(item.text(1))
-            self.imime = p.text(0)+"/"+item.text(0)
-            self.fitem2(self.imime)
+    # # populate
+    # def fitem(self, item, col):
+        # ##### find the index of the item in the category
+        # p = item.parent()
+        # if p:
+            # # clear the plist
+            # self.plist.clear()
+            # self.extLabel2.setText(item.text(1))
+            # self.imime = p.text(0)+"/"+item.text(0)
+            # self.fitem2(self.imime)
     
+    # 3
     def fitem2(self, imime):
         # clear the plist
         self.plist.clear()
@@ -279,14 +259,43 @@ class MainWin(QDialog):
             witem_code = witem[0].text(0)
             if witem_code == "":
                 witem[0].setText(0, "*")
+            elif witem_code == "+":
+                witem[0].setText(0, "+*")
         # resize the first column to content
         self.plist.resizeColumnToContents(0)
+        
+    # 4
+    # find the default or removed or removed applications of the mimetype
+    def addMime(self, imime):
+        imime = imime+"="
+        lAdded = []
+        lRemoved = []
+        lDefault = []
+        for item in self.lA:
+            if item[0:len(imime)] == imime:
+                lAdded = item.strip(";\n").split("=")[1].split(";")
+        for item in self.lD:
+            if item[0:len(imime)] == imime:
+                lDefault = item.strip(";\n").split("=")[1].split(";")
+        for item in self.lR:
+            if item[0:len(imime)] == imime:
+                lRemoved = item.strip(";\n").split("=")[1].split(";")
+        # consinstency: remove from the lRemoved list the items already in the lAdded or lDefault list
+        for item in lRemoved[:]:
+            if item in lAdded or item in lDefault:
+                lRemoved.remove(item)
+        #
+        return lAdded,lRemoved,lDefault
+    
     
     # make an application the default one for the selected mimetype
     def make_default(self):
         # selected item of plist
         itemSelected = self.plist.currentItem()
         if itemSelected:
+            if itemSelected.text(0) in ["+*","*"]:
+                commDialog("Already done.", 4)
+                return
             if itemSelected.text(0) not in ["+*","*","+?","-?"]:
                 dret = commDialog("Make default?", 3).getValue()
                 # 2 means Execute
@@ -307,28 +316,40 @@ class MainWin(QDialog):
                     ## update the mimeapps.list file
                     try:
                         ### removed
-                        temp_lR = self.lR[1:]
-                        lR_first_item = self.lR[0]
-                        for item in temp_lR[:]:
+                        temp_lR = ["[Removed Associations]\n"]
+                        for item in self.lR[1:]:
+                            # remove the previous association
                             if item[0:len(self.imime)+1] == self.imime+"=":
-                                temp_lR.remove(item)
-                                temp_lR.insert(0, lR_first_item)
-                                tnew = self.imime+"="
-                                for titem in lRemoved:
-                                    tnew += titem+";"
-                                tnew += "\n"
-                                temp_lR.append(tnew)
+                                self.lR.remove(item)
+                        # add the new associations for the mimetype
+                        if lRemoved:
+                            tnew = self.imime+"="
+                            for titem in lRemoved:
+                                tnew += titem+";"
+                            tnew += "\n"
+                            temp_lR.append(tnew)
+                        # add the other associations
+                        for item in self.lR[1:]:
+                            if item == "\n":
+                                continue
+                            temp_lR.append(item)
+                        #
                         self.lR = temp_lR
                         #
                         ### default
-                        temp_lD = self.lD[1:]
-                        lD_first_item = self.lD[0]
-                        for item in temp_lD[:]:
+                        temp_lD = ["[Default Applications]\n"]
+                        for item in self.lD[1:]:
                             if item[0:len(self.imime)+1] == self.imime+"=":
-                                temp_lD.remove(item)
-                                new_item = self.imime+"="+lDefault[0]+";\n"
-                                temp_lD.append(new_item)
-                                temp_lD.insert(0, lD_first_item)
+                                self.lD.remove(item)
+                        #
+                        new_item = self.imime+"="+lDefault[0]+";\n"
+                        temp_lD.append(new_item)
+                        #
+                        for item in self.lD[1:]:
+                            if item == "\n":
+                                continue
+                            temp_lD.append(item)
+                        #
                         self.lD = temp_lD
                         #
                         f = open(MIMEAPPSLIST, 'w')
@@ -348,7 +369,7 @@ class MainWin(QDialog):
                     self.fitem2(self.mimetype)
                     #
                     self.Value = 1
-                    
+    
     # 
     def remove_association(self):
         # confirmation dialog
@@ -364,72 +385,108 @@ class MainWin(QDialog):
             if itemSelected.text(0) in ["+*", "*"]:
                 if item_desktop_file in lDefault:
                     lDefault.remove(item_desktop_file)
+                    ret = self.update_mimeapps_list(lDefault, "D")
             # added and added orphan application
             elif itemSelected.text(0) in ["+", "+?"]:
                 if item_desktop_file in lAdded:
                     lAdded.remove(item_desktop_file)
+                    ret = self.update_mimeapps_list(lAdded, "A")
             # removed and removed orphan application
             elif itemSelected.text(0) in ["-", "-?"]:
                 if item_desktop_file in lRemoved:
                     lRemoved.remove(item_desktop_file)
-            #
-            ###### update the mimeapps.list
-            try:
-                ### removed
-                temp_lR = self.lR[1:]
-                lR_first_item = self.lR[0]
-                for item in temp_lR[:]:
+                    ret = self.update_mimeapps_list(lRemoved, "R")
+        
+    ###### update the mimeapps.list - self.remove_association()
+    def update_mimeapps_list(self, llist, list_type):
+        try:
+            ### removed
+            if list_type == "R":
+                lRemoved = llist
+                temp_lR = ["[Removed Associations]\n"]
+                #
+                for item in self.lR[1:]:
+                    if item == "\n":
+                        continue
+                    # remove the old associations
                     if item[0:len(self.imime)+1] == self.imime+"=":
-                        temp_lR.remove(item)
-                        temp_lR.insert(0, lR_first_item)
-                        tnew = self.imime+"="
-                        for titem in lRemoved:
-                            tnew += titem+";"
-                        tnew += "\n"
-                        temp_lR.append(tnew)
+                        self.lR.remove(item)
+                # add the new associations for the mimetype
+                if lRemoved:
+                    tnew = self.imime+"="
+                    for titem in lRemoved:
+                        tnew += titem+";"
+                    tnew += "\n"
+                    temp_lR.append(tnew)
+                # add the other associations
+                for item in self.lR[1:]:
+                    if item == "\n":
+                        continue
+                    temp_lR.append(item)
+                #
                 self.lR = temp_lR
                 #
-                ### added
-                temp_lA = self.lA[1:]
-                lA_first_item = self.lA[0]
-                for item in temp_lA[:]:
-                    if item[0:len(self.imime)+1] == self.imime+"=":
-                        temp_lA.remove(item)
-                        temp_lA.insert(0, lA_first_item)
-                        tnew = self.imime+"="
-                        for titem in lAdded:
-                            tnew += titem+";"
-                        tnew += "\n"
-                        temp_lA.append(tnew)
-                self.lA = temp_lA
-                ### default
-                temp_lD = self.lD[1:]
-                lD_first_item = self.lD[0]
-                for item in temp_lD[:]:
-                    if item[0:len(self.imime)+1] == self.imime+"=":
-                        temp_lD.remove(item)
-                        new_item = self.imime+"="+lDefault[0]+";\n"
-                        temp_lD.append(new_item)
-                        temp_lD.insert(0, lD_first_item)
-                self.lD = temp_lD
+            ### added
+            elif list_type == "A":
+                lAdded = llist
+                temp_lA = ["[Added Associations]\n"]
                 #
-                f = open(MIMEAPPSLIST, 'w')
-                for item in self.lD:
-                    f.write(item)
-                for item in self.lA:
-                    f.write(item)
-                for item in self.lR:
-                    f.write(item)
-                f.close()
-            except Exception as E:
-                commDialog("Error:\n{}".format(str(E)), 5)
+                for item in self.lA[1:]:
+                    if item == "\n":
+                        continue
+                    if item[0:len(self.imime)+1] == self.imime+"=":
+                        self.lA.remove(item)
+                #
+                if lAdded:
+                    tnew = self.imime+"="
+                    for titem in lAdded:
+                        tnew += titem+";"
+                    tnew += "\n"
+                    temp_lA.append(tnew)
+                #
+                for item in self.lA[1:]:
+                    if item == "\n":
+                        continue
+                    temp_lA.append(item)
+                #
+                self.lA = temp_lA
+            ### default
+            elif list_type == "D":
+                lDefault = llist
+                temp_lD = ["[Default Applications]\n"]
+                for item in self.lD[1:]:
+                    if item == "\n":
+                        continue
+                    if item[0:len(self.imime)+1] == self.imime+"=":
+                        self.lD.remove(item)
+                #
+                for item in self.lD[1:]:
+                    if item == "\n":
+                        continue
+                    temp_lD.append(item)
+                #
+                self.lD = temp_lD
             #
-            # rebuild the lists
-            self.fillLARD()
-            # reload treview
-            self.fitem2(self.mimetype)
-            #
-            self.Value = 1
+            f = open(MIMEAPPSLIST, 'w')
+            for item in self.lD:
+                f.write(item)
+            for item in self.lA:
+                f.write(item)
+            for item in self.lR:
+                f.write(item)
+            f.close()
+        except Exception as E:
+            commDialog("Error:\n{}".format(str(E)), 5)
+            ret = 0
+        #
+        # rebuild the lists
+        self.fillLARD()
+        # reload treview
+        self.fitem2(self.mimetype)
+        #
+        self.Value = 1
+        #
+        ret = 1
     
     #
     def add_association(self):
@@ -444,48 +501,30 @@ class MainWin(QDialog):
         # add the desktop file to the list
         lAdded,lRemoved,lDefault = self.addMime(self.imime)
         if desktop_file in lAdded:
-            commDialog("Info: {} has already been added.".format(ret[0]), 5)
+            commDialog("Info: {} has already been added.".format(ret[0]), 4)
             return
         lAdded.append(desktop_file)
         ###### update the mimeapps.list
         try:
-            ### removed
-            temp_lR = self.lR[1:]
-            lR_first_item = self.lR[0]
-            for item in temp_lR[:]:
+            temp_lA = ['[Added Associations]\n']
+            for item in self.lA[1:]:
+                if item == "\n":
+                    continue
                 if item[0:len(self.imime)+1] == self.imime+"=":
-                    temp_lR.remove(item)
-                    temp_lR.insert(0, lR_first_item)
-                    tnew = self.imime+"="
-                    for titem in lRemoved:
-                        tnew += titem+";"
-                    tnew += "\n"
-                    temp_lR.append(tnew)
-            self.lR = temp_lR
+                    self.lA.remove(item)
             #
-            ### added
-            temp_lA = self.lA[1:]
-            lA_first_item = self.lA[0]
-            for item in temp_lA[:]:
-                if item[0:len(self.imime)+1] == self.imime+"=":
-                    temp_lA.remove(item)
-                    temp_lA.insert(0, lA_first_item)
-                    tnew = self.imime+"="
-                    for titem in lAdded:
-                        tnew += titem+";"
-                    tnew += "\n"
-                    temp_lA.append(tnew)
+            if lAdded:
+                tnew = self.imime+"="
+                for titem in lAdded:
+                    tnew += titem+";"
+                tnew += "\n"
+                temp_lA.append(tnew)
+            #
+            for item in self.lA[1:]:
+                if item == "\n":
+                    continue
+                temp_lA.append(item)
             self.lA = temp_lA
-            ### default
-            temp_lD = self.lD[1:]
-            lD_first_item = self.lD[0]
-            for item in temp_lD[:]:
-                if item[0:len(self.imime)+1] == self.imime+"=":
-                    temp_lD.remove(item)
-                    new_item = self.imime+"="+lDefault[0]+";\n"
-                    temp_lD.append(new_item)
-                    temp_lD.insert(0, lD_first_item)
-            self.lD = temp_lD
             #
             f = open(MIMEAPPSLIST, 'w')
             for item in self.lD:
@@ -637,7 +676,8 @@ The upper section.
 This section lists the executables (if any) associates to the item mimetype.
 If one of the executables is the default program for the 
 mimetype it will be marked with (*). All the associations made in 
-the mimeapps.list (placed in the HOME/.config folder) will be shown 
+the mimeapps.list (the default one is placed in the HOME/.config folder
+but that in this program directory will be used) will be shown 
 as follow: those added will be marken with (+) or (+*) or (+?); those removed 
 will be marked with (-) or (-?). "?" means that an application has been
 registered but its desktop file cannot be found, e.g. after a 
@@ -654,7 +694,10 @@ executable from the list, also if it is marked with (-).
 The 'Help' button will show this help.
 """
         else:
-            button3_text = "Cancel"
+            if self.flag == 4:
+                button3_text = "Close"
+            else:
+                button3_text = "Cancel"
         #
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
