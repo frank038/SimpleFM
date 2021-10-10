@@ -30,10 +30,6 @@ class MyDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
         self.resize(400,300)
-        thefont = QFont()
-        FONT_SIZE = 14
-        thefont.setPointSize(FONT_SIZE)
-        self.setFont(thefont)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)

@@ -34,10 +34,6 @@ class checkSum(QDialog):
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(600,300)
         self.path = path
-        #thefont = QFont()
-        #FONT_SIZE = 14
-        #thefont.setPointSize(FONT_SIZE)
-        #self.setFont(thefont)
         #
         chks_list = ["MD5", "SHA256", "SHA1"]
         self.chks_exec = ["md5sum", "sha256sum", "sha1sum"]
