@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.5.3 (development/testing)
+V. 0.5.4 (development/testing)
 
 A file manager written in PyQt5.
 
