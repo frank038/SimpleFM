@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.3
+# version 0.5.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -828,7 +828,8 @@ class propertyDialog(QDialog):
                 mctime = datetime.datetime.fromtimestamp(os.stat(self.itemPath).st_ctime).strftime('%c')
             elif DATE_TIME == 1:
                 try:
-                    mctime1 = subprocess.check_output(["stat", "-c", "%W", self.itemPath], universal_newlines=False).decode()
+                    # mctime1 = subprocess.check_output(["stat", "-c", "%W", self.itemPath], universal_newlines=False).decode()
+                    mctime1 = subprocess.check_output(["./statmio", "-c", "%W", self.itemPath], universal_newlines=False).decode()
                     mctime2 = subprocess.check_output(["date", "-d", "@{}".format(mctime1)], universal_newlines=False).decode()
                     mctime = mctime2.strip("\n")
                 except:
@@ -1386,7 +1387,6 @@ class copyThread2(QThread):
         # ... if an item with the same name already exist at destination
         dirfile_dcode = 0
         # # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
-        # dcode = 0
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -1815,6 +1815,7 @@ class copyItems2():
         return sfsize    
     
     def threadslot(self, aa):
+        # from directories
         if aa[0] == "ReqNewDtype":
             # 1 skip - 2 overwrite - 4 automatic - 5 backup
             sNewDtype = pasteNmergeDialog(self.window, aa[1], aa[2], "folder").getValue()
@@ -2060,10 +2061,10 @@ class itemDelegate(QItemDelegate):
         else:
             iaddtext = None
         
-        if option.state & QStyle.State_Selected:
-            painter.setBrush(option.palette.color(QPalette.Highlight))
-            painter.setPen(option.palette.color(QPalette.Highlight))
-            painter.drawRoundedRect(QRect(option.rect.x(),option.rect.y(),option.rect.width(),ITEM_HEIGHT), 5.0, 5.0, Qt.AbsoluteSize)
+        # if option.state & QStyle.State_Selected:
+            # painter.setBrush(option.palette.color(QPalette.Highlight))
+            # painter.setPen(option.palette.color(QPalette.Highlight))
+            # painter.drawRoundedRect(QRect(option.rect.x()+1,option.rect.y()+1,option.rect.width()-2,ITEM_HEIGHT-2), 5.0, 5.0, Qt.AbsoluteSize)
         # elif option.state & QStyle.State_MouseOver:
             # pred = option.palette.color(QPalette.Highlight).red()
             # pgreen = option.palette.color(QPalette.Highlight).green()
@@ -2141,8 +2142,13 @@ class itemDelegate(QItemDelegate):
             painter.drawPixmap(option.rect.x()+ITEM_WIDTH-ICON_SIZE2, option.rect.y()+ITEM_HEIGHT-ICON_SIZE2,-1,-1, lpixmap,0,0,-1,-1)
         
         painter.save()
+        if option.state & QStyle.State_Selected:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(QColor(CIRCLE_COLOR))
+            painter.setPen(QColor(CIRCLE_COLOR))
+            painter.drawEllipse(QRect(option.rect.x()+1,option.rect.y()+1,CIRCLE_SIZE,CIRCLE_SIZE))
         # if option.state & QStyle.State_MouseOver and not option.state & QStyle.State_Selected:
-        if option.state & QStyle.State_MouseOver:
+        elif option.state & QStyle.State_MouseOver:
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setBrush(QColor(CIRCLE_COLOR))
             painter.setPen(QColor(CIRCLE_COLOR))
@@ -2211,6 +2217,8 @@ class IconProvider(QFileIconProvider):
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if file_icon:
                                     return file_icon
+                        # except Exception as E:
+                            # print(str(E))
                         except:
                             pass
                 #
@@ -2872,6 +2880,7 @@ class MainWin(QWidget):
                 if not folder_to_open:
                     if fpath == "/":
                         folder_to_open = "Root"
+            #elif os.path.isfile(ldir) or os.path.islink(ldir):
             else:
                 fpath = os.path.dirname(ldir)
                 folder_to_open = os.path.basename(fpath)
@@ -3506,7 +3515,7 @@ class LView(QBoxLayout):
                 self.label7.setText(imime.name())
             except: pass
         #
-        self.listview.viewport().update()
+        # self.listview.viewport().update()
     
     #
     def doubleClick(self, index):
@@ -4491,7 +4500,6 @@ class openTrash(QBoxLayout):
         self.window = window
         self.tdir = tdir
         self.setContentsMargins(QMargins(0,0,0,0))
-        # DA FARE: se non esistono le directory necessarie crearle
         global TrashIsOpen
         if TrashIsOpen:
             return
@@ -4657,7 +4665,6 @@ class openTrash(QBoxLayout):
                         break
                     i += 1
         else:
-            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
     
     def iconItem(self, item):
