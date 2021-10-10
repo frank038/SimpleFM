@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.1
+# version 0.5.2
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2059,21 +2059,19 @@ class itemDelegate(QItemDelegate):
             iaddtext = index.data(34)
         else:
             iaddtext = None
-
-        ## disabled
-        #if option.state & QStyle.State_MouseOver:
-            #pred = option.palette.color(QPalette.Highlight).red()
-            #pgreen = option.palette.color(QPalette.Highlight).green()
-            #pblue = option.palette.color(QPalette.Highlight).blue()
-            #painter.setBrush(QColor(pred, pgreen, pblue, 170))
-            #painter.setPen(QColor(pred, pgreen, pblue, 170))
-            #painter.drawRoundedRect(QRect(option.rect.x(),option.rect.y(),option.rect.width(),ITEM_HEIGHT), 5.0, 5.0, Qt.AbsoluteSize)
-
-        #el
+        
         if option.state & QStyle.State_Selected:
             painter.setBrush(option.palette.color(QPalette.Highlight))
             painter.setPen(option.palette.color(QPalette.Highlight))
             painter.drawRoundedRect(QRect(option.rect.x(),option.rect.y(),option.rect.width(),ITEM_HEIGHT), 5.0, 5.0, Qt.AbsoluteSize)
+        # elif option.state & QStyle.State_MouseOver:
+            # pred = option.palette.color(QPalette.Highlight).red()
+            # pgreen = option.palette.color(QPalette.Highlight).green()
+            # pblue = option.palette.color(QPalette.Highlight).blue()
+            # painter.setBrush(QColor(pred, pgreen, pblue, 170))
+            # painter.setPen(QColor(pred, pgreen, pblue, 170))
+            # #painter.drawRoundedRect(QRect(option.rect.x(),option.rect.y(),option.rect.width(),ITEM_HEIGHT), 5.0, 5.0, Qt.AbsoluteSize)
+            # painter.drawEllipse(QRect(option.rect.x(),option.rect.y(),CIRCLE_SIZE,CIRCLE_SIZE))
 
         painter.restore()
 
@@ -2142,6 +2140,15 @@ class itemDelegate(QItemDelegate):
             lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
             painter.drawPixmap(option.rect.x()+ITEM_WIDTH-ICON_SIZE2, option.rect.y()+ITEM_HEIGHT-ICON_SIZE2,-1,-1, lpixmap,0,0,-1,-1)
         
+        painter.save()
+        # if option.state & QStyle.State_MouseOver and not option.state & QStyle.State_Selected:
+        if option.state & QStyle.State_MouseOver:
+            painter.setRenderHint(QPainter.Antialiasing)
+            painter.setBrush(QColor(CIRCLE_COLOR))
+            painter.setPen(QColor(CIRCLE_COLOR))
+            painter.drawEllipse(QRect(option.rect.x()+1,option.rect.y()+1,CIRCLE_SIZE,CIRCLE_SIZE))
+        painter.restore()
+        
     
     def sizeHint(self, option, index):
         # additional text
@@ -2166,7 +2173,7 @@ class itemDelegate(QItemDelegate):
         hh = st.size().height()
         return QSize(int(ww), int(hh)+int(hh1)+ITEM_HEIGHT)
 
-
+        
 # used for main
 class IconProvider(QFileIconProvider):
     # set the icon theme
@@ -3122,19 +3129,18 @@ class LView(QBoxLayout):
         self.hicombo.activated[str].connect(self.fhbmenuction)
         self.hicombo.insertItem(0, self.lvDir)
         self.hicombo.setCurrentIndex(0)
-        
+        #
         self.fmf = 0
         self.selection = None
         self.listview = MyQlist()
-
         self.listview.setViewMode(QListView.IconMode)
-        
+        #
         # the background color
         if USE_BACKGROUND_COLOUR == 1:
             palette = self.listview.palette()
             palette.setColor(QPalette.Base, QColor(ORED,OGREEN,OBLUE))
             self.listview.setPalette(palette)
-        
+        #
         self.listview.setSpacing(ITEM_SPACE)
         self.listview.setSelectionMode(self.listview.ExtendedSelection)
         self.listview.setResizeMode(QListView.Adjust)
@@ -3145,13 +3151,14 @@ class LView(QBoxLayout):
             self.fileModel = QFileSystemModel()
         self.fileModel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System)
         self.listview.setModel(self.fileModel)
+        self.listview.viewport().setAttribute(Qt.WA_Hover)
         self.listview.setItemDelegate(itemDelegate())
         self.fileModel.setIconProvider(IconProvider())
         #
         self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
         self.listview.clicked.connect(self.singleClick)
         self.listview.doubleClicked.connect(self.doubleClick)
-
+        #
         self.label2 = QLabel()
         self.label3 = QLabel()
         self.label6 = QLabel()
@@ -3187,6 +3194,8 @@ class LView(QBoxLayout):
         self.listview.viewport().installEventFilter(self)
         # the button pressed in self.box_pb
         self.box_pb_btn = None
+        # item are added in the selected item list if clicked at its top-left position
+        self.static_items = False
     
     #
     def on_change_dir(self, path):
@@ -3288,8 +3297,22 @@ class LView(QBoxLayout):
     
     #
     def eventFilter(self, obj, event):
+        # select items continuosly without deselecting the others
         if event.type() == QEvent.MouseButtonPress:
-            if event.button() == Qt.MiddleButton:
+            if event.button() == Qt.LeftButton:
+                itemIdx = self.listview.indexAt(event.pos())
+                item_rect = self.listview.visualRect(itemIdx)
+                # item selected at top-left
+                topLeft = QRect(item_rect.x(), item_rect.y(), CIRCLE_SIZE, CIRCLE_SIZE)
+                if event.pos() in topLeft:
+                    self.static_items = True
+                    self.listview.setSelectionMode(QAbstractItemView.MultiSelection)
+                else:
+                    if self.static_items == True:
+                        self.static_items = False
+                        self.listview.setSelectionMode(QAbstractItemView.SingleSelection)
+            # 
+            elif event.button() == Qt.MiddleButton:
                 # button box
                 if obj.objectName() == 'pbwidget':
                     new_path_temp = []
@@ -4468,6 +4491,7 @@ class openTrash(QBoxLayout):
         self.window = window
         self.tdir = tdir
         self.setContentsMargins(QMargins(0,0,0,0))
+        # DA FARE: se non esistono le directory necessarie crearle
         global TrashIsOpen
         if TrashIsOpen:
             return
@@ -4633,6 +4657,7 @@ class openTrash(QBoxLayout):
                         break
                     i += 1
         else:
+            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
     
     def iconItem(self, item):

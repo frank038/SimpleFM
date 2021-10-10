@@ -39,7 +39,11 @@ ICON_SIZE2 = 48
 ICON_SIZE2_ALT = 24
 # space between items
 ITEM_SPACE = 25
-# button size: 0 to disable
+# the size of the circle at top-left of each item
+CIRCLE_SIZE=20
+# the circle color in the form #AARRGGBB
+CIRCLE_COLOR="#8858BB6A"
+# service buttons size: 0 to disable
 BUTTON_SIZE=0
 # show delete context menu entry that bypass the trashcan: 0 no - 1 yes
 USE_DELETE = 1
