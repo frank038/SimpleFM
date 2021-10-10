@@ -23,6 +23,10 @@ from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from cfg import *
 
+# the mimeapps.list used by this program
+# MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+MIMEAPPSLIST = "mimeapps.list"
+
 if OPEN_WITH:
     try:
         import Utility.open_with as OW
@@ -828,8 +832,7 @@ class propertyDialog(QDialog):
                 mctime = datetime.datetime.fromtimestamp(os.stat(self.itemPath).st_ctime).strftime('%c')
             elif DATE_TIME == 1:
                 try:
-                    # mctime1 = subprocess.check_output(["stat", "-c", "%W", self.itemPath], universal_newlines=False).decode()
-                    mctime1 = subprocess.check_output(["./statmio", "-c", "%W", self.itemPath], universal_newlines=False).decode()
+                    mctime1 = subprocess.check_output(["stat", "-c", "%W", self.itemPath], universal_newlines=False).decode()
                     mctime2 = subprocess.check_output(["date", "-d", "@{}".format(mctime1)], universal_newlines=False).decode()
                     mctime = mctime2.strip("\n")
                 except:
@@ -4215,7 +4218,8 @@ class getAppsByMime():
         self.lR = []
         self.lD = []
         # path of the mimeapps.list
-        self.MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+        self.MIMEAPPSLIST = MIMEAPPSLIST
+
     
     def appByMime(self):
         listPrograms = []
