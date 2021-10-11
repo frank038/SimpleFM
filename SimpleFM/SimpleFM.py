@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.5
+# version 0.5.6
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1403,9 +1403,11 @@ class copyThread2(QThread):
             # item is dir and not link to dir
             if os.path.isdir(dfile) and not os.path.islink(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
-                #
+                # trying to copy a dir into itself
+                if dfile == os.path.dirname(tdest):
+                    items_skipped += "Same folder:\n{}.".format(os.path.basename(dfile))
                 # it isnt the exactly same item
-                if dfile != tdest:
+                elif dfile != tdest:
                     #
                     # the dir doesnt exist at destination or it is a broken link
                     if not os.path.exists(tdest):
@@ -1622,7 +1624,6 @@ class copyThread2(QThread):
                                             items_skipped += "{}:\n{}\n------------\n".format(os.path.join(sdir,item_file), str(E))
                         #
                         #############
-                #
                 # origin and destination are the exactly same directory
                 else:
                     if action == 1:
@@ -1735,7 +1736,7 @@ class copyThread2(QThread):
                             else:
                                 ret = self.faddSuffix(tdest)
                             shutil.copy2(dfile, ret, follow_symlinks=False)
-                            items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(tdest, ret)
+                            # items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(tdest, ret)
                         except Exception as E:
                             items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                     elif action == 2:
@@ -1845,10 +1846,10 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # only for skipped items
-            if self.newAtype == 1:
-                if len(aa) == 4 and aa[3] != "":
-                    MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
+            # # only for skipped items
+            # if self.newAtype == 1:
+            if len(aa) == 4 and aa[3] != "":
+                MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
         elif aa[0] == "Cancelled":
             self.label1.setText("Cancelled.", self.mydialog.size().width()-12)
@@ -1858,10 +1859,10 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # only for skipped items
-            if self.newAtype == 1:
-                if len(aa) == 4 and aa[3] != "":
-                    MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
+            # # only for skipped items
+            # if self.newAtype == 1:
+            if len(aa) == 4 and aa[3] != "":
+                MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
     
     def fbutton1(self):
         self.mydialog.close()
@@ -1916,13 +1917,15 @@ class MyQlist(QListView):
                         pixmap1 = file_icon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
                         if not painter:
                             painter = QPainter(pixmap)
+                            woffset = int((ICON_SIZE - pixmap1.size().width())/2)
                             ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                            painter.drawPixmap(psizeW-ICON_SIZE, psizeH-ICON_SIZE+ioffset, pixmap1)
+                            painter.drawPixmap(psizeW-ICON_SIZE+woffset, psizeH-ICON_SIZE+ioffset, pixmap1)
                         else:
                             # limit the number of overlays
                             if i < NUM_OVERLAY:
+                                woffset = int((ICON_SIZE - pixmap1.size().width())/2)
                                 ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                                painter.drawPixmap(psizeW-ICON_SIZE-incr_offsetW, psizeH-ICON_SIZE-incr_offsetH+ioffset, pixmap1)
+                                painter.drawPixmap(psizeW-ICON_SIZE-incr_offsetW+woffset, psizeH-ICON_SIZE-incr_offsetH+ioffset, pixmap1)
                                 incr_offsetW += poffsetW
                                 incr_offsetH += poffsetH
                             else:
@@ -2884,7 +2887,6 @@ class MainWin(QWidget):
                 if not folder_to_open:
                     if fpath == "/":
                         folder_to_open = "Root"
-            #elif os.path.isfile(ldir) or os.path.islink(ldir):
             else:
                 fpath = os.path.dirname(ldir)
                 folder_to_open = os.path.basename(fpath)
@@ -3609,6 +3611,16 @@ class LView(QBoxLayout):
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
         pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
+        # in case of sticky selection
+        if self.static_items == True:
+            self.static_items = False
+            self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
+            if not pointedItem2 in self.selection:
+                # deselect all
+                self.listview.clearSelection()
+                self.selection = [pointedItem2]
+                # select the item
+                self.listview.setCurrentIndex(pointedItem2)
         # the items
         if vr:
             # the data of the selected item at the bottom
@@ -3662,6 +3674,12 @@ class LView(QBoxLayout):
                 copyAction = QAction("Cut", self)
                 copyAction.triggered.connect(lambda:self.fcopycutAction("cut"))
                 menu.addAction(copyAction)
+            # can paste into the hovered directory
+            if os.path.isdir(os.path.join(self.lvDir, itemName)):
+                if self.flag == 1 or self.flag == 3:
+                    pasteNmergeAction = QAction("Paste", self)
+                    pasteNmergeAction.triggered.connect(lambda d:PastenMerge(os.path.join(self.lvDir, itemName), -3, "", self.window))
+                    menu.addAction(pasteNmergeAction)
             #
             if USE_TRASH:
                 # only items in the HOME dir or in mass storages
