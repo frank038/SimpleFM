@@ -20,7 +20,7 @@ Features:
 - custom actions
 - custom thumbnailers
 - custom folder icon
-- sticky selection
+- sticky selection by pressing in the circle
 - and more...
 
 
