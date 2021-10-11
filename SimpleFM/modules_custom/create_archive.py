@@ -74,6 +74,8 @@ class compressData(QDialog):
         label2 = QLabel("Name of the archive:")
         #
         self.le1 = QLineEdit()
+        if len(self.path_list) == 1:
+            self.le1.setText(os.path.basename(self.path_list[0]))
         #
         button1 = QPushButton("Compress")
         button1.clicked.connect(self.fcompress)
@@ -94,7 +96,7 @@ class compressData(QDialog):
         
         if index == 0:
             archive_name = self.le1.text()
-            if os.path.exists(os.path.join(self.current_dir, archive_name+".tar")):
+            if archive_name == "" or os.path.exists(os.path.join(self.current_dir, archive_name+".tar")):
                 MyDialog("Info", "Choose a different name.")
             else:
                 try:
