@@ -80,6 +80,8 @@ DATE_TIME = 1
 USE_AD = 0
 
 ### needed by pythumb
+# use borders: 0 no - 1 yes
+USE_BORDERS=1
 # border color of the thumbnails
 BORDER_COLOR_R = 0
 BORDER_COLOR_G = 0
