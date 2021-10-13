@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.5.6 (development/testing)
+V. 0.5.7 (development/testing)
 
 A file manager written in PyQt5.
 
@@ -17,11 +17,14 @@ Features:
 - trashcan
 - media
 - bookmarks
+- mount some archive files through archivemount (more types can be added if supported by archivemount) 
 - custom actions
 - custom thumbnailers
 - custom folder icon
 - sticky selection by pressing in the circle
 - and more...
+
+Customizations throu the cfg.py file.
 
 
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
