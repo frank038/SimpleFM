@@ -66,16 +66,17 @@ def createimagethumb(fpath, el):
         if image == "Null":
             return "Null"
         # draw a colored border around the image
-        img_w = image.width()
-        img_h = image.height()
-        pen = QPen(QColor(BORDER_COLOR_R,BORDER_COLOR_G,BORDER_COLOR_B))
-        pwidth = 2
-        pen.setWidth(pwidth)
-        painter = QPainter()
-        painter.begin(image)
-        painter.setPen(pen)
-        painter.drawRect(pwidth-1,pwidth-1,img_w-pwidth,img_h-pwidth)
-        painter.end()
+        if USE_BORDER:
+            img_w = image.width()
+            img_h = image.height()
+            pen = QPen(QColor(BORDER_COLOR_R,BORDER_COLOR_G,BORDER_COLOR_B))
+            pwidth = 2
+            pen.setWidth(pwidth)
+            painter = QPainter()
+            painter.begin(image)
+            painter.setPen(pen)
+            painter.drawRect(pwidth-1,pwidth-1,img_w-pwidth,img_h-pwidth)
+            painter.end()
         #
         writer = QImageWriter(XDG_CACHE_LARGE+md5+".png", b'png')
         writer.setText("ThumbURI", uuri)
