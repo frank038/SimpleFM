@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.6
+# version 0.5.7
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -791,10 +791,14 @@ class propertyDialog(QDialog):
         if self.CAN_CHANGE_OWNER:
             if os.access(self.itemPath, os.R_OK):
                 if os.path.isfile(self.itemPath) and not os.path.islink(self.itemPath):
-                    if "i" in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
-                        self.ibtn.setText("Immutable")
-                    else:
-                        self.ibtn.setText("Not Immutable")
+                    try:
+                        if "i" in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
+                            self.ibtn.setText("Immutable")
+                        else:
+                            self.ibtn.setText("Not Immutable")
+                    except:
+                        self.ibtn.setEnabled(False)
+                        self.ibtn.hide()
                 else:
                     self.ibtn.setEnabled(False)
                     self.ibtn.hide()
@@ -1303,6 +1307,10 @@ class copyThread2(QThread):
         self.reqNewNm = ""
     
     def getdatasygnal(self, l=None):
+        # if l[0] == "SendNewName":
+            # self.reqNewNm = l[1]
+        # #
+        # el
         if l[0] == "SendNewAtype" or l[0] == "SendNewDtype":
             self.reqNewNm = l[1]
 
@@ -1390,6 +1398,7 @@ class copyThread2(QThread):
         # ... if an item with the same name already exist at destination
         dirfile_dcode = 0
         # # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
+        # dcode = 0
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -2399,27 +2408,27 @@ class MainWin(QWidget):
         self.vbox.addWidget(self.mtab)
         ####
         parg = ""
-        # if len(sys.argv) > 1:
+        if len(sys.argv) > 1:
+            parg = sys.argv[1]
             # for i in range(1, len(sys.argv) -1):
                 # parg += sys.argv[i]+" "
             # parg += sys.argv[len(sys.argv) - 1]
         # if parg != "" and parg != "/":
             # if parg[-1] == "/":
                 # parg = parg[0:-1]
-        
         #
         if os.path.dirname(parg) == "":
             self.openDir(HOME, 1)
-        # else:
-            # if os.path.exists(parg) and os.access(parg, os.R_OK):
-                # self.openDir(parg, 1)
-            # else:
-                # # cycle throu the path backward to find an existent or accessible directory
-                # path = os.path.dirname(parg)
-                # while not os.path.exists(path) or not os.access(path, os.R_OK):
-                    # path = os.path.dirname(path)
-                # #
-                # self.openDir(path, 1)
+        else:
+            if os.path.exists(parg) and os.access(parg, os.R_OK):
+                self.openDir(parg, 1)
+            else:
+                # cycle throu the path backward to find an existent or accessible directory
+                path = os.path.dirname(parg)
+                while not os.path.exists(path) or not os.access(path, os.R_OK):
+                    path = os.path.dirname(path)
+                #
+                self.openDir(path, 1)
     
     # add a new connected device
     def device_added_callback(self, *args):
@@ -2848,31 +2857,6 @@ class MainWin(QWidget):
         self.openDir(self.sender().toolTip(), 1)
     
 
-    #
-    def keyPressEvent(self, event):
-        if event.modifiers() ==  Qt.ControlModifier:
-            if event.key() == Qt.Key_S:
-                try:
-                    with open("winsize.cfg", "r") as ifile:
-                        fcontent = ifile.readline()
-                    aw, ah, am = fcontent.split(";")
-                    window_width = self.width()
-                    window_height = self.height()
-                    isMaximized = self.isMaximized()
-                    if isMaximized:
-                        if am == "False":
-                            with open("winsize.cfg", "w") as ifile:
-                                ifile.write("{};{};{}".format(aw, ah, str(isMaximized)))
-                    else:
-                        if window_width != int(aw) or window_height != int(ah):
-                            with open("winsize.cfg", "w") as ifile:
-                                ifile.write("{};{};{}".format(window_width, window_height, str(isMaximized)))
-                        else:
-                            with open("winsize.cfg", "w") as ifile:
-                                ifile.write("{};{};{}".format(aw, ah, str(isMaximized)))
-                except Exception as E:
-                    MyDialog("Error", str(E), self)
-    
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -2887,6 +2871,7 @@ class MainWin(QWidget):
                 if not folder_to_open:
                     if fpath == "/":
                         folder_to_open = "Root"
+            #elif os.path.isfile(ldir) or os.path.islink(ldir):
             else:
                 fpath = os.path.dirname(ldir)
                 folder_to_open = os.path.basename(fpath)
@@ -3266,7 +3251,6 @@ class LView(QBoxLayout):
             ret = self.on_change_dir(new_path)
             # if not change directory the previous button will be rechecked
             if ret == 0:
-                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -3282,6 +3266,9 @@ class LView(QBoxLayout):
             ppath = ["/"]
         else:
             ppath = ddir.split("/")
+        # remove the last empty item
+        if len(ppath) > 1 and ppath[-1] in ["","."]:
+            ppath.pop()
         #
         ppath_len = len(ppath)
         for p in range(0, ppath_len):
@@ -3401,12 +3388,19 @@ class LView(QBoxLayout):
     
     # status bar - current folder content
     def tabLabels(self):
-        self.label2.setText("<i>Items </i>")
-        num_items, hidd_items = self.num_itemh(self.lvDir)
-        self.label6.setText(str(num_items)+"    ")
-        self.label3.setText("<i>Hiddens </i>")
-        self.label7.setText(str(hidd_items))
-        self.label8.setText("")
+        if not os.path.exists(self.lvDir):
+            self.label2.setText("<i>Unreadable</i>")
+            self.label6.setText("")
+            self.label3.setText("")
+            self.label7.setText("")
+            self.label8.setText("")
+        else:
+            self.label2.setText("<i>Items </i>")
+            num_items, hidd_items = self.num_itemh(self.lvDir)
+            self.label6.setText(str(num_items)+"    ")
+            self.label3.setText("<i>Hiddens </i>")
+            self.label7.setText(str(hidd_items))
+            self.label8.setText("")
     
     # return the amount of the visible items and the hidden items
     def num_itemh(self, ddir):
@@ -3520,8 +3514,6 @@ class LView(QBoxLayout):
                 imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
                 self.label7.setText(imime.name())
             except: pass
-        #
-        # self.listview.viewport().update()
     
     #
     def doubleClick(self, index):
@@ -3641,8 +3633,6 @@ class LView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    # progActionList.append(iprog)
                                     progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.insert(1, iprog)
                                 else:
@@ -4224,7 +4214,6 @@ class thumbThread(threading.Thread):
                         hmd5 = create_thumbnail(item_fpath, imime.name())
                         self.event.wait(0.05)
             self.event.set()
-        #self.listview.viewport().update()
 
 
 # find the applications installed for a given mimetype
@@ -4430,7 +4419,6 @@ class getDefaultApp():
             try:
                 associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
             except Exception as E:
-                #MyDialog("Error", str(E), self.window)
                 return "None"
             
             if associatedDesktopProgram:
@@ -4877,8 +4865,6 @@ class openTrash(QBoxLayout):
                 if listPrograms: #!= []:
                     for iprog in listPrograms[::2]:
                         if iprog == defApp:
-                            # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                            # progActionList.append(iprog)
                             progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                             progActionList.insert(1, iprog)
                         else:
@@ -5328,8 +5314,6 @@ class cTView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    # progActionList.append(iprog)
                                     progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.insert(1, iprog)
                                 else:
