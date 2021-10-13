@@ -11,7 +11,7 @@ Requirements:
 - pdftocairo - ffmpegthumbnailer (optionals - needed for thumbnailers)
 - md5sum - sha256sum - sha1sum - 7z - tar - xterm (optionals - needed for custom actions)
 - pkexec is needed for some operations
-- archivemount for mounting archive files (an archive manager becames useless).
+- archivemount for mounting archive files.
 
 Features:
 - thumbnailers
