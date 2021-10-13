@@ -10,7 +10,7 @@ import importlib
 
 from PyQt5.QtGui import (QImageReader,QPen,QColor,QPainter,QImageWriter)
 
-from cfg import USE_BORDERS, BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
+from cfg import USE_BORDERS, BORDER_WIDTH, BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
 
 try:
     if not os.path.exists("sh_thumbnails"):
@@ -70,7 +70,7 @@ def createimagethumb(fpath, el):
             img_w = image.width()
             img_h = image.height()
             pen = QPen(QColor(BORDER_COLOR_R,BORDER_COLOR_G,BORDER_COLOR_B))
-            pwidth = 2
+            pwidth = BORDER_WIDTH
             pen.setWidth(pwidth)
             painter = QPainter()
             painter.begin(image)
