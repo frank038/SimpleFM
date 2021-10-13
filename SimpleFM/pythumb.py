@@ -10,7 +10,7 @@ import importlib
 
 from PyQt5.QtGui import (QImageReader,QPen,QColor,QPainter,QImageWriter)
 
-from cfg import BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
+from cfg import USE_BORDERS, BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
 
 try:
     if not os.path.exists("sh_thumbnails"):
