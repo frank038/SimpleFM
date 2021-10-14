@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-# version 0.5.7
+# version 0.5.8
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont)
-from dbus.mainloop.pyqt5 import DBusQtMainLoop
 import dbus
 import sys
 from pathlib import PosixPath
@@ -532,6 +531,18 @@ class PlistMenu(QDialog):
         self.Value = -1
         self.close()
 
+# get the folder size
+def folder_size(path):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(path):
+        for fl in filenames:
+            flp = os.path.join(dirpath, fl)
+            if os.access(flp, os.R_OK):
+                if os.path.islink(flp):
+                    continue
+                total_size += os.path.getsize(flp)
+    return total_size
+
 # property dialog for one item
 class propertyDialog(QDialog):
     def __init__(self, itemPath, parent):
@@ -641,7 +652,6 @@ class propertyDialog(QDialog):
             gBox1 = QGroupBox("Ownership")
             vboxp2.addWidget(gBox1)
             self.grid2 = QGridLayout()
-            #self.grid2.setContentsMargins(5,5,5,5)
             gBox1.setLayout(self.grid2)
             #
             labelgb11 = QLabel("Owner")
@@ -657,7 +667,6 @@ class propertyDialog(QDialog):
             gBox2 = QGroupBox("Permissions")
             vboxp2.addWidget(gBox2)
             self.grid3 = QGridLayout()
-            #grid3.setContentsMargins(5,5,5,5)
             gBox2.setLayout(self.grid3)
             if storageInfoIsReadOnly:
                 gBox2.setEnabled(False)
@@ -825,7 +834,7 @@ class propertyDialog(QDialog):
                 self.labelSize2.setText("(Not readable)")#, self.size().width()-50)
         elif os.path.isdir(self.itemPath):
             if os.access(self.itemPath, os.R_OK):
-                self.labelSize2.setText(str(self.convert_size(self.folder_size(self.itemPath))))#, self.size().width()-50)
+                self.labelSize2.setText(str(self.convert_size(folder_size(self.itemPath))))#, self.size().width()-50)
             else:
                 self.labelSize2.setText("(Not readable)")#, self.size().width()-50)
         else:
@@ -936,17 +945,6 @@ class propertyDialog(QDialog):
         else:
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize    
-
-    def folder_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for fl in filenames:
-                flp = os.path.join(dirpath, fl)
-                if os.access(flp, os.R_OK):
-                    if os.path.islink(flp):
-                        continue
-                    total_size += os.path.getsize(flp)
-        return total_size
     
     def tperms(self, perms):
         tperm = ""
@@ -1307,10 +1305,6 @@ class copyThread2(QThread):
         self.reqNewNm = ""
     
     def getdatasygnal(self, l=None):
-        # if l[0] == "SendNewName":
-            # self.reqNewNm = l[1]
-        # #
-        # el
         if l[0] == "SendNewAtype" or l[0] == "SendNewDtype":
             self.reqNewNm = l[1]
 
@@ -1325,10 +1319,10 @@ class copyThread2(QThread):
             for fl in filenames:
                 flp = os.path.join(dirpath, fl)
                 if os.access(flp, os.R_OK):
-                    if not os.path.exists(flp):
+                    if os.path.islink(flp):
                         continue
                     total_size += os.path.getsize(flp)
-        return total_size 
+        return total_size
 
     
     # total size of the list
@@ -1398,7 +1392,6 @@ class copyThread2(QThread):
         # ... if an item with the same name already exist at destination
         dirfile_dcode = 0
         # # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
-        # dcode = 0
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -1855,8 +1848,6 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # # only for skipped items
-            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
@@ -1868,8 +1859,6 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # # only for skipped items
-            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
     
@@ -2232,8 +2221,6 @@ class IconProvider(QFileIconProvider):
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if file_icon:
                                     return file_icon
-                        # except Exception as E:
-                            # print(str(E))
                         except:
                             pass
                 #
@@ -2306,7 +2293,6 @@ class MainWin(QWidget):
         # main box
         self.vbox = QBoxLayout(QBoxLayout.TopToBottom)
         self.vbox.setContentsMargins(QMargins(2,2,2,2))
-        # self.vbox.setContentsMargins(QMargins(0,0,0,0))
         self.setLayout(self.vbox)
         # tool box - 
         self.obox1 = QBoxLayout(QBoxLayout.LeftToRight)
@@ -2373,6 +2359,7 @@ class MainWin(QWidget):
         #
         ## a new device has been added or removed
         if USE_MEDIA:
+            from dbus.mainloop.pyqt5 import DBusQtMainLoop
             # box for media devices
             self.disk_box = QBoxLayout(QBoxLayout.LeftToRight)
             self.disk_box.setContentsMargins(QMargins(0,0,0,0))
@@ -2533,7 +2520,8 @@ class MainWin(QWidget):
                 dicon = self.getDevice(media_type, drive_type, conn_bus)
                 #
                 media_btn = QPushButton(QIcon(dicon),"")
-                media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+                if BUTTON_SIZE:
+                    media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
                 self.disk_box.addWidget(media_btn)
                 media_btn.setToolTip(disk_name)
                 media_btn_menu = QMenu()
@@ -2712,11 +2700,15 @@ class MainWin(QWidget):
             label = "(Not set)"
         if mountpoint == "N":
             mountpoint = "(Not mounted)"
+            device_size = str(self.convert_size(size))
+        else:
+            mountpoint_size = folder_size(mountpoint)
+            device_size = str(self.convert_size(size))+" - ("+str(self.convert_size(mountpoint_size))+")"
         if not vendor:
             vendor = "(None)"
         if not model:
             model = "(None)"
-        data = [label, vendor, model, str(self.convert_size(size)), file_system, bool(read_only), mountpoint, ddevice, media_type]
+        data = [label, vendor, model, device_size, file_system, bool(read_only), mountpoint, ddevice, media_type]
         devicePropertyDialog(data, self)
         
         
@@ -2765,6 +2757,14 @@ class MainWin(QWidget):
             # return ret
         # except:
             # return -1
+    
+    # def folder_size_f(self, fpath):
+        # total_size = 0
+        # for path, dirs, files in os.walk(fpath):
+            # for f in files:
+                # fp = os.path.join(path, f)
+                # total_size += os.path.getsize(fp)
+        # return total_size
     
     def convert_size(self, fsize2):
         if fsize2 == 0 or fsize2 == 1:
@@ -3109,18 +3109,13 @@ class LView(QBoxLayout):
                 else:
                     self.lvDir = os.path.dirname(TLVDIR)
         #
-        ### path button box
-        self.box_pb = FlowLayout()
-        self.insertLayout(0, self.box_pb)
-        self.on_box_pb(self.lvDir)
-        #
         #### history and buttons box
         self.bhicombo = QBoxLayout(QBoxLayout.LeftToRight)
         self.bhicombo.setContentsMargins(QMargins(0,0,0,0))
         self.bhicombo.setSpacing(0)
         #
         # history of the opened folders (of the current view)
-        self.insertLayout(1, self.bhicombo)
+        self.insertLayout(0, self.bhicombo)
         self.hicombo = QComboBox()
         self.hicombo.setEditable(True)
         if BUTTON_SIZE:
@@ -3129,6 +3124,11 @@ class LView(QBoxLayout):
         self.hicombo.activated[str].connect(self.fhbmenuction)
         self.hicombo.insertItem(0, self.lvDir)
         self.hicombo.setCurrentIndex(0)
+        #
+        ### path button box
+        self.box_pb = FlowLayout()
+        self.insertLayout(1, self.box_pb)
+        self.on_box_pb(self.lvDir)
         #
         self.fmf = 0
         self.selection = None
@@ -3251,6 +3251,7 @@ class LView(QBoxLayout):
             ret = self.on_change_dir(new_path)
             # if not change directory the previous button will be rechecked
             if ret == 0:
+                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -3585,7 +3586,7 @@ class LView(QBoxLayout):
                 elif os.path.isfile(path):
                     total_size += QFileInfo(path).size()
                 elif os.path.isdir(path):
-                    total_size += self.folder_size(path)
+                    total_size += folder_size(path)
                 else:
                     # just a number
                     total_size += 512
@@ -4011,7 +4012,7 @@ class LView(QBoxLayout):
                 elif os.path.isfile(item):
                     iSize += QFileInfo(item).size()
                 elif os.path.isdir(item):
-                    iSize += self.folder_size(item)
+                    iSize += folder_size(item)
                 else:
                     QFileInfo(item).size()
             except:
@@ -4150,19 +4151,6 @@ class LView(QBoxLayout):
         else:
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize    
-
-    
-    def folder_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for fl in filenames:
-                flp = os.path.join(dirpath, fl)
-                if os.access(flp, os.R_OK):
-                    if os.path.islink(flp):
-                        continue
-                    total_size += os.path.getsize(flp)
-        return total_size
-
 
 
 ###########################
@@ -4511,6 +4499,7 @@ class openTrash(QBoxLayout):
         self.window = window
         self.tdir = tdir
         self.setContentsMargins(QMargins(0,0,0,0))
+        #
         global TrashIsOpen
         if TrashIsOpen:
             return
@@ -4801,7 +4790,7 @@ class openTrash(QBoxLayout):
                 self.label10.setText("(Not readable)")
         elif os.path.isdir(fpath):
             if os.access(fpath, os.R_OK):
-                self.label10.setText(self.convert_size(self.folder_size(fpath)))
+                self.label10.setText(self.convert_size(folder_size(fpath)))
             else:
                 self.label10.setText("(Not readable)")
     
@@ -4921,17 +4910,7 @@ class openTrash(QBoxLayout):
         else:
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize  
-    
-    def folder_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for fl in filenames:
-                flp = os.path.join(dirpath, fl)
-                if os.access(flp, os.R_OK):
-                    if not os.path.exists(flp):
-                        continue
-                    total_size += os.path.getsize(flp)
-        return total_size 
+
 
 class RestoreTrashedItems():
     def __init__(self):
@@ -5171,12 +5150,6 @@ class cTView(QBoxLayout):
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
         self.window.fileModel = self.tmodel
-        # bindings
-        # # reset the filter
-        # if self.window.fileModel:
-            # if self.window.searchBtn.isChecked():
-                # self.window.fileModel.setNameFilters(["*.*"])
-                # self.window.fileModel.setNameFilterDisables(True)
         # 
         self.tmodel.setIconProvider(IconProvider())
         self.tmodel.setReadOnly(False)
@@ -5615,7 +5588,6 @@ class cTView(QBoxLayout):
     
     #
     def fdeleteItems(self, listItems):
-        #
         # something happened with some items
         items_skipped = ""
         #
@@ -5700,7 +5672,7 @@ class cTView(QBoxLayout):
                 elif os.path.isfile(item):
                     iSize += QFileInfo(item).size()
                 elif os.path.isdir(item):
-                    iSize += self.folder_size(item)
+                    iSize += folder_size(item)
                 else:
                     QFileInfo(item).size()
             except:
@@ -5724,17 +5696,6 @@ class cTView(QBoxLayout):
         else:
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize    
-
-    def folder_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for fl in filenames:
-                flp = os.path.join(dirpath, fl)
-                if os.access(flp, os.R_OK):
-                    if os.path.islink(flp):
-                        continue
-                    total_size += os.path.getsize(flp)
-        return total_size
 
     # go to the parent folder
     def upButton(self):
