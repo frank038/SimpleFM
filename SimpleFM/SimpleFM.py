@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.9
+# version 0.5.10
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2165,6 +2165,13 @@ class itemDelegate(QItemDelegate):
             painter.setBrush(QColor(CIRCLE_COLOR))
             painter.setPen(QColor(CIRCLE_COLOR))
             painter.drawEllipse(QRect(option.rect.x()+1,option.rect.y()+1,CIRCLE_SIZE,CIRCLE_SIZE))
+            # tick symbol
+            painter.setPen(QColor(TICK_COLOR))
+            text = '<div style="font-size:{}px">{}</div>'.format(TICK_SIZE, TICK_CHAR)
+            st = QStaticText(text)
+            tx = int(option.rect.x()+1+((CIRCLE_SIZE - st.size().width())/2))
+            ty = int(option.rect.y()+1+((CIRCLE_SIZE - st.size().height())/2))
+            painter.drawStaticText(tx, ty, st)
         # if option.state & QStyle.State_MouseOver and not option.state & QStyle.State_Selected:
         elif option.state & QStyle.State_MouseOver:
             painter.setRenderHint(QPainter.Antialiasing)
@@ -2822,7 +2829,6 @@ class MainWin(QWidget):
                     ifile.write("{};{};False".format(new_w, new_h))
                 ifile.close()
             except Exception as E:
-                # print(str(E))
                 pass
         qApp.quit()
     
@@ -2871,7 +2877,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-    
+
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -4245,6 +4251,7 @@ class thumbThread(threading.Thread):
                         hmd5 = create_thumbnail(item_fpath, imime.name())
                         self.event.wait(0.05)
             self.event.set()
+        #self.listview.viewport().update()
 
 
 # find the applications installed for a given mimetype
@@ -4588,7 +4595,9 @@ class openTrash(QBoxLayout):
         self.label4 = QLabel("<i>Type</i>")
         self.label5 = QLabel("<i>Size</i>")
         self.label6 = clabel()
+        # self.label6.setWordWrap(True)
         self.label7 = clabel()
+        # self.label7.setWordWrap(True)
         self.label8 = QLabel("")
         self.label9 = QLabel("")
         self.label10 = QLabel("")

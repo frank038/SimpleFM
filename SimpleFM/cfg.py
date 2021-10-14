@@ -45,6 +45,12 @@ ITEM_SPACE = 25
 CIRCLE_SIZE=20
 # the circle color in the form #AARRGGBB
 CIRCLE_COLOR="#8858BB6A"
+# tick symbol
+TICK_CHAR="✓"
+# tick size in pixels
+TICK_SIZE=20
+# tick symbol color
+TICK_COLOR="white"
 # service buttons size: 0 to disable
 BUTTON_SIZE=0
 # show delete context menu entry that bypass the trashcan: 0 no - 1 yes
