@@ -56,7 +56,8 @@ class ModuleCustom():
                     # add a button
                     self.win = mainLView.window
                     self.media_btn = QPushButton(QIcon("icons/fuse-archive.png"),"")
-                    self.media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+                    if BUTTON_SIZE:
+                        self.media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
                     self.win.disk_box.addWidget(self.media_btn)
                     if mount_name == file_name:
                         self.media_btn.setToolTip(file_name)
