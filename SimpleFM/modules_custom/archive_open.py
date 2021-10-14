@@ -33,16 +33,23 @@ def mmodule_type(mainLView):
 #
 class ModuleCustom():
     def __init__(self, mainLView):
-        udate = subprocess.check_output(["date","+%s"], universal_newlines=True, shell=False).strip("\n")
-        dest_dir = os.path.join("/tmp/archivemount", udate)
         index = mainLView.selection[0]
         path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
+        base_dest_dir = "/tmp/archivemount"
+        file_name = os.path.basename(path)
+        mount_name = file_name
+        #
         if os.access(path, os.R_OK):
             try:
                 if not os.path.exists("/tmp/archivemount"):
                     os.mkdir("/tmp/archivemount")
-                if not os.path.exists(dest_dir):
-                    os.mkdir(dest_dir)
+                #
+                i = 1
+                while os.path.exists(os.path.join(base_dest_dir, mount_name)):
+                    mount_name += "_{}".format(i)
+                    i += 1
+                dest_dir = os.path.join(base_dest_dir, mount_name)
+                os.mkdir(dest_dir)
                 #
                 ret = os.system("archivemount {} {}". format(path, dest_dir))
                 if ret == 0:
@@ -51,23 +58,30 @@ class ModuleCustom():
                     self.media_btn = QPushButton(QIcon("icons/fuse-archive.png"),"")
                     self.media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
                     self.win.disk_box.addWidget(self.media_btn)
-                    self.media_btn.setToolTip(os.path.basename(path))
+                    if mount_name == file_name:
+                        self.media_btn.setToolTip(file_name)
+                    else:
+                        self.media_btn.setToolTip(file_name+" - ("+mount_name+")")
                     self.media_btn_menu = QMenu()
                     self.media_btn_menu.addAction("Open", lambda:self.win.openDir(dest_dir, 1))
                     self.media_btn_menu.addAction("Umount", lambda:self.fuserumountf(dest_dir))
                     self.media_btn.setMenu(self.media_btn_menu)
                     #
-                    MyDialog("Info", "{}\nmounted.".format(os.path.basename(path)))
+                    MyDialog("Info", "{}\nmounted".format(file_name))
                 else:
-                    MyDialog("Info", "{}\nError: {}".format(os.path.basename(path), ret))
+                    MyDialog("Info", "{}\nError: {}".format(file_name, ret))
             except Exception as E:
-                MyDialog("ERROR", "Issues while opening the archive:\n{}\n{}.".format(os.path.basename(path), str(E)))
+                MyDialog("ERROR", "Issues while opening the archive:\n{}\n{}".format(file_name, str(E)))
 
     # umount the mounted archive
     def fuserumountf(self, mpath):
         ret = os.system("fusermount -u {}".format(mpath))
         if ret == 0:
             self.media_btn.deleteLater()
+            try:
+                os.rmdir(mpath)
+            except Exception as E:
+                MyDialog("Info", "Cannot remove the folder\n{}".format(mpath))
             
     
 class MyDialog(QDialog):
@@ -75,7 +89,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(400,300)
+        self.resize(500,300)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -83,6 +97,7 @@ class MyDialog(QDialog):
         #
         label = QLabel(args[1])
         label.setWordWrap(True)
+        label.setAlignment(Qt.AlignCenter)
         mbox.addWidget(label)
         #
         button_ok = QPushButton("     Ok     ")
