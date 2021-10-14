@@ -8,6 +8,7 @@ Requirements:
 - pyqt5
 - python3-xdg
 - pkexec is needed for some operations
+
 Optionals:
 - python3-dbus.mainloop.pyqt5 (for mass storages)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
