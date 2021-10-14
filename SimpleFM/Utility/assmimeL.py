@@ -24,8 +24,11 @@ for ppath in xdgDataDirs[:]:
         xdgDataDirs.remove(ppath)
 
 # full path of the mimeapps.list file
-# MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
-MIMEAPPSLIST = "mimeapps.list"
+from cfg import USER_MIMEAPPSLIST
+if USER_MIMEAPPSLIST:
+    MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+else:
+    MIMEAPPSLIST = "mimeapps.list"
 
 # create the menu: name - categoty - exec - desktop file
 THE_MENU = pop_menu.getMenu().retList()
