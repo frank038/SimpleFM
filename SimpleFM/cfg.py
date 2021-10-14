@@ -80,6 +80,8 @@ ICON_THEME = "gnome"
 DATE_TIME = 1
 # use additional data in each item: 0 no - 1 yes 
 USE_AD = 0
+# dialog windows width
+DIALOGWIDTH=600
 
 ### needed by pythumb
 # use borders: 0 no - 1 yes

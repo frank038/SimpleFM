@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.8
+# version 0.5.9
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -23,8 +23,10 @@ from xdg.DesktopEntry import *
 from cfg import *
 
 # the mimeapps.list used by this program
-# MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
-MIMEAPPSLIST = "mimeapps.list"
+if USER_MIMEAPPSLIST:
+    MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
+else:
+    MIMEAPPSLIST = "mimeapps.list"
 
 if OPEN_WITH:
     try:
@@ -45,7 +47,7 @@ if ICON_SIZE > ITEM_WIDTH:
 ITEMSDELETED = 30
 
 # with of the dialog windows
-dialWidth = 600
+dialWidth = DIALOGWIDTH
 
 # where to look for desktop files or default locations
 if xdg_data_dirs:
@@ -77,9 +79,7 @@ class firstMessage(QWidget):
         button = QPushButton("Close")
         box.addWidget(button)
         button.clicked.connect(self.close)
-        
         self.show()
-
         self.center()
 
     def center(self):
@@ -155,6 +155,7 @@ mmod_custom = glob.glob("modules_custom/*.py")
 list_custom_modules = []
 for el in reversed(mmod_custom):
     try:
+        # da python 3.4 exec_module invece di import_module
         ee = importlib.import_module(os.path.basename(el)[:-3])
         list_custom_modules.append(ee)
     except ImportError as ioe:
@@ -168,6 +169,7 @@ if not os.path.exists("icons"):
 
 #
 TCOMPUTER = 0
+
 
 class clabel2(QLabel):
     def __init__(self, parent=None):
@@ -207,7 +209,6 @@ class MyDialog(QDialog):
         #
         label = clabel2()
         label.setText(args[1], self.size().width()-12)
-        label.setWordWrap(True)
         #
         button_ok = QPushButton("     Ok     ")
         grid.addWidget(label, 0, 1, 1, 3, Qt.AlignCenter)
@@ -223,6 +224,7 @@ class MyMessageBox(QMessageBox):
         self.setIcon(QMessageBox.Information)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
+        self.resize(dialWidth,300)
         self.setText(args[1])
         self.setInformativeText(args[2])
         self.setDetailedText("The details are as follows:\n\n"+args[3])
@@ -273,7 +275,7 @@ class MyDialogRename2(QDialog):
         label2.setText(self.item_name, self.size().width()-12)
         mbox.addWidget(label2)
         #
-        label3 = QLabel("New name (do not use /):")
+        label3 = QLabel("New name:")
         mbox.addWidget(label3)
         #
         self.lineedit = QLineEdit()
@@ -328,7 +330,7 @@ class MyDialogRename3(QDialog):
         mbox.setContentsMargins(5,5,5,5)
         self.setLayout(mbox)
         #
-        label1 = QLabel("Choose a new name (do not use /):")
+        label1 = QLabel("Choose a new name:")
         mbox.addWidget(label1)
         #
         self.lineedit = QLineEdit()
@@ -421,7 +423,7 @@ class PlistMenu(QDialog):
         self.setWindowTitle("Open with...")
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.resize(600, 600)
+        self.resize(dialWidth, 600)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -563,7 +565,7 @@ class propertyDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Property")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(600, 300)
+        self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -579,25 +581,23 @@ class propertyDialog(QDialog):
         page1 = QWidget()
         self.gtab.addTab(page1, "General")
         self.grid1 = QGridLayout()
-        #grid1.setContentsMargins(5,5,5,5)
         page1.setLayout(self.grid1)
         #
-        labelName = QLabel("Name")
-        font = labelName.font()
-        font.setItalic(True)
+        labelName = QLabel("<i>Name</i>")
         self.grid1.addWidget(labelName, 0, 0, 1, 1, Qt.AlignRight)
         self.labelName2 = QLabel()
         self.labelName2.setWordWrap(True)
         self.labelName2.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.labelName2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
         self.grid1.addWidget(self.labelName2, 0, 1, 1, 4, Qt.AlignLeft)
         #
-        labelMime = QLabel("MimeType")
+        labelMime = QLabel("<i>MimeType</i>")
         self.grid1.addWidget(labelMime, 2, 0, 1, 1, Qt.AlignRight)
         self.labelMime2 = QLabel()
         self.grid1.addWidget(self.labelMime2, 2, 1, 1, 4, Qt.AlignLeft)
         #
         if os.path.isfile(itemPath) or os.path.isdir(itemPath):
-            labelOpenWith = QLabel("Open With...")
+            labelOpenWith = QLabel("<i>Open With...</i>")
             self.grid1.addWidget(labelOpenWith, 3, 0, 1, 1, Qt.AlignRight)
             self.btnOpenWith = QPushButton("----------")
             self.btnOpenWith.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Minimum)
@@ -605,41 +605,50 @@ class propertyDialog(QDialog):
             self.grid1.addWidget(self.btnOpenWith, 3, 1, 1, 4, Qt.AlignLeft)
             self.btnOpenWithPopulate()
         #
-        labelSize = QLabel("Size")
+        labelSize = QLabel("<i>Size</i>")
         self.grid1.addWidget(labelSize, 4, 0, 1, 1, Qt.AlignRight)
-        #self.labelSize2 = clabel2()
         self.labelSize2 = QLabel()
         self.grid1.addWidget(self.labelSize2, 4, 1, 1, 4, Qt.AlignLeft)
         #
-        if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
-            label_real_link = QLabel("To Path")
-            self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
-            label_real_link2 = QLabel()
-            label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
-            label_real_link2.setWordWrap(True)
-            label_real_link2.setText(os.readlink(self.itemPath))
-            self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
-        elif os.path.exists(self.itemPath):
+        # if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
+        if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
-                label_real_link = QLabel("To Path")
+                self.labelName2.setText(os.path.basename(self.itemPath))
+                self.labelMime2.setText("Broken link")
+                labelSize.hide()
+                self.labelSize2.hide()
+                label_real_link = QLabel("<i>To Path</i>")
                 self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
                 label_real_link2 = QLabel()
                 label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
                 label_real_link2.setWordWrap(True)
                 label_real_link2.setText(os.readlink(self.itemPath))
+                label_real_link2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
+                self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
+                self.adjustSize()
+                self.exec_()
+        elif os.path.exists(self.itemPath):
+            if os.path.islink(self.itemPath):
+                label_real_link = QLabel("<i>To Path</i>")
+                self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
+                label_real_link2 = QLabel()
+                label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
+                label_real_link2.setWordWrap(True)
+                label_real_link2.setText(os.path.realpath(os.readlink(self.itemPath)))
+                label_real_link2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
                 self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
             #
-            labelCreation = QLabel("Creation")
+            labelCreation = QLabel("<i>Creation</i>")
             self.grid1.addWidget(labelCreation, 6, 0, 1, 1, Qt.AlignRight)
             self.labelCreation2 = QLabel()
             self.grid1.addWidget(self.labelCreation2, 6, 1, 1, 4, Qt.AlignLeft)
             #
-            labelModification = QLabel("Modification")
+            labelModification = QLabel("<i>Modification</i>")
             self.grid1.addWidget(labelModification, 7, 0, 1, 1, Qt.AlignRight)
             self.labelModification2 = QLabel()
             self.grid1.addWidget(self.labelModification2, 7, 1, 1, 4, Qt.AlignLeft)
             #
-            labelAccess = QLabel("Access")
+            labelAccess = QLabel("<i>Access</i>")
             self.grid1.addWidget(labelAccess, 8, 0, 1, 1, Qt.AlignRight)
             self.labelAccess2 = QLabel()
             self.grid1.addWidget(self.labelAccess2, 8, 1, 1, 4, Qt.AlignLeft)
@@ -654,12 +663,12 @@ class propertyDialog(QDialog):
             self.grid2 = QGridLayout()
             gBox1.setLayout(self.grid2)
             #
-            labelgb11 = QLabel("Owner")
+            labelgb11 = QLabel("<i>Owner</i>")
             self.grid2.addWidget(labelgb11, 0, 0, 1, 1, Qt.AlignRight)
             self.labelgb12 = QLabel()
             self.grid2.addWidget(self.labelgb12, 0, 1, 1, 5, Qt.AlignLeft)
             #
-            labelgb21 = QLabel("Group")
+            labelgb21 = QLabel("<i>Group</i>")
             self.grid2.addWidget(labelgb21, 1, 0, 1, 1, Qt.AlignRight)
             self.labelgb22 = QLabel()
             self.grid2.addWidget(self.labelgb22, 1, 1, 1, 5, Qt.AlignLeft)
@@ -671,19 +680,19 @@ class propertyDialog(QDialog):
             if storageInfoIsReadOnly:
                 gBox2.setEnabled(False)
             #
-            labelOwnerPerm = QLabel("Owner")
+            labelOwnerPerm = QLabel("<i>Owner</i>")
             self.grid3.addWidget(labelOwnerPerm, 0, 0, 1, 1, Qt.AlignRight)
             self.combo1 = QComboBox()
             self.combo1.addItems(["Read and Write", "Read", "Forbidden"])
             self.grid3.addWidget(self.combo1, 0, 1, 1, 5, Qt.AlignLeft)
             #
-            labelGroupPerm = QLabel("Group")
+            labelGroupPerm = QLabel("<i>Group</i>")
             self.grid3.addWidget(labelGroupPerm, 1, 0, 1, 1, Qt.AlignRight)
             self.combo2 = QComboBox()
             self.combo2.addItems(["Read and Write", "Read", "Forbidden"])
             self.grid3.addWidget(self.combo2, 1, 1, 1, 5, Qt.AlignLeft)
             #
-            labelOtherPerm = QLabel("Others")
+            labelOtherPerm = QLabel("<i>Others</i>")
             self.grid3.addWidget(labelOtherPerm, 2, 0, 1, 1, Qt.AlignRight)
             self.combo3 = QComboBox()
             self.combo3.addItems(["Read and Write", "Read", "Forbidden"])
@@ -693,35 +702,35 @@ class propertyDialog(QDialog):
             self.combo2.activated.connect(self.fcombo2)
             self.combo3.activated.connect(self.fcombo3)
             #
-        # change owner button
-        self.own_btn = QPushButton("Change")
-        if self.CAN_CHANGE_OWNER:
-            self.own_btn.clicked.connect(lambda:self.on_change_owner(me = os.path.basename(os.getenv("HOME"))))
-        self.grid2.addWidget(self.own_btn, 0, 6, 1, 1, Qt.AlignLeft)
-        # change group button
-        self.grp_btn = QPushButton("Change")
-        if self.CAN_CHANGE_OWNER:
-            self.grp_btn.clicked.connect(lambda:self.on_change_grp(me = os.path.basename(os.getenv("HOME"))))
-        self.grid2.addWidget(self.grp_btn, 1, 6, 1, 1, Qt.AlignLeft)
-        # folder access - file executable
-        self.cb1 = QCheckBox()
-        self.cb1.stateChanged.connect(self.fcb1)
-        self.grid3.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
-        # immutable file button
-        self.ibtn = QPushButton()
-        self.ibtn.clicked.connect(self.ibtn_pkexec)
-        self.grid3.addWidget(self.ibtn, 5, 0, 1, 5, Qt.AlignLeft)
-        #
-        button1 = QPushButton("OK")
-        button1.clicked.connect(self.faccept)
-        #
-        hbox = QBoxLayout(QBoxLayout.LeftToRight)
-        vbox.addLayout(hbox)
-        hbox.addWidget(button1)
-        # populate all
-        self.tab()
-        self.adjustSize()
-        self.exec_()
+            # change owner button
+            self.own_btn = QPushButton("Change")
+            if self.CAN_CHANGE_OWNER:
+                self.own_btn.clicked.connect(lambda:self.on_change_owner(me = os.path.basename(os.getenv("HOME"))))
+            self.grid2.addWidget(self.own_btn, 0, 6, 1, 1, Qt.AlignLeft)
+            # change group button
+            self.grp_btn = QPushButton("Change")
+            if self.CAN_CHANGE_OWNER:
+                self.grp_btn.clicked.connect(lambda:self.on_change_grp(me = os.path.basename(os.getenv("HOME"))))
+            self.grid2.addWidget(self.grp_btn, 1, 6, 1, 1, Qt.AlignLeft)
+            # folder access - file executable
+            self.cb1 = QCheckBox()
+            self.cb1.stateChanged.connect(self.fcb1)
+            self.grid3.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
+            # immutable file button
+            self.ibtn = QPushButton()
+            self.ibtn.clicked.connect(self.ibtn_pkexec)
+            self.grid3.addWidget(self.ibtn, 4, 6, 1, 1, Qt.AlignLeft)
+            #
+            button1 = QPushButton("OK")
+            button1.clicked.connect(self.faccept)
+            #
+            hbox = QBoxLayout(QBoxLayout.LeftToRight)
+            vbox.addLayout(hbox)
+            hbox.addWidget(button1)
+            # populate all
+            self.tab()
+            self.adjustSize()
+            self.exec_()
     
     #
     # def comboOpenWithPopulate(self):
@@ -792,9 +801,9 @@ class propertyDialog(QDialog):
         if os.path.isdir(self.itemPath):
             self.cb1.setText('folder access')
         elif os.path.isfile(self.itemPath):
-            self.cb1.setText('is executable')
+            self.cb1.setText('Executable')
         else:
-            self.cb1.setText('is executable')
+            self.cb1.setText('Executable')
         #
         # set or unset the immutable flag
         if self.CAN_CHANGE_OWNER:
@@ -824,19 +833,19 @@ class propertyDialog(QDialog):
         #
         if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
-                self.labelSize2.setText("(Broken Link)")#, self.size().width()-50)
+                self.labelSize2.setText("(Broken Link)")
             else:
-                self.labelSize2.setText("Unrecognizable")#, self.size().width()-50)
+                self.labelSize2.setText("Unrecognizable")
         if os.path.isfile(self.itemPath):
             if os.access(self.itemPath, os.R_OK):
-                self.labelSize2.setText(self.convert_size(QFileInfo(self.itemPath).size()))#, self.size().width()-50)
+                self.labelSize2.setText(self.convert_size(QFileInfo(self.itemPath).size()))
             else:
-                self.labelSize2.setText("(Not readable)")#, self.size().width()-50)
+                self.labelSize2.setText("(Not readable)")
         elif os.path.isdir(self.itemPath):
             if os.access(self.itemPath, os.R_OK):
-                self.labelSize2.setText(str(self.convert_size(folder_size(self.itemPath))))#, self.size().width()-50)
+                self.labelSize2.setText(str(self.convert_size(folder_size(self.itemPath))))
             else:
-                self.labelSize2.setText("(Not readable)")#, self.size().width()-50)
+                self.labelSize2.setText("(Not readable)")
         else:
             self.labelSize2.setText("0")
         #
@@ -1096,14 +1105,14 @@ class propertyDialogMulti(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Property")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(600, 100)
+        self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         self.setLayout(vbox)
         #
-        label1 = QLabel("Number of items: {}".format(itemNum))
+        label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i> {}".format(itemNum))
         vbox.addWidget(label1)
-        label2 = QLabel("Total size of the items: {}".format(itemSize))
+        label2 = QLabel("<i>Total size of the items&nbsp;&nbsp;&nbsp;</i> {}".format(itemSize))
         vbox.addWidget(label2)
         #
         button1 = QPushButton("Close")
@@ -1123,7 +1132,7 @@ class execfileDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(600, 100)
+        self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -1171,6 +1180,7 @@ class retDialogBox(QMessageBox):
         self.setIcon(QMessageBox.Information)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
+        self.resize(dialWidth, 100)
         self.setText(args[1])
         self.setInformativeText(args[2])
         self.setDetailedText("The details are as follows:\n\n"+args[3])
@@ -1312,6 +1322,7 @@ class copyThread2(QThread):
         time.sleep(1)
         self.item_op()
 
+    
     # calculate the folder size 
     def folder_size(self, path):
         total_size = 0
@@ -1391,7 +1402,7 @@ class copyThread2(QThread):
         # the default action for all files in the dir to be copied...
         # ... if an item with the same name already exist at destination
         dirfile_dcode = 0
-        # # for the items in the dir: 1 skip - 2 replace - 3 new name - 4 automatic - 5 backup
+        # for the items in the dir: 1 skip - 2 replace - 4 automatic - 5 backup
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
@@ -1766,14 +1777,13 @@ class copyItems2():
         self.mydialog.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.mydialog.setWindowTitle("Copying...")
         self.mydialog.setWindowModality(Qt.ApplicationModal)
-        self.mydialog.resize(600,300)
+        self.mydialog.resize(dialWidth,300)
         # 
         grid = QGridLayout()
         grid.setContentsMargins(5,5,5,5)
         #
         self.label1 = clabel2()
         self.label1.setText("Processing...", self.mydialog.size().width()-12)
-        self.label1.setWordWrap(True)
         grid.addWidget(self.label1, 0, 0, 1, 4, Qt.AlignCenter)
         #
         self.label2 = QLabel("")
@@ -1848,6 +1858,8 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
+            # # only for skipped items
+            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
@@ -1859,6 +1871,8 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
+            # # only for skipped items
+            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
     
@@ -2188,7 +2202,6 @@ class itemDelegate(QItemDelegate):
 class IconProvider(QFileIconProvider):
     # set the icon theme
     QIcon.setThemeName(ICON_THEME)
-    
     
     def evaluate_pixbuf(self, ifull_path, imime):
         hmd5 = "Null"
@@ -2766,6 +2779,7 @@ class MainWin(QWidget):
                 # total_size += os.path.getsize(fp)
         # return total_size
     
+    
     def convert_size(self, fsize2):
         if fsize2 == 0 or fsize2 == 1:
             sfsize = str(fsize2)+" byte"
@@ -2808,7 +2822,8 @@ class MainWin(QWidget):
                     ifile.write("{};{};False".format(new_w, new_h))
                 ifile.close()
             except Exception as E:
-                print(str(E))
+                # print(str(E))
+                pass
         qApp.quit()
     
     
@@ -2856,7 +2871,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-
+    
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3515,6 +3530,8 @@ class LView(QBoxLayout):
                 imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
                 self.label7.setText(imime.name())
             except: pass
+        #
+        # self.listview.viewport().update()
     
     #
     def doubleClick(self, index):
@@ -3696,10 +3713,37 @@ class LView(QBoxLayout):
                     renameAction.triggered.connect(lambda:self.frenameAction(ipath))
                     menu.addAction(renameAction)
             #
-            menu.addSeparator()
-            subm_customAction = menu.addMenu("Custom Actions")
+            ###### custom actions
+            # ## search for new modules
+            # mmod_custom_new = glob.glob("modules_custom/*.py")
+            # global list_custom_modules
+            # global mmod_custom
+            # list_custom_modules_new = []
+            # list_custom_modules_temp = list_custom_modules[:]
+            # for el in reversed(mmod_custom_new):
+                # try:
+                    # # new module
+                    # if el not in mmod_custom:
+                        # # da python 3.4 exec_module invece di import_module
+                        # ee = importlib.import_module(os.path.basename(el)[:-3])
+                        # list_custom_modules.append(ee)
+                # except ImportError as ioe:
+                    # pass
+            # ## search for removed modules
+            # for el in list_custom_modules_temp:
+                # el_name = str(el.__name__)
+                # el_name_path = os.path.join("modules_custom", el_name)+".py"
+                # if str(el_name_path) not in mmod_custom_new:
+                    # del sys.modules[el_name]
+                    # list_custom_modules.remove(el)
+            # # concinstency
+            # mmod_custom = mmod_custom_new
+            # del list_custom_modules_temp
             #
+            ## populate
             if len(list_custom_modules) > 0:
+                menu.addSeparator()
+                subm_customAction = menu.addMenu("Actions")
                 listActions = []
                 for el in list_custom_modules:
                     if el.mmodule_type(self) == 1 and self.selection and len(self.selection) == 1:
@@ -3920,7 +3964,7 @@ class LView(QBoxLayout):
         #
         # something happened with some items
         items_skipped = ""
-        
+        #
         for item in listItems:
             time.sleep(0.1)
             if os.path.islink(item):
@@ -3972,7 +4016,6 @@ class LView(QBoxLayout):
         
     # new file or folder
     def wrename3(self, ditem, dest_path):
-        #
         ret = MyDialogRename3(ditem, self.lvDir, self.window).getValues()
         if ret == -1:
                 return ret
@@ -4345,19 +4388,19 @@ class getAppsByMime():
         lRemoved = []
         lDefault = []
         lista = []
-        
+        #
         # reset
         lA1 = []
         lR1 = []
         lD1 = []
-        
+        #
         if not os.path.exists(self.MIMEAPPSLIST):
             return
-        
+        #
         # all the file in lista: one row one item added to lista
         with open(self.MIMEAPPSLIST, "r") as f:
             lista = f.readlines()
-        
+        #
         # marker
         x = ""
         for el in lista:
@@ -4406,16 +4449,15 @@ class getDefaultApp():
             #
             try:
                 associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
-            except Exception as E:
+            except:
                 return "None"
-            
+            #
             if associatedDesktopProgram:
-
                 for ddir in xdgDataDirs:
                     if ddir[-1] == "/":
                         ddir = ddir[:-1]
                     desktopPath = os.path.join(ddir+"/applications", associatedDesktopProgram.strip())
-                    
+                    #
                     if os.path.exists(desktopPath):
                         applicationName2 = DesktopEntry(desktopPath).getExec()
                         if applicationName2:
@@ -4456,14 +4498,13 @@ class PastenMerge():
         #
         clipboard = QApplication.clipboard()
         mimeData = clipboard.mimeData(QClipboard.Clipboard)
-        
+        #
         got_quoted_data = []
         for f in mimeData.formats():
             #
             if f == "x-special/gnome-copied-files":
                 data = mimeData.data(f)
                 got_quoted_data = data.data().decode().split("\n")
-                
                 got_action = got_quoted_data[0]
                 if got_action == "copy":
                     self.action = 1
@@ -4499,7 +4540,6 @@ class openTrash(QBoxLayout):
         self.window = window
         self.tdir = tdir
         self.setContentsMargins(QMargins(0,0,0,0))
-        #
         global TrashIsOpen
         if TrashIsOpen:
             return
@@ -4548,9 +4588,7 @@ class openTrash(QBoxLayout):
         self.label4 = QLabel("<i>Type</i>")
         self.label5 = QLabel("<i>Size</i>")
         self.label6 = clabel()
-        self.label6.setWordWrap(True)
         self.label7 = clabel()
-        self.label7.setWordWrap(True)
         self.label8 = QLabel("")
         self.label9 = QLabel("")
         self.label10 = QLabel("")
@@ -4593,15 +4631,12 @@ class openTrash(QBoxLayout):
     # populate the QListView model
     def popTrash(self):
         llista = trash_module.ReadTrash(self.tdir).return_the_list()
-        
         if llista == -2:
             MyDialog("ERROR", "The trash directory and its subfolders have some problem.", self.window)
             return
-        
         if llista == -1:
             MyDialog("ERROR", "Got some problem during the reading of the trashed items.\nSolve the issue manually.", self.window)
             return
-        
         if llista != -1:
             for item in llista:
                 if self.tdir == "HOME":
@@ -4651,7 +4686,7 @@ class openTrash(QBoxLayout):
                         self.list_trashed_items.append(fake_name+".trashinfo")
                 except Exception as E:
                     MyDialog("ERROR", str(E), self.window)
-            #
+        #
         elif len(updated_list) < len(self.list_trashed_items):
             item_deleted = [x for x in self.list_trashed_items if x not in updated_list]
             for eitem in item_deleted:
@@ -4664,8 +4699,10 @@ class openTrash(QBoxLayout):
                         self.list_trashed_items.remove(eitem)
                         break
                     i += 1
+        #
         else:
             pass
+    
     
     def iconItem(self, item):
         path = item
@@ -4690,7 +4727,7 @@ class openTrash(QBoxLayout):
             if self.model.item(i).checkState():
                 checkedItems.append(self.model.item(i))
             i += 1
-        
+        #
         for iitem in checkedItems:
             restore_items = []
             index = iitem.index()
@@ -4723,7 +4760,7 @@ class openTrash(QBoxLayout):
             if self.model.item(i).checkState():
                 checkedItems.append(self.model.item(i))
             i += 1
-
+        #
         for iitem in checkedItems:
             restore_items = []
             index = iitem.index()
@@ -4775,12 +4812,12 @@ class openTrash(QBoxLayout):
         self.label6.setText(itemName, self.window.size().width())
         self.label7.setText(itemPath, self.window.size().width())
         self.label8.setText(str(deletionDate).replace("T", " - "))
-
+        #
         Tpath = trash_module.mountPoint(self.tdir).find_trash_path()
         fpath = os.path.join(Tpath, "files", fake_name)
         imime = QMimeDatabase().mimeTypeForFile(fpath, QMimeDatabase.MatchDefault)
         self.label9.setText(imime.name())
-        
+        #
         if not os.path.exists(fpath):
             self.label10.setText("(Broken Link)")
         elif os.path.isfile(fpath):
@@ -4826,7 +4863,7 @@ class openTrash(QBoxLayout):
                         return
                 elif ret == -1:
                     return
-
+            #
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
@@ -4847,7 +4884,7 @@ class openTrash(QBoxLayout):
             if os.path.isfile(os.path.join(Tpath, "files", itemName)):
                 subm_openwithAction= menu.addMenu("Open with...")
                 listPrograms = getAppsByMime(os.path.join(Tpath, "files", itemName)).appByMime()
-                
+                #
                 ii = 0
                 defApp = getDefaultApp(os.path.join(Tpath, "files", itemName)).defaultApplication()
                 progActionList = []
@@ -4928,7 +4965,7 @@ class TrashModule():
         self.Tinfo = os.path.join(self.trash_path, "info")
         self.can_trash = 0
         self.Ttrash_can_trash()
-        
+        #
         if self.can_trash:
             self.Tcan_trash(self.list_items)
 
@@ -4976,17 +5013,17 @@ class TrashModule():
                 except Exception as E:
                     MyDialog("ERROR", str(E), self.window)
                     return
-            
+            #
             if not os.path.exists(self.Tinfo):
                 try:
                     os.mkdir(self.Tinfo, 0o700)
                 except Exception as E:
                     MyDialog("ERROR", str(E), self.window)
                     return
-            
+            #
             self.can_trash = 1
             return
-        
+        #
         else:
             MyDialog("ERROR", "The Trash folder has wrong permissions.", self.window)
             return
@@ -5001,12 +5038,12 @@ class TrashModule():
                 basename, suffix = os.path.splitext(item)
                 i = 2
                 aa = basename+"."+str(i)+suffix+".trashinfo"
-
+                #
                 while os.path.exists(os.path.join(self.Tinfo, basename+"."+str(i)+suffix+".trashinfo")):
                     i += 1
                 else:
                     item = basename+"."+str(i)+suffix
-
+            #
             try:
                 shutil.move(item_path, os.path.join(self.Tfiles, item))
             except Exception as E:
@@ -5228,7 +5265,7 @@ class cTView(QBoxLayout):
                     ret = execfileDialog(path, 1, self.window).getValue()
                 else:
                     ret = execfileDialog(path, 0, self.window).getValue()
-                
+                #
                 if ret == 2:
                     try:
                         subprocess.Popen(path, shell=True)
@@ -5370,7 +5407,6 @@ class cTView(QBoxLayout):
                             trashAction = QAction("Trash", self)
                             trashAction.triggered.connect(self.ftrashAction)
                             menu.addAction(trashAction)
-            #
             # delete function
             if USE_DELETE:
                 if self.flag == 1 or self.flag == 3:
@@ -5696,6 +5732,7 @@ class cTView(QBoxLayout):
         else:
             sfsize = str(round(fsize2/1048576))+" MB"
         return sfsize    
+
 
     # go to the parent folder
     def upButton(self):
