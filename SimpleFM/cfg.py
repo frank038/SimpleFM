@@ -1,4 +1,6 @@
 ### main program
+# can use: 1 - the user mimeapps.list (in $HOME/.config/mimeapps.list) or 0 - those in the program
+USER_MIMEAPPSLIST=0
 # directory to open - full path or HOME
 FOLDER_TO_OPEN = "HOME"
 # multi items drag picture: 0 use simple icon - 1 enable extended icon
