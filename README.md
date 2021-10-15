@@ -10,7 +10,7 @@ Requirements:
 - pkexec
 
 Optionals:
-- python3-dbus.mainloop.pyqt5 (for mass storages)
+- python3-dbus.mainloop.pyqt5 (for mass storage devices)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
 - md5sum - sha256sum - sha1sum - 7z - tar - xterm (for custom actions)
 - archivemount (for mounting archive files - custom action)
