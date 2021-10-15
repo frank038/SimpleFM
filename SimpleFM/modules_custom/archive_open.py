@@ -16,6 +16,7 @@ from cfg import BUTTON_SIZE
 def mmodule_name():
     return "Open archive"
 
+
 # 1 : one item selected - 2 : more than one item selected - 3 : one or more items selected- 4 on background - 5 always
 # action type
 def mmodule_type(mainLView):
@@ -35,6 +36,14 @@ class ModuleCustom():
     def __init__(self, mainLView):
         index = mainLView.selection[0]
         path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
+        # test the archive for password
+        # archivemount do not support passworded archives
+        if shutil.which("7z"):
+            ret = self.test_archive(path)
+            if ret == 2:
+                MyDialog("Info", "This archive is password-protected\nand cannot be mounted.")
+                return
+        #
         base_dest_dir = "/tmp/archivemount"
         try:
             if not os.path.exists(base_dest_dir):
@@ -108,7 +117,24 @@ class ModuleCustom():
         else:
             MyDialog("Info", "Error while umount the folder\n{}\n{}".format(dest_dir, ret))
 
-    
+        
+    # test the archive for password using 7z
+    def test_archive(self, path):
+        szdata = None
+        try:
+            szdata = subprocess.check_output('7z l -slt -bso0 -- "{}"'.format(path), shell=True)
+        except:
+            return 0
+        #
+        if szdata != None:
+            szdata_decoded = szdata.decode()
+            ddata = szdata_decoded.splitlines()
+            if "Encrypted = +" in ddata:
+                return 2
+            else:
+                return 1   
+
+
 class MyDialog(QDialog):
     def __init__(self, *args, parent=None):
         super(MyDialog, self).__init__(parent)
