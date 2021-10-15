@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.10
+# version 0.5.11
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -585,10 +585,8 @@ class propertyDialog(QDialog):
         #
         labelName = QLabel("<i>Name</i>")
         self.grid1.addWidget(labelName, 0, 0, 1, 1, Qt.AlignRight)
-        self.labelName2 = QLabel()
-        self.labelName2.setWordWrap(True)
+        self.labelName2 = clabel2()
         self.labelName2.setTextInteractionFlags(Qt.TextSelectableByMouse)
-        self.labelName2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
         self.grid1.addWidget(self.labelName2, 0, 1, 1, 4, Qt.AlignLeft)
         #
         labelMime = QLabel("<i>MimeType</i>")
@@ -613,17 +611,14 @@ class propertyDialog(QDialog):
         # if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
         if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
-                self.labelName2.setText(os.path.basename(self.itemPath))
+                self.labelName2.setText(os.path.basename(self.itemPath), self.size().width()-12)
                 self.labelMime2.setText("Broken link")
                 labelSize.hide()
                 self.labelSize2.hide()
                 label_real_link = QLabel("<i>To Path</i>")
                 self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
-                label_real_link2 = QLabel()
-                label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
-                label_real_link2.setWordWrap(True)
-                label_real_link2.setText(os.readlink(self.itemPath))
-                label_real_link2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
+                label_real_link2 = clabel2()
+                label_real_link2.setText(os.path.realpath(self.itemPath), self.size().width()-12)
                 self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
                 self.adjustSize()
                 self.exec_()
@@ -631,11 +626,8 @@ class propertyDialog(QDialog):
             if os.path.islink(self.itemPath):
                 label_real_link = QLabel("<i>To Path</i>")
                 self.grid1.addWidget(label_real_link, 5, 0, 1, 1, Qt.AlignRight)
-                label_real_link2 = QLabel()
-                label_real_link2.setTextInteractionFlags(Qt.TextSelectableByMouse)
-                label_real_link2.setWordWrap(True)
-                label_real_link2.setText(os.path.realpath(os.readlink(self.itemPath)))
-                label_real_link2.setSizePolicy(QSizePolicy.Maximum, QSizePolicy.MinimumExpanding)
+                label_real_link2 = clabel2()
+                label_real_link2.setText(os.path.realpath(self.itemPath), self.size().width()-12)
                 self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
             #
             labelCreation = QLabel("<i>Creation</i>")
@@ -828,7 +820,7 @@ class propertyDialog(QDialog):
             self.ibtn.hide()
         #
         fileInfo = QFileInfo(self.itemPath)
-        self.labelName2.setText(fileInfo.fileName())
+        self.labelName2.setText(fileInfo.fileName(), self.size().width()-12)
         self.labelMime2.setText(self.imime.name())
         #
         if not os.path.exists(self.itemPath):
@@ -1858,8 +1850,6 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # # only for skipped items
-            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
@@ -1871,8 +1861,6 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # # only for skipped items
-            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
     
@@ -2413,6 +2401,15 @@ class MainWin(QWidget):
         self.mtab.tabCloseRequested.connect(self.closeTab)
         #
         self.vbox.addWidget(self.mtab)
+        #### autostart
+        for el in list_custom_modules[:]:
+            if el.__name__[0:10] == "autostart_":
+                if el.mmodule_type(self) == 6:
+                    try:
+                        el.ModuleCustom(self)
+                        list_custom_modules.remove(el)
+                    except Exception as E:
+                        MyDialog("Error", str(E), self)
         ####
         parg = ""
         if len(sys.argv) > 1:
@@ -2829,7 +2826,7 @@ class MainWin(QWidget):
                     ifile.write("{};{};False".format(new_w, new_h))
                 ifile.close()
             except Exception as E:
-                pass
+                MyDialog("Error", str(E), self)
         qApp.quit()
     
     
@@ -2877,7 +2874,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-
+    
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3504,10 +3501,13 @@ class LView(QBoxLayout):
                 else:
                     self.label6.setText("(Not readable)"+"    ")
             # link - broken link
+            real_path_short = real_path
+            if len(real_path) > 50:
+                real_path_short = real_path[0:23]+"..."+real_path[-24:]
             if not os.path.exists(real_path):
-                self.label8.setText("Broken link to: {}".format(real_path))
+                self.label8.setText("Broken link to: {}".format(real_path_short))
             else:
-                self.label8.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Link to</i>: {}".format(real_path))
+                self.label8.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Link to</i>: {}".format(real_path_short))
         elif os.path.isfile(path):
             # mimetype
             imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
@@ -3848,7 +3848,7 @@ class LView(QBoxLayout):
                 menu.addAction(pasteNmergeAction)
             #
             menu.addSeparator()
-            subm_customAction = menu.addMenu("Custom Actions")
+            subm_customAction = menu.addMenu("Actions")
             #
             if len(list_custom_modules) > 0:
                 listActions = []
@@ -5432,7 +5432,7 @@ class cTView(QBoxLayout):
                     menu.addAction(renameAction)
             #
             menu.addSeparator()
-            subm_customAction = menu.addMenu("Custom Actions")
+            subm_customAction = menu.addMenu("Actions")
             #
             if len(list_custom_modules) > 0:
                 listActions = []
