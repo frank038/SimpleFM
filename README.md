@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.5.11 (development/testing)
+V. 0.6.0 (testing)
 
 A file manager written in PyQt5.
 
@@ -27,6 +27,8 @@ Features:
 - custom folder icon
 - sticky selection by pressing in the circle
 - and more...
+
+Tested a bit also under wayland.
 
 Customizations throu the cfg.py file.
 
