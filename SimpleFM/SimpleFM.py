@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.5.11
+# version 0.6.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -140,22 +140,23 @@ if USE_AD:
     try:
         from custom_icon_text import fcit
     except Exception as E:
-        print("Error while importing the module:\n{}".format(str(E)))
+        # print("Error while importing the module:\n{}".format(str(E)))
+        pass
         USE_AD = 0
 
 if not os.path.exists("modules_custom"):
     try:
         os.mkdir("modules_custom")
     except:
-        print("Cannot create the modules_custom folder. Exiting...")
-        sys.exit()
+        app = QApplication(sys.argv)
+        fm = firstMessage("Error", "Cannot create the modules_custom folder. Exiting...")
+        sys.exit(app.exec_())
 
 sys.path.append("modules_custom")
 mmod_custom = glob.glob("modules_custom/*.py")
 list_custom_modules = []
 for el in reversed(mmod_custom):
     try:
-        # da python 3.4 exec_module invece di import_module
         ee = importlib.import_module(os.path.basename(el)[:-3])
         list_custom_modules.append(ee)
     except ImportError as ioe:
@@ -164,8 +165,9 @@ for el in reversed(mmod_custom):
         sys.exit(app.exec_())
 
 if not os.path.exists("icons"):
-    print("The folder icons doesn't exist. Exiting...")
-    sys.exit()
+    app = QApplication(sys.argv)
+    fm = firstMessage("Error", "The folder icons doesn't exist. Exiting...")
+    sys.exit(app.exec_())
 
 #
 TCOMPUTER = 0
@@ -608,7 +610,6 @@ class propertyDialog(QDialog):
         self.labelSize2 = QLabel()
         self.grid1.addWidget(self.labelSize2, 4, 1, 1, 4, Qt.AlignLeft)
         #
-        # if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
         if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
                 self.labelName2.setText(os.path.basename(self.itemPath), self.size().width()-12)
@@ -1893,7 +1894,6 @@ class MyQlist(QListView):
         drag = QDrag(self)
         if len(item_list) > 1:
             if not USE_EXTENDED_DRAG_ICON:
-                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
@@ -2874,7 +2874,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-    
+
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3898,6 +3898,13 @@ class LView(QBoxLayout):
     
     # copy the template choosen - the rename dialog appears
     def ftemplateAction(self, templateName):
+        templateDir = None
+        if shutil.which("xdg-user-dir"):
+            templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
+            if not os.path.exists(templateDir):
+                optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
+                if os.path.exists(optTemplateDir):
+                   templateDir = optTemplateDir
         #
         if os.access(self.lvDir, os.W_OK): 
             ret = self.wrename3(templateName, self.lvDir)
@@ -3905,8 +3912,7 @@ class LView(QBoxLayout):
                 destPath = os.path.join(self.lvDir, ret)
                 if not os.path.exists(destPath):
                     try:
-                        iitem = open(destPath,'w')
-                        iitem.close()
+                        shutil.copy(os.path.join(templateDir, templateName), destPath)
                     except Exception as E:
                         MyDialog("Error", str(E), self.window)
     
@@ -4597,7 +4603,6 @@ class openTrash(QBoxLayout):
         self.label6 = clabel()
         # self.label6.setWordWrap(True)
         self.label7 = clabel()
-        # self.label7.setWordWrap(True)
         self.label8 = QLabel("")
         self.label9 = QLabel("")
         self.label10 = QLabel("")
@@ -5513,6 +5518,13 @@ class cTView(QBoxLayout):
                         MyDialog("Error", str(E), self.window)
     
     def ftemplateAction(self, templateName):
+        templateDir = None
+        if shutil.which("xdg-user-dir"):
+            templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
+            if not os.path.exists(templateDir):
+                optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
+                if os.path.exists(optTemplateDir):
+                   templateDir = optTemplateDir
         #
         if os.access(self.lvDir, os.W_OK): 
             ret = self.wrename3(templateName, self.lvDir)
@@ -5520,8 +5532,7 @@ class cTView(QBoxLayout):
                 destPath = os.path.join(self.lvDir, ret)
                 if not os.path.exists(destPath):
                     try:
-                        iitem = open(destPath,'w')
-                        iitem.close()
+                        shutil.copy(os.path.join(templateDir, templateName), destPath)
                     except Exception as E:
                         MyDialog("Error", str(E), self.window)
     
