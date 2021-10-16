@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-create a tar or tgz archive
+create a tar or tgz or zip archive
 """
 import os
 import stat
@@ -17,7 +17,7 @@ def mmodule_name():
 # 1 : one item selected - 2 : more than one item selected - 3 : one or more items selected- 4 on background - 5 always
 # action type
 def mmodule_type(mainLView):
-    if shutil.which("tar"):
+    if shutil.which("tar") or shutil.which("7z"):
         return 3
     else:
         return 0
@@ -62,6 +62,9 @@ class compressData(QDialog):
             compressor_list.append("Tar")
             if shutil.which("gzip"):
                 compressor_list.append("TarGz")
+        # for zip
+        if shutil.which("7z"):
+            compressor_list.append("Zip")
         #
         grid = QGridLayout()
         grid.setContentsMargins(5,5,5,5)
@@ -92,38 +95,37 @@ class compressData(QDialog):
         self.exec_()
 
     def fcompress(self):
-        index = self.cb.currentIndex()
-        
-        if index == 0:
+        container_choosen = self.cb.currentText()
+        if container_choosen == "Tar":
             archive_name = self.le1.text()
             if archive_name == "" or os.path.exists(os.path.join(self.current_dir, archive_name+".tar")):
                 MyDialog("Info", "Choose a different name.")
             else:
                 try:
-                    command = "cd '{0}' && tar -cf '{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), self.path_list[0][len(self.current_dir)+1:])
-                    subprocess.call([command], shell=True)
-                    
+                    command = "cd '{0}' && tar -cf '{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), os.path.basename(self.path_list[0]))
+                    subprocess.check_output(command, shell=True)
+                    #
                     if len(self.path_list) > 1:
                         for iitem in self.path_list[1:]:
-                            command = "cd '{0}' && tar --append --file='{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), iitem[len(self.current_dir)+1:])
-                            subprocess.Popen([command], shell=True)
+                            command = "cd '{0}' && tar --append --file='{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), os.path.basename(iitem))
+                            subprocess.check_output(command, shell=True)
                     self.close()
                     MyDialog("Info", "Archive created:\n{}".format(self.le1.text()+".tar"))
                 except Exception as E:
                     self.close()
                     MyDialog("ERROR", str(E))
-        elif index == 1:
+        elif container_choosen == "TarGz":
             archive_name = self.le1.text()
-            if os.path.exists(os.path.join(self.current_dir, archive_name+".tar")) or os.path.exists(os.path.join(self.current_dir, archive_name+".tar.gz")):
+            if archive_name == "" or os.path.exists(os.path.join(self.current_dir, archive_name+".tar")) or os.path.exists(os.path.join(self.current_dir, archive_name+".tar.gz")):
                 MyDialog("Info", "Choose a different name.")
             else:
                 try:
-                    command = "cd '{0}' && tar -cf '{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), self.path_list[0][len(self.current_dir)+1:])
-                    subprocess.call([command], shell=True)
+                    command = "cd '{0}' && tar -cf '{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), os.path.basename(self.path_list[0]))
+                    subprocess.check_output(command, shell=True)
                     if len(self.path_list) > 1:
                         for iitem in self.path_list[1:]:
-                            command = "cd '{0}' && tar --append --file='{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), iitem[len(self.current_dir)+1:])
-                            subprocess.Popen([command], shell=True)
+                            command = "cd '{0}' && tar --append --file='{1}'.tar '{2}'".format(self.current_dir, self.le1.text(), os.path.basename(iitem))
+                            subprocess.check_output(command, shell=True)
                     command = "cd '{0}' && gzip '{1}'".format(self.current_dir, self.le1.text()+".tar")
                     subprocess.call([command], shell=True)
                     self.close()
@@ -131,7 +133,19 @@ class compressData(QDialog):
                 except Exception as E:
                     self.close()
                     MyDialog("ERROR", str(E))
-
+        elif container_choosen == "Zip":
+            archive_name = self.le1.text()
+            if archive_name == "" or os.path.exists(os.path.join(self.current_dir, archive_name+".zip")):
+                MyDialog("Info", "Choose a different name.")
+            else:
+                try:
+                    for iitem in self.path_list:
+                        subprocess.check_output("7z a '{}'.zip '{}'".format(os.path.join(self.current_dir, self.le1.text()), iitem), shell=True)
+                    self.close()
+                    MyDialog("Info", "Archive created:\n{}".format(self.le1.text()+".zip"))
+                except Exception as E:
+                    self.close()
+                    MyDialog("ERROR", str(E))
 
 class ModuleCustom():
     
