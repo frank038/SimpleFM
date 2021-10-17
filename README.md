@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.6.2 (testing - no more features will be added in the main program)
+V. 0.6.3 (testing - no more features will be added in the main program)
 
 A file manager written in PyQt5.
 
@@ -8,11 +8,13 @@ Requirements:
 - pyqt5
 - python3-xdg
 - pkexec
+- python3-psutil
 
 Optionals:
 - python3-dbus.mainloop.pyqt5 (for mass storage devices)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
-- md5sum - sha256sum - sha1sum - 7z - tar - xterm (for custom actions)
+- 7z (for custom actions - raccomanded)
+- md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
 - archivemount (for mounting archive files - custom action)
 - coreurils at least 8.31 to get the right creation date and time of items.
 
