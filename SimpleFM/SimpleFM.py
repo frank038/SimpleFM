@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.6.3
+# version 0.6.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2754,8 +2754,8 @@ class MainWin(QWidget):
             mountpoint = "(Not mounted)"
             device_size = str(convert_size(size))
         else:
-            mountpoint_size = folder_size(mountpoint)
-            device_size = str(convert_size(size))+" - ("+str(convert_size(mountpoint_size))+")"
+            mountpoint_size = convert_size(psutil.disk_usage(mountpoint).used)
+            device_size = str(convert_size(size))+" - ("+mountpoint_size+")"
         if not vendor:
             vendor = "(None)"
         if not model:
