@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# version 0.6.2
+# version 0.6.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont)
 import dbus
+import psutil
 import sys
 from pathlib import PosixPath
 import os
@@ -70,7 +71,7 @@ class firstMessage(QWidget):
         title = args[0]
         message = args[1]
         self.setWindowTitle(title)
-        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         box = QBoxLayout(QBoxLayout.TopToBottom)
         box.setContentsMargins(5,5,5,5)
         self.setLayout(box)
@@ -140,8 +141,8 @@ if USE_AD:
     try:
         from custom_icon_text import fcit
     except Exception as E:
-        # print("Error while importing the module:\n{}".format(str(E)))
-        pass
+        app = QApplication(sys.argv)
+        fm = firstMessage("Error", "Error while importing the module:\n{}".format(str(E)))
         USE_AD = 0
 
 if not os.path.exists("modules_custom"):
@@ -547,6 +548,22 @@ def folder_size(path):
                 total_size += os.path.getsize(flp)
     return total_size
 
+def convert_size(fsize2):
+    if fsize2 == 0 or fsize2 == 1:
+        sfsize = str(fsize2)+" byte"
+    elif fsize2//1024 == 0:
+        sfsize = str(fsize2)+" bytes"
+    elif fsize2//1048576 == 0:
+        sfsize = str(round(fsize2/1024, 3))+" KB"
+    elif fsize2//1073741824 == 0:
+        sfsize = str(round(fsize2/1048576, 3))+" MB"
+    elif fsize2//1099511627776 == 0:
+        sfsize = str(round(fsize2/1073741824, 3))+" GiB"
+    else:
+        sfsize = str(round(fsize2/1099511627776, 3))+" GiB"
+    return sfsize  
+
+
 # property dialog for one item
 class propertyDialog(QDialog):
     def __init__(self, itemPath, parent):
@@ -645,6 +662,40 @@ class propertyDialog(QDialog):
             self.grid1.addWidget(labelAccess, 8, 0, 1, 1, Qt.AlignRight)
             self.labelAccess2 = QLabel()
             self.grid1.addWidget(self.labelAccess2, 8, 1, 1, 4, Qt.AlignLeft)
+            # disc usage
+            num_partitions = len(psutil.disk_partitions())
+            file_mountpoint = ""
+            data_mountpoint = None
+            if num_partitions == 1:
+                data_mountpoint = psutil.disk_partitions()[0]
+                file_mountpoint = data_mountpoint.mountpoint
+            else:
+                for ppart in psutil.disk_partitions():
+                    if ppart.mountpoint == "/":
+                        continue
+                    p_mount_point = ppart.mountpoint+"/"
+                    if self.itemPath[0:len(p_mount_point)] == p_mount_point:
+                        data_mountpoint = ppart
+                        file_mountpoint = ppart.mountpoint
+            if data_mountpoint == None:
+                for ppart in psutil.disk_partitions():
+                    if ppart.mountpoint == "/":
+                        data_mountpoint = ppart
+                        file_mountpoint = "/"
+                        break
+            if file_mountpoint == "/":
+                file_mountpoint = "Root"
+            elif file_mountpoint == "/boot":
+                file_mountpoint = "Boot"
+            elif file_mountpoint == "/home":
+                file_mountpoint = "Home"
+            label_partition = QLabel("<i>Disc {}</i>".format(file_mountpoint))
+            self.grid1.addWidget(label_partition, 9, 0, 1, 1, Qt.AlignRight)
+            label_partition2 = QLabel()
+            disc_size = convert_size(psutil.disk_usage(data_mountpoint.mountpoint).total)
+            disc_used = convert_size(psutil.disk_usage(data_mountpoint.mountpoint).used)
+            label_partition2.setText("{} / {}".format(disc_size, disc_used))
+            self.grid1.addWidget(label_partition2, 9, 1, 1, 4, Qt.AlignLeft)
             ###### tab 2
             page2 = QWidget()
             self.gtab.addTab(page2, "Permissions")
@@ -707,6 +758,13 @@ class propertyDialog(QDialog):
             self.grid2.addWidget(self.grp_btn, 1, 6, 1, 1, Qt.AlignLeft)
             # folder access - file executable
             self.cb1 = QCheckBox()
+            ## set the initial state
+            fileInfo = QFileInfo(self.itemPath)
+            perms = fileInfo.permissions()
+            # folder access - file execution
+            if perms & QFile.ExeOwner:
+                self.cb1.setChecked(True)
+            #
             self.cb1.stateChanged.connect(self.fcb1)
             self.grid3.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
             # immutable file button
@@ -831,12 +889,12 @@ class propertyDialog(QDialog):
                 self.labelSize2.setText("Unrecognizable")
         if os.path.isfile(self.itemPath):
             if os.access(self.itemPath, os.R_OK):
-                self.labelSize2.setText(self.convert_size(QFileInfo(self.itemPath).size()))
+                self.labelSize2.setText(convert_size(QFileInfo(self.itemPath).size()))
             else:
                 self.labelSize2.setText("(Not readable)")
         elif os.path.isdir(self.itemPath):
             if os.access(self.itemPath, os.R_OK):
-                self.labelSize2.setText(str(self.convert_size(folder_size(self.itemPath))))
+                self.labelSize2.setText(str(convert_size(folder_size(self.itemPath))))
             else:
                 self.labelSize2.setText("(Not readable)")
         else:
@@ -884,7 +942,8 @@ class propertyDialog(QDialog):
             perms = fileInfo.permissions()
             # folder access - file execution
             if perms & QFile.ExeOwner:
-                self.cb1.setChecked(True)
+                if not self.cb1.checkState():
+                    self.cb1.setChecked(True)
             #
             nperm = self.fgetPermissions()
             #
@@ -935,19 +994,6 @@ class propertyDialog(QDialog):
             if ret.returncode == 0:
                 self.tab()
     
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        else:
-            sfsize = str(round(fsize2/1048576))+" MB"
-        return sfsize    
-    
     def tperms(self, perms):
         tperm = ""
         tperm = str(perms[0] + perms[1] + perms[2])+str(perms[3] + perms[4] + perms[5])+str(perms[6] + perms[7] + perms[8])
@@ -995,7 +1041,7 @@ class propertyDialog(QDialog):
         try:
             os.chmod(self.itemPath, int("{}".format(tperm), 8))
         except Exception as E:
-                MyDialog("Error", str(E), self.window)
+            MyDialog("Error", str(E), self.window)
         # repopulate
         self.tab()
     
@@ -1015,7 +1061,7 @@ class propertyDialog(QDialog):
         try:
             os.chmod(self.itemPath, int("{}".format(tperm), 8))
         except Exception as E:
-                MyDialog("Error", str(E), self.window)
+            MyDialog("Error", str(E), self.window)
         # repopulate
         self.tab()
     
@@ -1035,7 +1081,7 @@ class propertyDialog(QDialog):
         try:
             os.chmod(self.itemPath, int("{}".format(tperm), 8))
         except Exception as E:
-                MyDialog("Error", str(E), self.window)
+            MyDialog("Error", str(E), self.window)
         # repopulate
         self.tab()
 
@@ -1809,19 +1855,7 @@ class copyItems2():
         self.mythread.start()
         #
         self.mydialog.exec()
-
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        else:
-            sfsize = str(round(fsize2/1048576))+" MB"
-        return sfsize    
+   
     
     def threadslot(self, aa):
         # from directories
@@ -1894,6 +1928,7 @@ class MyQlist(QListView):
         drag = QDrag(self)
         if len(item_list) > 1:
             if not USE_EXTENDED_DRAG_ICON:
+                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
@@ -2521,13 +2556,13 @@ class MainWin(QWidget):
                     disk_name = str(label)
                 else:
                     if str(vendor) and str(model):
-                        disk_name = str(vendor)+" - "+str(model)+" - "+str(self.convert_size(size))
+                        disk_name = str(vendor)+" - "+str(model)+" - "+str(convert_size(size))
                     elif str(vendor):
-                        disk_name = str(vendor)+" - "+str(self.convert_size(size))
+                        disk_name = str(vendor)+" - "+str(convert_size(size))
                     elif str(model):
-                        disk_name = str(model)+" - "+str(self.convert_size(size))
+                        disk_name = str(model)+" - "+str(convert_size(size))
                     else:
-                        disk_name = str(pdevice_dec)+" - "+str(self.convert_size(size))
+                        disk_name = str(pdevice_dec)+" - "+str(convert_size(size))
                 #
                 if is_optical:
                     drive_type = 5 # 0 disk - 5 optical
@@ -2717,10 +2752,10 @@ class MainWin(QWidget):
             label = "(Not set)"
         if mountpoint == "N":
             mountpoint = "(Not mounted)"
-            device_size = str(self.convert_size(size))
+            device_size = str(convert_size(size))
         else:
             mountpoint_size = folder_size(mountpoint)
-            device_size = str(self.convert_size(size))+" - ("+str(self.convert_size(mountpoint_size))+")"
+            device_size = str(convert_size(size))+" - ("+str(convert_size(mountpoint_size))+")"
         if not vendor:
             vendor = "(None)"
         if not model:
@@ -2774,31 +2809,6 @@ class MainWin(QWidget):
             # return ret
         # except:
             # return -1
-    
-    # def folder_size_f(self, fpath):
-        # total_size = 0
-        # for path, dirs, files in os.walk(fpath):
-            # for f in files:
-                # fp = os.path.join(path, f)
-                # total_size += os.path.getsize(fp)
-        # return total_size
-    
-    
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        elif fsize2//1099511627776 == 0:
-            sfsize = str(round(fsize2/1073741824, 3))+" GiB"
-        else:
-            sfsize = str(round(fsize2/1099511627776, 3))+" GiB"
-        return sfsize  
-
     
     #
     def closeEvent(self, event):
@@ -2874,7 +2884,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-
+    
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3492,7 +3502,7 @@ class LView(QBoxLayout):
             # size
             if os.path.isfile(real_path):
                 if os.access(real_path, os.R_OK):
-                    self.label6.setText(self.convert_size(file_info.size())+"    ")
+                    self.label6.setText(convert_size(file_info.size())+"    ")
                 else:
                     self.label6.setText("(Not readable)"+"    ")
             elif os.path.isdir(real_path):
@@ -3514,7 +3524,7 @@ class LView(QBoxLayout):
             self.label7.setText(imime.name())
             # size
             if os.access(path, os.R_OK):
-                self.label6.setText(self.convert_size(file_info.size())+"    ")
+                self.label6.setText(convert_size(file_info.size())+"    ")
             else:
                 self.label6.setText("(Not readable)"+"    ")
         elif os.path.isdir(path):
@@ -3616,7 +3626,7 @@ class LView(QBoxLayout):
             self.label2.setText("<i>Selected Items </i>")
             self.label6.setText(str(len(self.selection)))
             self.label3.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Size </i>")
-            self.label7.setText(str(self.convert_size(total_size)))
+            self.label7.setText(str(convert_size(total_size)))
             self.label8.setText("")
     
     # mouse right click on the pointed item
@@ -3657,6 +3667,8 @@ class LView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
+                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    # progActionList.append(iprog)
                                     progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.insert(1, iprog)
                                 else:
@@ -4073,7 +4085,7 @@ class LView(QBoxLayout):
             except:
                 iSize += 0
         #
-        propertyDialogMulti(self.convert_size(iSize), iNum, self.window)
+        propertyDialogMulti(convert_size(iSize), iNum, self.window)
     
     # 
     def ficustomAction(self, el, menuType):
@@ -4193,19 +4205,6 @@ class LView(QBoxLayout):
             self.fileModel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System)
             self.fmf = 0
 
-    
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        else:
-            sfsize = str(round(fsize2/1048576))+" MB"
-        return sfsize    
 
 
 ###########################
@@ -4601,7 +4600,6 @@ class openTrash(QBoxLayout):
         self.label4 = QLabel("<i>Type</i>")
         self.label5 = QLabel("<i>Size</i>")
         self.label6 = clabel()
-        # self.label6.setWordWrap(True)
         self.label7 = clabel()
         self.label8 = QLabel("")
         self.label9 = QLabel("")
@@ -4715,6 +4713,7 @@ class openTrash(QBoxLayout):
                     i += 1
         #
         else:
+            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
     
     
@@ -4836,12 +4835,12 @@ class openTrash(QBoxLayout):
             self.label10.setText("(Broken Link)")
         elif os.path.isfile(fpath):
             if os.access(fpath, os.R_OK):
-                self.label10.setText(self.convert_size(QFileInfo(fpath).size()))
+                self.label10.setText(convert_size(QFileInfo(fpath).size()))
             else:
                 self.label10.setText("(Not readable)")
         elif os.path.isdir(fpath):
             if os.access(fpath, os.R_OK):
-                self.label10.setText(self.convert_size(folder_size(fpath)))
+                self.label10.setText(convert_size(folder_size(fpath)))
             else:
                 self.label10.setText("(Not readable)")
     
@@ -4947,20 +4946,7 @@ class openTrash(QBoxLayout):
                     MyDialog("Error", str(E), self.window)
             else:
                 MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
-    
-    
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        else:
-            sfsize = str(round(fsize2/1048576))+" MB"
-        return sfsize  
+
 
 
 class RestoreTrashedItems():
@@ -5734,24 +5720,11 @@ class cTView(QBoxLayout):
             except:
                 iSize += 0
         #
-        propertyDialogMulti(self.convert_size(iSize), iNum, self.window)
+        propertyDialogMulti(convert_size(iSize), iNum, self.window)
     
     # item property dialog
     def fpropertyAction(self, ipath):
         propertyDialog(ipath, self.window)
-
-    def convert_size(self, fsize2):
-        if fsize2 == 0 or fsize2 == 1:
-            sfsize = str(fsize2)+" byte"
-        elif fsize2//1024 == 0:
-            sfsize = str(fsize2)+" bytes"
-        elif fsize2//1048576 == 0:
-            sfsize = str(round(fsize2/1024, 3))+" KB"
-        elif fsize2//1073741824 == 0:
-            sfsize = str(round(fsize2/1048576, 3))+" MB"
-        else:
-            sfsize = str(round(fsize2/1048576))+" MB"
-        return sfsize    
 
 
     # go to the parent folder
