@@ -30,7 +30,7 @@ class checkSum(QDialog):
     def __init__(self, path, parent=None):
         super(checkSum, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.setWindowTitle("Checksum")
+        self.setWindowTitle("Checksum"+" - "+os.path.basename(path))
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(600,300)
         self.path = path
