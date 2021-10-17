@@ -3,7 +3,7 @@
 from PyQt5.QtCore import (QMargins,QEvent,QObject,Qt)
 from PyQt5.QtWidgets import (QDialog, QListWidgetItem, QListWidget, QTreeWidget, QTreeWidgetItem, qApp,QBoxLayout,QLabel,QPushButton,QApplication,QDialog,QMessageBox,QLineEdit,QTabWidget,QWidget,QListView)
 from PyQt5.QtGui import (QIcon,QPixmap,QFont)
-
+from xdg import DesktopEntry
 import sys
 import os
 
@@ -234,10 +234,13 @@ class MainWin(QDialog):
         for el in lAdded:
             if el not in desktop_found:
                 for elx in xdgDataDirs:
-                    for ellx in os.listdir(os.path.join(elx, "applications")):
+                    app_dir = os.path.join(elx, "applications")
+                    for ellx in os.listdir(app_dir):
                         if el == ellx:
                             desktop_found.append(os.path.basename(ellx))
-                            item = QTreeWidgetItem(["+", el.split(".")[0], el])
+                            entry = DesktopEntry.DesktopEntry(os.path.join(app_dir, el))
+                            fexec = entry.getExec().split(" ")[0]
+                            item = QTreeWidgetItem(["+", fexec, el])
                             self.plist.addTopLevelItem(item)
                             break
         # added - missing desktop files
