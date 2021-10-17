@@ -13,7 +13,7 @@ Requirements:
 Optionals:
 - python3-dbus.mainloop.pyqt5 (for mass storage devices)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
-- 7z (for custom actions - raccomanded)
+- 7z (for custom actions - raccomended)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
 - archivemount (for mounting archive files - custom action)
 - coreurils at least 8.31 to get the right creation date and time of items.
