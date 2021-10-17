@@ -90,6 +90,8 @@ USE_AD = 0
 DIALOGWIDTH=600
 
 ### needed by pythumb
+# use thumbnailer in the home dir only: 0 no - 1 yes
+USE_THUMB_HOME_ONLY=1
 # use borders: 0 no - 1 yes
 USE_BORDERS=1
 # 

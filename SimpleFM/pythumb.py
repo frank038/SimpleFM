@@ -10,7 +10,7 @@ import importlib
 
 from PyQt5.QtGui import (QImageReader,QPen,QColor,QPainter,QImageWriter)
 
-from cfg import USE_BORDERS, BORDER_WIDTH, BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
+from cfg import USE_THUMB_HOME_ONLY, USE_BORDERS, BORDER_WIDTH, BORDER_COLOR_R, BORDER_COLOR_G, BORDER_COLOR_B, XDG_CACHE_LARGE
 
 try:
     if not os.path.exists("sh_thumbnails"):
@@ -89,10 +89,13 @@ def createimagethumb(fpath, el):
         return "Null"
 
 def create_thumbnail(fpath, imime):
+    
+    if USE_THUMB_HOME_ONLY:
+        home = os.path.expanduser("~")
+        if fpath[0:len(home)] != home:
+            return "Null"
 
-    path = fpath
-
-    fmtime, omtime = check_mtime(path)
+    fmtime, omtime = check_mtime(fpath)
     md5 = None
 
     if int(fmtime) != int(omtime):
@@ -102,7 +105,7 @@ def create_thumbnail(fpath, imime):
         
         for ii in range(len(menu_bg_module)):
             if imime in menu_bg_module[ii].list_mime:
-                md5 = createimagethumb(path, menu_bg_module[ii])
+                md5 = createimagethumb(fpath, menu_bg_module[ii])
                 if md5 != "Null":
                     return str(md5)
             else:
@@ -110,4 +113,4 @@ def create_thumbnail(fpath, imime):
         else:
             return "Null"
     else:
-        return eencode(path)
+        return eencode(fpath)
