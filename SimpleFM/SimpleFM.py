@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.6.4
+# version 0.6.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -28,6 +28,15 @@ if USER_MIMEAPPSLIST:
     MIMEAPPSLIST = os.path.expanduser('~')+"/.config/mimeapps.list"
 else:
     MIMEAPPSLIST = "mimeapps.list"
+
+# create an empty mimeapps.list if it doesnt exist
+if not os.path.exists(MIMEAPPSLIST):
+    ff = open(MIMEAPPSLIST, "w")
+    ff.write("[Default Applications]\n")
+    ff.write("[Added Associations]\n")
+    ff.write("[Removed Associations]\n")
+    ff.close()
+
 
 if OPEN_WITH:
     try:
@@ -71,7 +80,6 @@ class firstMessage(QWidget):
         title = args[0]
         message = args[1]
         self.setWindowTitle(title)
-        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         box = QBoxLayout(QBoxLayout.TopToBottom)
         box.setContentsMargins(5,5,5,5)
         self.setLayout(box)
@@ -1928,7 +1936,6 @@ class MyQlist(QListView):
         drag = QDrag(self)
         if len(item_list) > 1:
             if not USE_EXTENDED_DRAG_ICON:
-                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
@@ -2884,7 +2891,7 @@ class MainWin(QWidget):
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
     
-    
+
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3667,8 +3674,6 @@ class LView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    # progActionList.append(QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    # progActionList.append(iprog)
                                     progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.insert(1, iprog)
                                 else:
@@ -4459,10 +4464,16 @@ class getDefaultApp():
             else:
                 mimetype = imime
             #
-            try:
-                associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
-            except:
-                return "None"
+            associatedDesktopProgram = None
+            #
+            if USER_MIMEAPPSLIST:
+                #
+                try:
+                    associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
+                except:
+                    return "None"
+            else:
+                associatedDesktopProgram = self.defaultApplication2(mimetype)
             #
             if associatedDesktopProgram:
                 for ddir in xdgDataDirs:
@@ -4489,8 +4500,36 @@ class getDefaultApp():
                 return "None"
             else:
                 return "None"
+        #
         else:
             MyDialog("Error", "xdg-mime cannot be found", self.window)
+        
+    # function that found the default program for the given mimetype
+    def defaultApplication2(self, mimetype):
+        # lists of mimetypes added or removed
+        lista = []
+        # all the file in lista: one row one item added to lista
+        with open(MIMEAPPSLIST, "r") as f:
+            lista = f.readlines()
+        # marker
+        x = ""
+        for el in lista:
+            if el == "[Added Associations]\n":
+                x = "A"
+            elif el == "[Removed Associations]\n":
+                x = "R"
+            elif el == "[Default Applications]\n":
+                x = "D"
+            #
+            if x == "D":
+                if el:
+                    if el == "\n":
+                        continue
+                    if el[0:len(mimetype)+1] == mimetype+"=":
+                        desktop_file = el.split("=")[1].strip("\n").strip(";")
+                        return desktop_file
+        # nothing found
+        return "None"
 
 
 # Paste and Merge function - utility
@@ -4713,7 +4752,6 @@ class openTrash(QBoxLayout):
                     i += 1
         #
         else:
-            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
     
     
