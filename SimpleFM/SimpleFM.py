@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.6.5
+# version 0.6.6
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1287,7 +1287,7 @@ class pasteNmergeDialog(QDialog):
         if self.item_type == "folder":
             label1 = QLabel("The folder\n"+self.ltitle+"\nexists in\n{}.".format(os.path.dirname(self.destination))+"\nPlease choose the default action for all folders.\nThis choise cannot be changed afterwards.\n")
         elif self.item_type == "file":
-            label1 = QLabel("The file\n"+self.ltitle+"\nexists in\n{}.".format(self.destination)+"\nPlease choose the default action for all files.\nThis choise cannot be changed afterwards.\n")
+            label1 = QLabel("The file\n"+self.ltitle+"\nexists in\n{}.".format(os.path.dirname(self.destination))+"\nPlease choose the default action for all files.\nThis choise cannot be changed afterwards.\n")
         vbox.addWidget(label1)
         #
         hbox = QBoxLayout(QBoxLayout.LeftToRight)
@@ -2753,7 +2753,11 @@ class MainWin(QWidget):
         ### 
         media_type = bd2.Get('org.freedesktop.UDisks2.Drive', 'Media', dbus_interface='org.freedesktop.DBus.Properties')
         if not media_type:
-            media_type = "N"
+            conn_bus = bd2.Get('org.freedesktop.UDisks2.Drive', 'ConnectionBus', dbus_interface='org.freedesktop.DBus.Properties')
+            if conn_bus:
+                media_type = conn_bus
+            else:
+                media_type = "N"
         #
         if not label:
             label = "(Not set)"
@@ -2773,17 +2777,14 @@ class MainWin(QWidget):
         
     # get the device icon
     def getDevice(self, media_type, drive_type, connection_bus):
-        if connection_bus == "usb" and drive_type == 0:
-            return "icons/media-removable.svg"
-        #
         if "flash" in media_type:
             return "icons/media-flash.svg"
-        elif "optical" in media_type:
+        if "optical" in media_type:
             return "icons/media-optical.svg"
-        #
+        if connection_bus == "usb" and drive_type == 0:
+            return "icons/media-removable.svg"
         if drive_type == 0:
             return "icons/drive-harddisk.svg"
-        #
         elif drive_type == 5:
             return "icons/media-optical.svg"
         #
