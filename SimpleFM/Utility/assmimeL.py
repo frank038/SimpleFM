@@ -683,7 +683,7 @@ This section lists the executables (if any) associates to the item mimetype.
 If one of the executables is the default program for the 
 mimetype it will be marked with (*). All the associations made in 
 the mimeapps.list (the default one is placed in the HOME/.config folder
-but that in this program directory will be used) will be shown 
+but can also be used that one in this program folder) will be shown 
 as follow: those added will be marken with (+) or (+*) or (+?); those removed 
 will be marked with (-) or (-?). "?" means that an application has been
 registered but its desktop file cannot be found, e.g. after a 
