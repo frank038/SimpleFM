@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.7.0
+# version 0.7.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2634,7 +2634,7 @@ class MainWin(QWidget):
         if mountpoint == "N":
             ret = self.mount_device(mountpoint, ddevice)
             if ret == -1:
-                MyDialog("Info", "The device cannot be mounted.", self.window)
+                MyDialog("Info", "The device cannot be mounted.", self)
                 return
             else:
                 mountpoint = ret
@@ -2660,12 +2660,12 @@ class MainWin(QWidget):
         if mountpoint == "N":
             ret = self.on_mount_device(ddevice, 'Mount')
             if ret == -1:
-                MyDialog("Info", "The device cannot be mounted.", self.window)
+                MyDialog("Info", "The device cannot be mounted.", self)
                 return 
         else:
             ret = self.on_mount_device(ddevice, 'Unmount')
             if ret == -1:
-                MyDialog("Info", "The device cannot be unmounted.", self.window)
+                MyDialog("Info", "The device cannot be unmounted.", self)
                 return
             # close the open tabs
             if ret == None:
@@ -2695,12 +2695,12 @@ class MainWin(QWidget):
         if mountpoint != "N":
             ret = self.mount_device(mountpoint, ddevice)
             if ret == -1:
-                MyDialog("Info", "Device busy.", self.window)
+                MyDialog("Info", "Device busy.", self)
                 return
         # 
         ret = self.on_eject(ddrive)
         if ret == -1:
-            MyDialog("Error", "The device cannot be ejected.", self.window)
+            MyDialog("Error", "The device cannot be ejected.", self)
             return
         # close the open tabs
         self.close_open_tab(mountpoint)
@@ -2806,7 +2806,7 @@ class MainWin(QWidget):
         # #ret = media_module.devPoweroff(mdrive).fdevpoweroff()
         # ret = self.on_poweroff(mdrive)
         # if ret == -1:
-            # MyDialog("Error", "The device cannot be turned off.", self.window)
+            # MyDialog("Error", "The device cannot be turned off.", self)
         # self.button3.setEnabled(False)
     
     # # self.ftbutton3
@@ -2925,6 +2925,7 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
         
+    
     #
     def closeTab(self, index):
         if self.mtab.count() > 1:
@@ -4306,7 +4307,6 @@ class getAppsByMime():
                         # consinstency - do not crash if the desktop file is malformed
                         try:
                             if mimetype in DesktopEntry(desktopPath).getMimeTypes():
-                                # 
                                 mimeProg2 = DesktopEntry(desktopPath).getExec()
                                 # replace $HOME with home path
                                 if mimeProg2[0:5].upper() == "$HOME":
