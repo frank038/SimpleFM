@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.6.6
+# version 0.7.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -80,6 +80,7 @@ class firstMessage(QWidget):
         title = args[0]
         message = args[1]
         self.setWindowTitle(title)
+        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         box = QBoxLayout(QBoxLayout.TopToBottom)
         box.setContentsMargins(5,5,5,5)
         self.setLayout(box)
@@ -483,7 +484,6 @@ class PlistMenu(QDialog):
         #
         import Utility.pop_menu as pop_menu
         THE_MENU = pop_menu.getMenu().retList()
-        #for el in self.menu:
         for el in THE_MENU:
             cat = el[1]
             if cat == "Development":
@@ -635,6 +635,7 @@ class propertyDialog(QDialog):
         self.labelSize2 = QLabel()
         self.grid1.addWidget(self.labelSize2, 4, 1, 1, 4, Qt.AlignLeft)
         #
+        # if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
         if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
                 self.labelName2.setText(os.path.basename(self.itemPath), self.size().width()-12)
@@ -2465,6 +2466,11 @@ class MainWin(QWidget):
         #
         if os.path.dirname(parg) == "":
             self.openDir(HOME, 1)
+        elif parg == "trash://":
+            if USE_TRASH:
+                openTrash(self, "HOME")
+            else:
+                self.openDir(HOME, 1)
         else:
             if os.path.exists(parg) and os.access(parg, os.R_OK):
                 self.openDir(parg, 1)
@@ -2919,7 +2925,6 @@ class MainWin(QWidget):
         page.setLayout(clv)
         self.mtab.setCurrentIndex(self.mtab.count()-1)
         
-    
     #
     def closeTab(self, index):
         if self.mtab.count() > 1:
@@ -4493,7 +4498,7 @@ class getDefaultApp():
                             if os.path.exists(applicationPath):
                                 return applicationPath
                             else:
-                                MyDialog("Error", "{} cannot be found".format(applicationPath), self.window)
+                                MyDialog("Error", "{} cannot be found".format(applicationPath), None)
                         else:
                             return "None"
                 #
@@ -4503,7 +4508,7 @@ class getDefaultApp():
                 return "None"
         #
         else:
-            MyDialog("Error", "xdg-mime cannot be found", self.window)
+            MyDialog("Error", "xdg-mime cannot be found", None)
         
     # function that found the default program for the given mimetype
     def defaultApplication2(self, mimetype):
