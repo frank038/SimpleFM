@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.7.1
+# version 0.7.2
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -167,6 +167,7 @@ mmod_custom = glob.glob("modules_custom/*.py")
 list_custom_modules = []
 for el in reversed(mmod_custom):
     try:
+        # from python 3.4 exec_module instead of import_module
         ee = importlib.import_module(os.path.basename(el)[:-3])
         list_custom_modules.append(ee)
     except ImportError as ioe:
@@ -484,6 +485,7 @@ class PlistMenu(QDialog):
         #
         import Utility.pop_menu as pop_menu
         THE_MENU = pop_menu.getMenu().retList()
+        #for el in self.menu:
         for el in THE_MENU:
             cat = el[1]
             if cat == "Development":
@@ -1894,6 +1896,8 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
+            # # only for skipped items
+            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
@@ -2110,19 +2114,6 @@ class itemDelegate(QItemDelegate):
         else:
             iaddtext = None
         
-        # if option.state & QStyle.State_Selected:
-            # painter.setBrush(option.palette.color(QPalette.Highlight))
-            # painter.setPen(option.palette.color(QPalette.Highlight))
-            # painter.drawRoundedRect(QRect(option.rect.x()+1,option.rect.y()+1,option.rect.width()-2,ITEM_HEIGHT-2), 5.0, 5.0, Qt.AbsoluteSize)
-        # elif option.state & QStyle.State_MouseOver:
-            # pred = option.palette.color(QPalette.Highlight).red()
-            # pgreen = option.palette.color(QPalette.Highlight).green()
-            # pblue = option.palette.color(QPalette.Highlight).blue()
-            # painter.setBrush(QColor(pred, pgreen, pblue, 170))
-            # painter.setPen(QColor(pred, pgreen, pblue, 170))
-            # #painter.drawRoundedRect(QRect(option.rect.x(),option.rect.y(),option.rect.width(),ITEM_HEIGHT), 5.0, 5.0, Qt.AbsoluteSize)
-            # painter.drawEllipse(QRect(option.rect.x(),option.rect.y(),CIRCLE_SIZE,CIRCLE_SIZE))
-
         painter.restore()
 
         # use larger thumbs
@@ -2378,15 +2369,17 @@ class MainWin(QWidget):
                 except:
                     USE_TRASH = 0
         if USE_TRASH:
-            tbtn = QPushButton(QIcon.fromTheme("user-trash"), None)
+            self.tbtn = QPushButton(QIcon.fromTheme("user-trash"), None)
             if BUTTON_SIZE:
-                tbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-            tbtn.setToolTip("Recycle Bin")
-            self.obox1.addWidget(tbtn, 0, Qt.AlignLeft)
+                self.tbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+            self.tbtn.setToolTip("Recycle Bin")
+            self.obox1.addWidget(self.tbtn, 0, Qt.AlignLeft)
             if not isXDGDATAHOME:
-                tbtn.setEnabled(False)
+                self.tbtn.setEnabled(False)
             else:
-                tbtn.clicked.connect(lambda:openTrash(self, "HOME"))
+                self.tbtn.clicked.connect(lambda:openTrash(self, "HOME"))
+        # check the trash state: empty or not empty
+        self.checkTrash()
         #
         # show treeview of the current folder
         if ALTERNATE_VIEW:
@@ -2481,6 +2474,18 @@ class MainWin(QWidget):
                     path = os.path.dirname(path)
                 #
                 self.openDir(path, 1)
+    
+    
+    # check its state: empty or not empty
+    def checkTrash(self):
+        trash_path = os.path.join(os.path.expanduser("~"), ".local/share/Trash")
+        tmp = os.listdir(os.path.join(trash_path, "files"))
+        if tmp:
+            trash_icon = QIcon.fromTheme("user-trash-full")
+        else:
+            trash_icon = QIcon.fromTheme("user-trash")
+        self.tbtn.setIcon(trash_icon)
+    
     
     # add a new connected device
     def device_added_callback(self, *args):
@@ -4758,7 +4763,10 @@ class openTrash(QBoxLayout):
                     i += 1
         #
         else:
+            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
+        # udpate the recycle bin icon in the main program
+        self.window.checkTrash()
     
     
     def iconItem(self, item):
