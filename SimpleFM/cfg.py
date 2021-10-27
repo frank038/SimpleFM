@@ -51,8 +51,8 @@ TICK_CHAR="✓"
 TICK_SIZE=20
 # tick symbol color
 TICK_COLOR="white"
-# menu highlight colour
-MENU_H_COLOR="#DF5E0B"
+# menu highlight colour: use "" to use the default style
+MENU_H_COLOR=""
 # service buttons size: 0 to disable
 BUTTON_SIZE=0
 # show delete context menu entry that bypass the trashcan: 0 no - 1 yes
