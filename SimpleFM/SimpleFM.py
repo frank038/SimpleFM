@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.7.2
+# version 0.7.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -44,10 +44,6 @@ if OPEN_WITH:
     except Exception as E:
         OPEN_WITH = 0
 
-# 
-LARGETHUMS = 0
-if THUMB_SIZE > ICON_SIZE:
-    LARGETHUMS = 1
 
 #
 if ICON_SIZE > ITEM_WIDTH:
@@ -637,7 +633,6 @@ class propertyDialog(QDialog):
         self.labelSize2 = QLabel()
         self.grid1.addWidget(self.labelSize2, 4, 1, 1, 4, Qt.AlignLeft)
         #
-        # if os.path.islink(self.itemPath) and not os.path.exists(self.itemPath):
         if not os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
                 self.labelName2.setText(os.path.basename(self.itemPath), self.size().width()-12)
@@ -1896,8 +1891,6 @@ class copyItems2():
             self.button1.setEnabled(True)
             self.button2.setEnabled(False)
             # something happened with some items
-            # # only for skipped items
-            # if self.newAtype == 1:
             if len(aa) == 4 and aa[3] != "":
                 MyMessageBox("Info", "Something happened with some items", "", aa[3], self.window)
         # operation interrupted by the user
@@ -2066,7 +2059,7 @@ class MyQlist(QListView):
                     webUrl = uurl.url()
                     if webUrl[0:5] == "http:" or webUrl[0:6] == "https:":
                         webPaths.append(webUrl)
-            # TO-DO
+            # 
             if webPaths:
                 MyDialog("Info", "Not supported.", None)
                 event.ignore()
@@ -2113,40 +2106,20 @@ class itemDelegate(QItemDelegate):
             iaddtext = index.data(34)
         else:
             iaddtext = None
-        
+        #
         painter.restore()
-
-        # use larger thumbs
-        if LARGETHUMS:
-            if not index.data(QFileSystemModel.FileIconRole).name():
-                #pixmap = index.data(QFileSystemModel.FileIconRole).pixmap(THUMB_SIZE, THUMB_SIZE, QIcon.Mode(0), QIcon.State(1))
-                pixmap = iicon.pixmap(QSize(THUMB_SIZE, THUMB_SIZE))
-                size_pixmap = pixmap.size()
-                pw = size_pixmap.width()
-                ph = size_pixmap.height()
-                xpad = int((ITEM_WIDTH - pw) / 2)
-                ypad = int((ITEM_HEIGHT - ph) / 2)
-                painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
-            else:
-                #pixmap = index.data(QFileSystemModel.FileIconRole).pixmap(ICON_SIZE, ICON_SIZE, QIcon.Mode(0), QIcon.State(1))
-                pixmap = iicon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
-                size_pixmap = pixmap.size()
-                pw = size_pixmap.width()
-                ph = size_pixmap.height()
-                xpad = int((ITEM_WIDTH - pw) / 2)
-                ypad = int((ITEM_HEIGHT - ph) / 2)
-                painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
-        
+        #
+        if not index.data(QFileSystemModel.FileIconRole).name():
+            pixmap = iicon.pixmap(QSize(THUMB_SIZE, THUMB_SIZE))
         else:
-            #pixmap = index.data(QFileSystemModel.FileIconRole).pixmap(ICON_SIZE, ICON_SIZE, QIcon.Mode(0), QIcon.State(1))
             pixmap = iicon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
-            size_pixmap = pixmap.size()
-            pw = size_pixmap.width()
-            ph = size_pixmap.height()
-            xpad = int((ITEM_WIDTH - pw) / 2)
-            ypad = int((ITEM_HEIGHT - ph) / 2)
-            painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
-        
+        size_pixmap = pixmap.size()
+        pw = size_pixmap.width()
+        ph = size_pixmap.height()
+        xpad = int((ITEM_WIDTH - pw) / 2)
+        ypad = int((ITEM_HEIGHT - ph) / 2)
+        painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
+        #
         # other text
         if iaddtext:
             st1 = QStaticText("<i>"+iaddtext+"</i>")
@@ -2194,7 +2167,6 @@ class itemDelegate(QItemDelegate):
             tx = int(option.rect.x()+1+((CIRCLE_SIZE - st.size().width())/2))
             ty = int(option.rect.y()+1+((CIRCLE_SIZE - st.size().height())/2))
             painter.drawStaticText(tx, ty, st)
-        # if option.state & QStyle.State_MouseOver and not option.state & QStyle.State_Selected:
         elif option.state & QStyle.State_MouseOver:
             painter.setRenderHint(QPainter.Antialiasing)
             painter.setBrush(QColor(CIRCLE_COLOR))
@@ -2238,10 +2210,7 @@ class IconProvider(QFileIconProvider):
         #
         file_icon = "Null"
         if hmd5 != "Null":
-            if LARGETHUMS:
-                file_icon = QIcon(QPixmap(XDG_CACHE_LARGE+"/"+str(hmd5)+".png"))
-            else:
-                file_icon = QIcon(QPixmap(XDG_CACHE_LARGE+"/"+str(hmd5)+".png"))
+            file_icon = QIcon(QPixmap(XDG_CACHE_LARGE+"/"+str(hmd5)+".png"))
         #
         return file_icon
     
@@ -2296,8 +2265,6 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
-                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
-                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2378,6 +2345,12 @@ class MainWin(QWidget):
                 self.tbtn.setEnabled(False)
             else:
                 self.tbtn.clicked.connect(lambda:openTrash(self, "HOME"))
+            #
+            # check for changes in the trash directories
+            fPath = [os.path.join(trash_module.mountPoint("HOME").find_trash_path(), "files")]
+            self.fileSystemWatcher = QFileSystemWatcher(fPath)
+            self.fileSystemWatcher.directoryChanged.connect(self.checkTrash)
+        #
         # check the trash state: empty or not empty
         self.checkTrash()
         #
@@ -2902,8 +2875,8 @@ class MainWin(QWidget):
     # the bookmark action
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
-    
 
+    
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
         page = QWidget()
@@ -3673,6 +3646,16 @@ class LView(QBoxLayout):
             #
             itemName = self.fileModel.data(pointedItem2, Qt.DisplayRole)
             menu = QMenu("Menu", self.listview)
+            if MENU_H_COLOR:
+                csaa = "QMenu { "
+                csab = "background: {}".format(QPalette.Window)
+                csac = "; margin: 1px; padding: 5px 5px 5px 5px;}"
+                csad = " QMenu::item:selected { "
+                csae = "background-color: {};".format(MENU_H_COLOR)
+                csaf = " padding: 10px;}"
+                csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
+                csa = csaa+csab+csac+csad+csae+csaf+csag
+                menu.setStyleSheet(csa)
             ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
             if self.selection != None:
                 if len(self.selection) == 1:
@@ -3837,6 +3820,16 @@ class LView(QBoxLayout):
         else:
             self.listview.clearSelection()
             menu = QMenu("Menu", self.listview)
+            if MENU_H_COLOR:
+                csaa = "QMenu { "
+                csab = "background: {}".format(QPalette.Window)
+                csac = "; margin: 1px; padding: 5px 5px 5px 5px;}"
+                csad = " QMenu::item:selected { "
+                csae = "background-color: {};".format(MENU_H_COLOR)
+                csaf = " padding: 10px;}"
+                csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
+                csa = csaa+csab+csac+csad+csae+csaf+csag
+                menu.setStyleSheet(csa)
             #
             if self.flag == 1 or self.flag == 3:
                 newFolderAction = QAction("New Folder", self)
@@ -4607,10 +4600,11 @@ class openTrash(QBoxLayout):
             return
         TrashIsOpen = 1
         #
-        # check for changes in the trash directories
-        fPath = [os.path.join(trash_module.mountPoint(self.tdir).find_trash_path(), "files")]
-        self.fileSystemWatcher = QFileSystemWatcher(fPath)
-        self.fileSystemWatcher.directoryChanged.connect(self.trash_directory_changed)
+        # # check for changes in the trash directories
+        # fPath = [os.path.join(trash_module.mountPoint(self.tdir).find_trash_path(), "files")]
+        # self.fileSystemWatcher = QFileSystemWatcher(fPath)
+        # self.fileSystemWatcher.directoryChanged.connect(self.trash_directory_changed)
+        self.window.fileSystemWatcher.directoryChanged.connect(self.trash_directory_changed)
         # the list of trashed items - fake names
         self.list_trashed_items = []
         #
@@ -4763,10 +4757,9 @@ class openTrash(QBoxLayout):
                     i += 1
         #
         else:
-            # da fare: esiste un file in files ma non il corrispondente file in info
             pass
-        # udpate the recycle bin icon in the main program
-        self.window.checkTrash()
+        # # udpate the recycle bin icon in the main program
+        # self.window.checkTrash()
     
     
     def iconItem(self, item):
@@ -4945,6 +4938,16 @@ class openTrash(QBoxLayout):
         if vr:
             itemName = self.model.data(pointedItem2, Qt.UserRole+1)
             menu = QMenu("Menu", self.ilist)
+            if MENU_H_COLOR:
+                csaa = "QMenu { "
+                csab = "background: {}".format(QPalette.Window)
+                csac = "; margin: 1px; padding: 5px 5px 5px 5px;}"
+                csad = " QMenu::item:selected { "
+                csae = "background-color: {};".format(MENU_H_COLOR)
+                csaf = " padding: 10px;}"
+                csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
+                csa = csaa+csab+csac+csad+csae+csaf+csag
+                menu.setStyleSheet(csa)
             Tpath = trash_module.mountPoint(self.tdir).find_trash_path()
             if os.path.isfile(os.path.join(Tpath, "files", itemName)):
                 subm_openwithAction= menu.addMenu("Open with...")
@@ -5364,6 +5367,16 @@ class cTView(QBoxLayout):
         if vr:
             itemName = self.tmodel.data(pointedItem2, Qt.DisplayRole)
             menu = QMenu("Menu", self.tview)
+            if MENU_H_COLOR:
+                csaa = "QMenu { "
+                csab = "background: {}".format(QPalette.Window)
+                csac = "; margin: 1px; padding: 5px 5px 5px 5px;}"
+                csad = " QMenu::item:selected { "
+                csae = "background-color: {};".format(MENU_H_COLOR)
+                csaf = " padding: 10px;}"
+                csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
+                csa = csaa+csab+csac+csad+csae+csaf+csag
+                menu.setStyleSheet(csa)
             #
             if self.selection != None:
                 if len(self.selection) == 1:
