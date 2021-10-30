@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.7.3 (testing - no more features will be added in the main program)
+V. 0.8.0 (testing - no more features will be added in the main program)
 
 A file manager written in PyQt5.
 
@@ -29,6 +29,8 @@ Features:
 - custom folder icon
 - sticky selection by pressing in the circle
 - and more...
+
+Support for drag and drop from my archive manager. For this operation it is used a custom mimetype so no need of changing any window property.
 
 Tested a bit also under wayland.
 
