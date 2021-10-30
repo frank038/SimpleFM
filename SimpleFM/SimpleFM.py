@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.7.3
+# version 0.8.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1913,10 +1913,73 @@ class copyItems2():
 
 #################################
 
+# dialog for asking the archive password
+class passWord(QDialog):
+    def __init__(self, path, parent):
+        super(passWord, self).__init__(parent)
+        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        self.setWindowTitle("7z extractor")
+        self.setWindowModality(Qt.ApplicationModal)
+        self.resize(600,100)
+        #
+        self.path = path
+        # main box
+        mbox = QBoxLayout(QBoxLayout.TopToBottom)
+        mbox.setContentsMargins(5,5,5,5)
+        # label
+        self.label = QLabel("Enter The Password:")
+        mbox.addWidget(self.label)
+        # checkbox
+        self.ckb = QCheckBox("Hide/Show the password")
+        self.ckb.setChecked(True)
+        self.ckb.toggled.connect(self.on_checked)
+        mbox.addWidget(self.ckb)
+        # lineedit
+        self.le1 = QLineEdit()
+        self.le1.setEchoMode(QLineEdit.Password)
+        mbox.addWidget(self.le1)
+        ##
+        button_box = QBoxLayout(QBoxLayout.LeftToRight)
+        button_box.setContentsMargins(0,0,0,0)
+        mbox.addLayout(button_box)
+        #
+        button_ok = QPushButton("     Accept     ")
+        button_box.addWidget(button_ok)
+        #
+        button_close = QPushButton("     Cancel     ")
+        button_box.addWidget(button_close)
+        #
+        self.setLayout(mbox)
+        button_ok.clicked.connect(self.getpswd)
+        button_close.clicked.connect(self.close)
+        #
+        self.arpass = ""
+        #
+        self.exec_()
+    
+    def on_checked(self):
+        if self.ckb.isChecked():
+            self.le1.setEchoMode(QLineEdit.Password)
+        else:
+            self.le1.setEchoMode(QLineEdit.Normal)
+    
+    def getpswd(self):
+        passwd = self.le1.text()
+        try:
+            ptest = subprocess.check_output('{} t -p{} -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, passwd, self.path), shell=True)
+            if ptest.decode() == "":
+                self.arpass = passwd
+                self.close()
+        except:
+            self.label.setText("Wrong Password:")
+            self.le1.setText("")
+
+ARCHIVE_PASSWORD=""
 class MyQlist(QListView):
     def __init__(self):
         super(MyQlist, self).__init__()
         self.verticalScrollBar().setSingleStep(25)
+        self.customMimeType = "application/x-customqt5archiver"
     
     def startDrag(self, supportedActions):
         item_list = []
@@ -1989,7 +2052,7 @@ class MyQlist(QListView):
                 pixmap = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
         else:
             return
-        
+        #
         drag.setPixmap(pixmap)
         data = QMimeData()
         data.setUrls(item_list)
@@ -2004,25 +2067,39 @@ class MyQlist(QListView):
             event.ignore()
 
     def dragMoveEvent(self, event):
+        if event.mimeData().hasFormat(self.customMimeType):
+            # a folder in the destination directory
+            pointedItem = self.indexAt(event.pos())
+            ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+            # 
+            if pointedItem.isValid():
+                if os.path.isdir(ifp):
+                    dest_dir = QFileInfo(ifp)
+                    if not dest_dir.isWritable():
+                        event.ignore()
+                        return
+            #
+            event.acceptProposedAction()
+            return
+        #
         if event.pos().y() > self.viewport().size().height() - 100:
             step = 10
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() + step)
         elif event.pos().y() < 100:
             step = -10
             self.verticalScrollBar().setValue(self.verticalScrollBar().value() + step)
-                        
+        #
         dest_path = self.model().rootPath()
         curr_dir = QFileInfo(dest_path)
         if not curr_dir.isWritable():
             event.ignore()
-
+        #
         if event.mimeData().hasUrls:
             if isinstance(event.source(), MyQlist):
                 pointedItem = self.indexAt(event.pos())
                 ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-
+                #
                 if pointedItem.isValid():
-
                     if os.path.isdir(ifp):
                         for uurl in event.mimeData().urls():
                             if uurl.toLocalFile() == ifp:
@@ -2036,9 +2113,57 @@ class MyQlist(QListView):
                     event.ignore()
             else:
                 event.acceptProposedAction()
-
+    
+    
     def dropEvent(self, event):
-        
+        if event.mimeData().hasFormat(self.customMimeType):
+            ddata = event.mimeData().data(self.customMimeType)
+            ttype_temp, archive_name_temp, item_to_extract_temp = ddata.split("\n")
+            ttype = str(ttype_temp, 'utf-8')
+            archive_name = str(archive_name_temp, 'utf-8')
+            item_to_extract = str(item_to_extract_temp, 'utf-8')
+            #
+            dest_path = self.model().rootPath()
+            curr_dir = QFileInfo(dest_path)
+            # 
+            pointedItem = self.indexAt(event.pos())
+            if pointedItem.isValid():
+                ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+                if os.path.isdir(ifp):
+                    if os.access(ifp, os.W_OK):
+                        dest_path = ifp
+                    else:
+                        MyDialog("Info", "Not writable:\n{}".format(os.path.basename(ifp)), None)
+            #
+            if shutil.which(COMMAND_EXTRACTOR):
+                try:
+                    global ARCHIVE_PASSWORD
+                    password = ARCHIVE_PASSWORD
+                    hasPassWord = self.test_archive(archive_name)
+                    if hasPassWord == 2:
+                        if not password:
+                            password = passWord(archive_name, None).arpass
+                            ARCHIVE_PASSWORD = password
+                            if not password:
+                                MyDialog("Info", "Cancelled.", None)
+                                return
+                    # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
+                    ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
+                    ### exit codes
+                    # 0 No error
+                    # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
+                    # 2 Fatal error
+                    # 7 Command line error
+                    # 8 Not enough memory for operation
+                    # 255 User stopped the process
+                    if ret == 0:
+                        MyDialog("Info", "Extracted.", None)
+                    elif ret != -5:
+                        MyDialog("Error", "{}".format(ret), None)
+                except Exception as E:
+                    MyDialog("Error", str(E), None)
+            return
+        #
         dest_path = self.model().rootPath()
         curr_dir = QFileInfo(dest_path)
         if not curr_dir.isWritable():
@@ -2065,12 +2190,11 @@ class MyQlist(QListView):
                 event.ignore()
             #
             filePaths = filePathsTemp
-            
             # if not empty
             if filePaths:
                 #
                 pointedItem = self.indexAt(event.pos())
-
+                #
                 if pointedItem.isValid():
                     ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
                     if os.path.isdir(ifp):
@@ -2079,7 +2203,6 @@ class MyQlist(QListView):
                         else:
                             MyDialog("Info", "The following folder in not writable: "+os.path.basename(ifp), None)
                             return
-
                     else:
                         PastenMerge(dest_path, event.proposedAction(), filePaths, None)
                 else:
@@ -2089,6 +2212,23 @@ class MyQlist(QListView):
         else:
             event.ignore()
     
+    
+    # check it the archive is password protected
+    def test_archive(self, path):
+        szdata = None
+        try:
+            szdata = subprocess.check_output('{} l -slt -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, path), shell=True)
+        except:
+            return 0
+        #
+        if szdata != None:
+            szdata_decoded = szdata.decode()
+            ddata = szdata_decoded.splitlines()
+            if "Encrypted = +" in ddata:
+                return 2
+            else:
+                return 1
+
 
 class itemDelegate(QItemDelegate):
 
@@ -2098,7 +2238,6 @@ class itemDelegate(QItemDelegate):
     def paint(self, painter, option, index):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
-        ##painter.setRenderHint(QPainter.HighQualityAntialiasing)
         iicon = index.data(QFileSystemModel.FileIconRole)
         ppath = index.data(QFileSystemModel.FilePathRole)
         # additional icon text
@@ -2265,6 +2404,8 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
+                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
+                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2875,7 +3016,7 @@ class MainWin(QWidget):
     # the bookmark action
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
-
+    
     
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
@@ -2891,7 +3032,6 @@ class MainWin(QWidget):
                 if not folder_to_open:
                     if fpath == "/":
                         folder_to_open = "Root"
-            #elif os.path.isfile(ldir) or os.path.islink(ldir):
             else:
                 fpath = os.path.dirname(ldir)
                 folder_to_open = os.path.basename(fpath)
@@ -4600,10 +4740,6 @@ class openTrash(QBoxLayout):
             return
         TrashIsOpen = 1
         #
-        # # check for changes in the trash directories
-        # fPath = [os.path.join(trash_module.mountPoint(self.tdir).find_trash_path(), "files")]
-        # self.fileSystemWatcher = QFileSystemWatcher(fPath)
-        # self.fileSystemWatcher.directoryChanged.connect(self.trash_directory_changed)
         self.window.fileSystemWatcher.directoryChanged.connect(self.trash_directory_changed)
         # the list of trashed items - fake names
         self.list_trashed_items = []
@@ -4758,8 +4894,6 @@ class openTrash(QBoxLayout):
         #
         else:
             pass
-        # # udpate the recycle bin icon in the main program
-        # self.window.checkTrash()
     
     
     def iconItem(self, item):

@@ -90,6 +90,9 @@ DATE_TIME = 1
 USE_AD = 0
 # dialog windows width
 DIALOGWIDTH=600
+### needed for qt5archiver
+# usually 7z - or 7za
+COMMAND_EXTRACTOR="7z"
 
 ### needed by pythumb
 # use thumbnailer in the home dir only: 0 no - 1 yes
