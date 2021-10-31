@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.0
+# version 0.8.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2118,9 +2118,10 @@ class MyQlist(QListView):
     def dropEvent(self, event):
         if event.mimeData().hasFormat(self.customMimeType):
             ddata = event.mimeData().data(self.customMimeType)
-            ttype_temp, archive_name_temp, item_to_extract_temp = ddata.split("\n")
+            ttype_temp, archive_name_temp, item_type_temp, item_to_extract_temp = ddata.split("\n")
             ttype = str(ttype_temp, 'utf-8')
             archive_name = str(archive_name_temp, 'utf-8')
+            item_type = str(item_type_temp, 'utf-8')
             item_to_extract = str(item_to_extract_temp, 'utf-8')
             #
             dest_path = self.model().rootPath()
@@ -2147,8 +2148,16 @@ class MyQlist(QListView):
                             if not password:
                                 MyDialog("Info", "Cancelled.", None)
                                 return
-                    # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
-                    ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
+                    # 
+                    if item_type == "file":
+                        # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
+                        ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
+                    elif item_type == "folder":
+                        ttype = "x"
+                        if passWord:
+                            ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, password, dest_path))
+                        else:
+                            ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -o{4} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
                     ### exit codes
                     # 0 No error
                     # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
