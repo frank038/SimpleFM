@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.2
+# version 0.8.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1997,7 +1997,6 @@ class MyQlist(QListView):
         drag = QDrag(self)
         if len(item_list) > 1:
             if not USE_EXTENDED_DRAG_ICON:
-                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
@@ -2072,6 +2071,7 @@ class MyQlist(QListView):
             # a folder in the destination directory
             pointedItem = self.indexAt(event.pos())
             ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+            # 
             if pointedItem.isValid():
                 if os.path.isdir(ifp):
                     dest_dir = QFileInfo(ifp)
@@ -2752,8 +2752,6 @@ class MainWin(QWidget):
         ret_eject = self.get_device_can_eject(ddrive)
         if ret_eject:
             baction = self.sender().addAction("Eject", lambda:self.eject_media(ddrive, ret_mountpoint, ddevice))
-        # power off
-        # pass
         # property
         baction = self.sender().addAction("Property", lambda:self.media_property(block_device, ret_mountpoint, ddrive, ddevice))
     
@@ -2827,10 +2825,18 @@ class MainWin(QWidget):
                 MyDialog("Info", "Device busy.", self)
                 return
         # 
+        bd2 = self.bus.get_object('org.freedesktop.UDisks2', ddrive)
+        can_poweroff = bd2.Get('org.freedesktop.UDisks2.Drive', 'CanPowerOff', dbus_interface='org.freedesktop.DBus.Properties')
+        # 
         ret = self.on_eject(ddrive)
         if ret == -1:
             MyDialog("Error", "The device cannot be ejected.", self)
             return
+        #
+        if can_poweroff:
+            ret = self.on_poweroff(ddrive)
+            if ret == -1:
+                MyDialog("Error", "The device cannot be turned off.", self)
         # close the open tabs
         self.close_open_tab(mountpoint)
     
@@ -2842,6 +2848,21 @@ class MainWin(QWidget):
         try:
             bus = dbus.SystemBus()
             methname = 'Eject'
+            obj  = bus.get_object(progname, objpath)
+            intf = dbus.Interface(obj, intfname)
+            ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
+            return ret
+        except:
+            return -1
+    
+    # self.eject_media1
+    def on_poweroff(self, ddrive):
+        progname = 'org.freedesktop.UDisks2'
+        objpath  = ddrive
+        intfname = 'org.freedesktop.UDisks2.Drive'
+        try:
+            bus = dbus.SystemBus()
+            methname = 'PowerOff'
             obj  = bus.get_object(progname, objpath)
             intf = dbus.Interface(obj, intfname)
             ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
@@ -2925,7 +2946,7 @@ class MainWin(QWidget):
         #
         return "icons/drive-harddisk.svg"
     
-
+    
     #
     def closeEvent(self, event):
         self.on_close()
@@ -2999,7 +3020,7 @@ class MainWin(QWidget):
     # the bookmark action
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
-    
+
     
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
@@ -5307,7 +5328,6 @@ class itemDelegateT(QItemDelegate):
         if ITEM_WIDTH_ALT+ww > self.max:
             self.max = ITEM_WIDTH_ALT+ww
         return QSize(ITEM_WIDTH_ALT+ww, ITEM_HEIGHT_ALT)
-
 
 # treeview
 class cTView(QBoxLayout):
