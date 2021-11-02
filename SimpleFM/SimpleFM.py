@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.1
+# version 0.8.2
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1997,6 +1997,7 @@ class MyQlist(QListView):
         drag = QDrag(self)
         if len(item_list) > 1:
             if not USE_EXTENDED_DRAG_ICON:
+                # # pixmap = QPixmap("icons/items_multi.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
@@ -2071,7 +2072,6 @@ class MyQlist(QListView):
             # a folder in the destination directory
             pointedItem = self.indexAt(event.pos())
             ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-            # 
             if pointedItem.isValid():
                 if os.path.isdir(ifp):
                     dest_dir = QFileInfo(ifp)
@@ -2117,16 +2117,14 @@ class MyQlist(QListView):
     
     def dropEvent(self, event):
         if event.mimeData().hasFormat(self.customMimeType):
-            ddata = event.mimeData().data(self.customMimeType)
-            ttype_temp, archive_name_temp, item_type_temp, item_to_extract_temp = ddata.split("\n")
-            ttype = str(ttype_temp, 'utf-8')
-            archive_name = str(archive_name_temp, 'utf-8')
-            item_type = str(item_type_temp, 'utf-8')
-            item_to_extract = str(item_to_extract_temp, 'utf-8')
+            ddata_temp = event.mimeData().data(self.customMimeType)
+            ddata = str(ddata_temp, 'utf-8').split("\n")
+            archive_name = ddata[0]
+            # extraction mode (e or x) - item type (file or folder) - item name (with path)
+            items = ddata[1:]
             #
             dest_path = self.model().rootPath()
             curr_dir = QFileInfo(dest_path)
-            # 
             pointedItem = self.indexAt(event.pos())
             if pointedItem.isValid():
                 ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
@@ -2140,6 +2138,7 @@ class MyQlist(QListView):
                 try:
                     global ARCHIVE_PASSWORD
                     password = ARCHIVE_PASSWORD
+                    passWord = None
                     hasPassWord = self.test_archive(archive_name)
                     if hasPassWord == 2:
                         if not password:
@@ -2149,15 +2148,19 @@ class MyQlist(QListView):
                                 MyDialog("Info", "Cancelled.", None)
                                 return
                     # 
-                    if item_type == "file":
-                        # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
-                        ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
-                    elif item_type == "folder":
-                        ttype = "x"
-                        if passWord:
-                            ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, password, dest_path))
-                        else:
-                            ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -o{4} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
+                    for i in range(0, len(items), 3):
+                        ttype = items[i]
+                        item_type = items[i+1]
+                        item_to_extract = items[i+2]
+                        if item_type == "file":
+                            # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
+                            ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
+                        elif item_type == "folder":
+                            ttype = "x"
+                            if passWord:
+                                ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, password, dest_path))
+                            else:
+                                ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -o{4} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
                     ### exit codes
                     # 0 No error
                     # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
@@ -2193,7 +2196,7 @@ class MyQlist(QListView):
                     webUrl = uurl.url()
                     if webUrl[0:5] == "http:" or webUrl[0:6] == "https:":
                         webPaths.append(webUrl)
-            # 
+            # TO-DO
             if webPaths:
                 MyDialog("Info", "Not supported.", None)
                 event.ignore()
@@ -2413,8 +2416,6 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
-                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
-                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2924,34 +2925,7 @@ class MainWin(QWidget):
         #
         return "icons/drive-harddisk.svg"
     
-    
-    # # NON IMPLEMENTATO
-    # # power-off
-    # def ftbutton3(self, index):
-        # if index == None:
-            # return
-        # mdrive = index.data(Qt.UserRole+12)
-        # #ret = media_module.devPoweroff(mdrive).fdevpoweroff()
-        # ret = self.on_poweroff(mdrive)
-        # if ret == -1:
-            # MyDialog("Error", "The device cannot be turned off.", self)
-        # self.button3.setEnabled(False)
-    
-    # # self.ftbutton3
-    # def on_poweroff(self, mdrive):
-        # progname = 'org.freedesktop.UDisks2'
-        # objpath  = mdrive
-        # intfname = 'org.freedesktop.UDisks2.Drive'
-        # try:
-            # bus = dbus.SystemBus()
-            # methname = 'PowerOff'
-            # obj  = bus.get_object(progname, objpath)
-            # intf = dbus.Interface(obj, intfname)
-            # ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
-            # return ret
-        # except:
-            # return -1
-    
+
     #
     def closeEvent(self, event):
         self.on_close()
@@ -5333,6 +5307,7 @@ class itemDelegateT(QItemDelegate):
         if ITEM_WIDTH_ALT+ww > self.max:
             self.max = ITEM_WIDTH_ALT+ww
         return QSize(ITEM_WIDTH_ALT+ww, ITEM_HEIGHT_ALT)
+
 
 # treeview
 class cTView(QBoxLayout):
