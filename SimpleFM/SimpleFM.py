@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.4
+# version 0.8.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2594,6 +2594,9 @@ class MainWin(QWidget):
                 path = os.path.dirname(parg)
                 while not os.path.exists(path) or not os.access(path, os.R_OK):
                     path = os.path.dirname(path)
+                    if path == "":
+                        path = HOME
+                        break
                 #
                 self.openDir(path, 1)
     
