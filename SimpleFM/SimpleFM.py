@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.3
+# version 0.8.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -481,7 +481,6 @@ class PlistMenu(QDialog):
         #
         import Utility.pop_menu as pop_menu
         THE_MENU = pop_menu.getMenu().retList()
-        #for el in self.menu:
         for el in THE_MENU:
             cat = el[1]
             if cat == "Development":
@@ -1427,7 +1426,7 @@ class copyThread2(QThread):
         return dest
         
     # the work on each item
-    # self.atype: 1 skip - 2 overwrite - 3 rename - 4 automatic suffix - 5 backup the existent items
+    # self.atype: 1 skip - 2 overwrite - 4 automatic suffix - 5 backup the existent items
     def item_op(self):
         items_skipped = ""
         # action: copy 1 - cut 2
@@ -1917,10 +1916,10 @@ class copyItems2():
 class passWord(QDialog):
     def __init__(self, path, parent):
         super(passWord, self).__init__(parent)
-        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("7z extractor")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(600,100)
+        self.resize(dialWidth,100)
         #
         self.path = path
         # main box
@@ -2071,7 +2070,7 @@ class MyQlist(QListView):
             # a folder in the destination directory
             pointedItem = self.indexAt(event.pos())
             ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-            # 
+            #
             if pointedItem.isValid():
                 if os.path.isdir(ifp):
                     dest_dir = QFileInfo(ifp)
@@ -2137,14 +2136,11 @@ class MyQlist(QListView):
             if shutil.which(COMMAND_EXTRACTOR):
                 try:
                     global ARCHIVE_PASSWORD
-                    password = ARCHIVE_PASSWORD
-                    passWord = None
                     hasPassWord = self.test_archive(archive_name)
                     if hasPassWord == 2:
-                        if not password:
-                            password = passWord(archive_name, None).arpass
-                            ARCHIVE_PASSWORD = password
-                            if not password:
+                        if not ARCHIVE_PASSWORD:
+                            ARCHIVE_PASSWORD = passWord(archive_name, None).arpass
+                            if not ARCHIVE_PASSWORD:
                                 MyDialog("Info", "Cancelled.", None)
                                 return
                     # 
@@ -2154,11 +2150,11 @@ class MyQlist(QListView):
                         item_to_extract = items[i+2]
                         if item_type == "file":
                             # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
-                            ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, password, dest_path))
+                            ret = os.system("{0} {1} '-i!{2}' {3} -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, ARCHIVE_PASSWORD, dest_path))
                         elif item_type == "folder":
                             ttype = "x"
-                            if passWord:
-                                ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, password, dest_path))
+                            if ARCHIVE_PASSWORD:
+                                ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, ARCHIVE_PASSWORD, dest_path))
                             else:
                                 ret = os.system("{0} {1} {2} *.* -r '{3}' -y -aou -o{4} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
                     ### exit codes
@@ -2173,7 +2169,7 @@ class MyQlist(QListView):
                     elif ret != -5:
                         MyDialog("Error", "{}".format(ret), None)
                 except Exception as E:
-                    MyDialog("Error", str(E), None)
+                    MyDialog("Error33", str(E), None)
             return
         #
         dest_path = self.model().rootPath()
@@ -2416,6 +2412,8 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
+                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
+                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2616,6 +2614,8 @@ class MainWin(QWidget):
         for k in args[1]:
             kk = "org.freedesktop.UDisks2.Filesystem"
             if k == kk:
+                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb1
+                # ("DEVICE ADDED Filesystem::", args[0])
                 mobject = self.iface.GetManagedObjects()
                 self.on_add_partition(args[0], mobject[args[0]])
     
@@ -2625,6 +2625,8 @@ class MainWin(QWidget):
         for k in args[1]:
             kk = "org.freedesktop.UDisks2.Filesystem"
             if k == kk:
+                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb1
+                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb
                 for i in range(self.disk_box.count()):
                     item = self.disk_box.itemAt(i).widget()
                     if isinstance(item, QPushButton):
@@ -2637,6 +2639,7 @@ class MainWin(QWidget):
     # get all the partitions
     def on_pop_devices(self):
         mobject = self.iface.GetManagedObjects()
+        # k:: /org/freedesktop/UDisks2/block_devices/sdb1
         for k in mobject:
             #
             if "loop" in k:
@@ -2650,6 +2653,7 @@ class MainWin(QWidget):
     # def on_add_partition(self, k, bus, kmobject):
     def on_add_partition(self, k, kmobject):
         for ky in kmobject:
+            # kk = "org.freedesktop.UDisks2.Partition"
             kk = "org.freedesktop.UDisks2.Block"
             if  str(ky) == kk:
                 bd = self.bus.get_object('org.freedesktop.UDisks2', k)
@@ -3020,7 +3024,7 @@ class MainWin(QWidget):
     # the bookmark action
     def on_bookmark_action(self):
         self.openDir(self.sender().toolTip(), 1)
-
+    
     
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
@@ -3414,8 +3418,8 @@ class LView(QBoxLayout):
         if new_path != self.lvDir:
             ret = self.on_change_dir(new_path)
             # if not change directory the previous button will be rechecked
+            # VERIFY
             if ret == 0:
-                # 
                 self.box_pb_btn.setChecked(True)
             elif ret == 1:
                 self.box_pb_btn = self.sender()
@@ -3797,6 +3801,7 @@ class LView(QBoxLayout):
                 csad = " QMenu::item:selected { "
                 csae = "background-color: {};".format(MENU_H_COLOR)
                 csaf = " padding: 10px;}"
+                # padding: 1 top - 2 right - 3 bottom - 4 left
                 csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
                 csa = csaa+csab+csac+csad+csae+csaf+csag
                 menu.setStyleSheet(csa)
@@ -4897,6 +4902,7 @@ class openTrash(QBoxLayout):
                     i += 1
         #
         else:
+            # improvements: a file exists in the dir files but not its info file
             pass
     
     
@@ -5380,6 +5386,12 @@ class cTView(QBoxLayout):
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
         self.window.fileModel = self.tmodel
+        # bindings
+        # # reset the filter
+        # if self.window.fileModel:
+            # if self.window.searchBtn.isChecked():
+                # self.window.fileModel.setNameFilters(["*.*"])
+                # self.window.fileModel.setNameFilterDisables(True)
         # 
         self.tmodel.setIconProvider(IconProvider())
         self.tmodel.setReadOnly(False)
