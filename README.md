@@ -28,7 +28,7 @@ Features:
 - custom thumbnailers
 - custom folder icon
 - sticky selection by pressing in the circle
-- send desktop files to the desktop (feature of my SimpleDesktop program) - not in the release version yet
+- send desktop files to the desktop (feature of my SimpleDesktop program)
 - and more...
 
 Support for drag and drop from my archive manager. For this operation it is used a custom mimetype so no need of changing any window property.
