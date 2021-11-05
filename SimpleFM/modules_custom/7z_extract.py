@@ -94,14 +94,10 @@ class passWord(QDialog):
         self.exec_()
     
     def getpswd(self):
-        
         passwd = self.le1.text()
-        
         try:
             ptest = subprocess.check_output('7z t -p{} -bso0 -- "{}"'.format(passwd, self.path), shell=True)
-            
             if ptest.decode() == "":
-                
                 self.arpass = passwd
                 self.close()
         except:
@@ -114,18 +110,12 @@ class ModuleCustom():
     def __init__(self, mainLView):
         index = mainLView.selection[0]
         path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
-        
         if os.access(path, os.R_OK):
-            
             if stat.S_ISREG(os.stat(path).st_mode):
-                
                 if os.access(mainLView.lvDir, os.W_OK):
-                    
                     ret = self.test_archive(path)
-                    
                     if ret == 1:
                         try:
-                            #subprocess.Popen(['7z', 'x', "-o{}".format(os.path.dirname(path)), '-y', '-aou', '--', path])
                             ret = subprocess.check_output('7z x "-o{}" -y -aou -- "{}"'.format(os.path.dirname(path), path), shell=True)
                             if "Everything is Ok" in ret.decode():
                                 MyDialog("Info", "Archive extracted.")
@@ -133,12 +123,9 @@ class ModuleCustom():
                                 MyDialog("ERROR", "Issues while extracting the archive.")
                         except Exception as E:
                             MyDialog("ERROR", "Issues while extracting the archive:\n{}.".format(E))
-                    
                     elif ret == 2:
                         pret = passWord(path).arpass
-                        
                         try:
-                            #subprocess.Popen(['7z', 'x', '-p{}'.format(pret), '-o{}'.format(os.path.dirname(path)), '-y', '-aou', '--', path])
                             ret = subprocess.check_output('7z x "-p{}" "-o{}" -y -aou -- "{}"'.format(pret, os.path.dirname(path), path), shell=True)
                             if "Everything is Ok" in ret.decode():
                                 MyDialog("Info", "Archive extracted.")
@@ -146,18 +133,15 @@ class ModuleCustom():
                                 MyDialog("ERROR", "Issues while extracting the archive.")
                         except Exception as E:
                             MyDialog("ERROR", "Issues while extracting the archive:\n{}.".format(E))
-                    
                     elif ret == 0:
                         MyDialog("ERROR", "Issues while checking the archive.")
     
     def test_archive(self, path):
-        
         szdata = None
         try:
             szdata = subprocess.check_output('7z l -slt -bso0 -- "{}"'.format(path), shell=True)
         except:
             return 0
-        
         if szdata != None:
             szdata_decoded = szdata.decode()
             ddata = szdata_decoded.splitlines()

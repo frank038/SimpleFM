@@ -10,7 +10,6 @@ import locale
 
 class getMenu():
     
-    #def __init__(self, app_dirs_user, app_dirs_system):
     def __init__(self):
         # the dirs of the application files
         app_dirs_user = [os.path.expanduser("~")+"/.local/share/applications"]
@@ -88,8 +87,6 @@ class getMenu():
         
     # return the lists
     def retList(self):
-        #list_one = sorted(self.lists, key=lambda x: x[1].lower(), reverse=False)
-        #return list_one
         return self.lists
     
 #############################
@@ -174,6 +171,3 @@ class getMenu():
                 return "Education"
             elif cccat in self.system_extended_categories:
                 return "System"
-            # # ???
-            # else:
-                # return "Missed"

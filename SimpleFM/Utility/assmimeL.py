@@ -179,17 +179,6 @@ class MainWin(QDialog):
         self.extLabel2.setText(self.mimetype)
         self.fitem2(self.mimetype)
     
-    # # populate
-    # def fitem(self, item, col):
-        # ##### find the index of the item in the category
-        # p = item.parent()
-        # if p:
-            # # clear the plist
-            # self.plist.clear()
-            # self.extLabel2.setText(item.text(1))
-            # self.imime = p.text(0)+"/"+item.text(0)
-            # self.fitem2(self.imime)
-    
     # 3
     def fitem2(self, imime):
         # clear the plist

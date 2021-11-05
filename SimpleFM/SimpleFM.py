@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.5
+# version 0.8.6
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -204,27 +204,35 @@ class clabel2(QLabel):
         ntext = ctempT
         super(clabel2, self).setText(ntext)
 
-# simple info dialog
-class MyDialog(QDialog):
+# simple dialog message
+# type - message - parent
+class MyDialog(QMessageBox):
     def __init__(self, *args):
         super(MyDialog, self).__init__(args[-1])
+        if args[0] == "Info":
+            self.setIcon(QMessageBox.Information)
+        elif args[0] == "Error":
+            self.setIcon(QMessageBox.Critical)
+        elif args[0] == "Question":
+            self.setIcon(QMessageBox.Question)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.setWindowModality(Qt.ApplicationModal)
-        self.resize(dialWidth,300)
+        self.resize(DIALOGWIDTH,300)
+        self.setText(args[1])
+        self.setStandardButtons(QMessageBox.Ok)
+        retval = self.exec_()
+    
+    def event(self, e):
+        result = QMessageBox.event(self, e)
         #
-        grid = QGridLayout()
-        grid.setContentsMargins(5,5,5,5)
-        #
-        label = clabel2()
-        label.setText(args[1], self.size().width()-12)
-        #
-        button_ok = QPushButton("     Ok     ")
-        grid.addWidget(label, 0, 1, 1, 3, Qt.AlignCenter)
-        grid.addWidget(button_ok, 1, 1, 1, 3, Qt.AlignHCenter)
-        self.setLayout(grid)
-        button_ok.clicked.connect(self.close)
-        self.exec_()
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(16777215)
+        self.setMinimumWidth(0)
+        self.setMaximumWidth(16777215)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # 
+        return result
+
 
 # dialog message with info list
 class MyMessageBox(QMessageBox):
@@ -1221,9 +1229,14 @@ class execfileDialog(QDialog):
 class retDialogBox(QMessageBox):
     def __init__(self, *args):
         super(retDialogBox, self).__init__(args[-1])
-        self.setIcon(QMessageBox.Information)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
+        if args[0] == "Info":
+            self.setIcon(QMessageBox.Information)
+        elif args[0] == "Error":
+            self.setIcon(QMessageBox.Critical)
+        elif args[0] == "Question":
+            self.setIcon(QMessageBox.Question)
         self.resize(dialWidth, 100)
         self.setText(args[1])
         self.setInformativeText(args[2])
@@ -1460,9 +1473,15 @@ class copyThread2(QThread):
             # item is dir and not link to dir
             if os.path.isdir(dfile) and not os.path.islink(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
-                # trying to copy a dir into itself
-                if dfile == os.path.dirname(tdest):
-                    items_skipped += "Same folder:\n{}.".format(os.path.basename(dfile))
+                # recursive copying
+                len_dfile = len(dfile)
+                if tdest[0:len_dfile] == dfile and not tdest == dfile:
+                    items_skipped += "Recursive copying:\n{}".format(os.path.basename(dfile))
+                    continue
+                # # trying to copy a dir into itself
+                # if dfile == os.path.dirname(tdest):
+                    # items_skipped += "Same folder:\n{}.".format(os.path.basename(dfile))
+                    # continue
                 # it isnt the exactly same item
                 elif dfile != tdest:
                     #
@@ -2169,7 +2188,7 @@ class MyQlist(QListView):
                     elif ret != -5:
                         MyDialog("Error", "{}".format(ret), None)
                 except Exception as E:
-                    MyDialog("Error33", str(E), None)
+                    MyDialog("Error", str(E), None)
             return
         #
         dest_path = self.model().rootPath()
@@ -2412,8 +2431,6 @@ class IconProvider(QFileIconProvider):
                     # 
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
-                    # if fileInfo.fileName() in ["Music", "Templates", "Downloads", "Documents", "Pictures", "Videos"]:
-                        # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Desktop":
                         return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
                     elif fileInfo.fileName() == "Public":
@@ -2617,8 +2634,6 @@ class MainWin(QWidget):
         for k in args[1]:
             kk = "org.freedesktop.UDisks2.Filesystem"
             if k == kk:
-                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb1
-                # ("DEVICE ADDED Filesystem::", args[0])
                 mobject = self.iface.GetManagedObjects()
                 self.on_add_partition(args[0], mobject[args[0]])
     
@@ -2628,8 +2643,6 @@ class MainWin(QWidget):
         for k in args[1]:
             kk = "org.freedesktop.UDisks2.Filesystem"
             if k == kk:
-                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb1
-                # DEVICE:: /org/freedesktop/UDisks2/block_devices/sdb
                 for i in range(self.disk_box.count()):
                     item = self.disk_box.itemAt(i).widget()
                     if isinstance(item, QPushButton):
@@ -2642,7 +2655,6 @@ class MainWin(QWidget):
     # get all the partitions
     def on_pop_devices(self):
         mobject = self.iface.GetManagedObjects()
-        # k:: /org/freedesktop/UDisks2/block_devices/sdb1
         for k in mobject:
             #
             if "loop" in k:
@@ -2656,7 +2668,6 @@ class MainWin(QWidget):
     # def on_add_partition(self, k, bus, kmobject):
     def on_add_partition(self, k, kmobject):
         for ky in kmobject:
-            # kk = "org.freedesktop.UDisks2.Partition"
             kk = "org.freedesktop.UDisks2.Block"
             if  str(ky) == kk:
                 bd = self.bus.get_object('org.freedesktop.UDisks2', k)
@@ -2837,13 +2848,13 @@ class MainWin(QWidget):
         # 
         ret = self.on_eject(ddrive)
         if ret == -1:
-            MyDialog("Error", "The device cannot be ejected.", self)
+            MyDialog("Info", "The device cannot be ejected.", self)
             return
         #
         if can_poweroff:
             ret = self.on_poweroff(ddrive)
             if ret == -1:
-                MyDialog("Error", "The device cannot be turned off.", self)
+                MyDialog("Info", "The device cannot be turned off.", self)
         # close the open tabs
         self.close_open_tab(mountpoint)
     
@@ -2853,9 +2864,8 @@ class MainWin(QWidget):
         objpath  = ddrive
         intfname = 'org.freedesktop.UDisks2.Drive'
         try:
-            bus = dbus.SystemBus()
             methname = 'Eject'
-            obj  = bus.get_object(progname, objpath)
+            obj  = self.bus.get_object(progname, objpath)
             intf = dbus.Interface(obj, intfname)
             ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
             return ret
@@ -2868,9 +2878,8 @@ class MainWin(QWidget):
         objpath  = ddrive
         intfname = 'org.freedesktop.UDisks2.Drive'
         try:
-            bus = dbus.SystemBus()
             methname = 'PowerOff'
-            obj  = bus.get_object(progname, objpath)
+            obj  = self.bus.get_object(progname, objpath)
             intf = dbus.Interface(obj, intfname)
             ret = intf.get_dbus_method(methname, dbus_interface='org.freedesktop.UDisks2.Drive')([])
             return ret
@@ -3386,10 +3395,10 @@ class LView(QBoxLayout):
                     self.hicombo.setCurrentIndex(0)
                     return 1
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
                     return 0
             else:
-                MyDialog("ERROR", path+"\n\n   Not readable", self.window)
+                MyDialog("Error", path+"\n\n   Not readable", self.window)
                 return 0
     
     # see on_box_pb
@@ -3413,7 +3422,7 @@ class LView(QBoxLayout):
         if os.path.exists(new_path):
             self.on_btn_change_dir(new_path)
         else:
-            MyDialog("Error", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+            MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
             
         
     # see btn_change_dir
@@ -3497,7 +3506,7 @@ class LView(QBoxLayout):
                         self.on_btn_change_dir(new_path)
                         obj.setChecked(True)
                     else:
-                        MyDialog("Error", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+                        MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
                     #
                     return QObject.event(obj, event)
                 # folders
@@ -3511,7 +3520,7 @@ class LView(QBoxLayout):
                                     # open the selected folder in a new tab
                                     self.fnewtabAction(itemSelectedPath, 1)
                                 except Exception as E:
-                                    MyDialog("ERROR", str(E), self.window)
+                                    MyDialog("Error", str(E), self.window)
                             else:
                                 # open the selected folder in the same tab
                                 try:
@@ -3529,9 +3538,9 @@ class LView(QBoxLayout):
                                     #
                                     self.on_box_pb(self.lvDir)
                                 except Exception as E:
-                                    MyDialog("ERROR", str(E), self.window)
+                                    MyDialog("Error", str(E), self.window)
                         else:
-                            MyDialog("ERROR", itemSelected+"\nNot readable", self.window)
+                            MyDialog("Info", itemSelected+"\nNot readable", self.window)
         #
         return QObject.event(obj, event)
 
@@ -3712,9 +3721,9 @@ class LView(QBoxLayout):
                     #
                     self.on_box_pb(self.lvDir)
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("ERROR", path+"\n\n   Not readable", self.window)
+                MyDialog("Info", path+"\n\n   Not readable", self.window)
         #
         elif os.path.isfile(path):
             perms = QFileInfo(path).permissions()
@@ -3742,7 +3751,7 @@ class LView(QBoxLayout):
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("Error", "No programs found.", self.window)
+                MyDialog("Info", "No programs found.", self.window)
      
     #
     def lselectionChanged(self):
@@ -4068,7 +4077,7 @@ class LView(QBoxLayout):
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
+                MyDialog("Info", "The program\n"+ret+"\ncannot be found", self.window)
     
     # copy the template choosen - the rename dialog appears
     def ftemplateAction(self, templateName):
@@ -4103,7 +4112,7 @@ class LView(QBoxLayout):
         if os.access(ldir, os.R_OK):
             self.window.openDir(ldir, flag)
         else:
-            MyDialog("Error", "Cannot open the folder: "+os.path.basename(ldir), self.window)
+            MyDialog("Info", "Cannot open the folder: "+os.path.basename(ldir), self.window)
 
     # send to trash the selected items
     def ftrashAction(self):
@@ -4117,9 +4126,9 @@ class LView(QBoxLayout):
                 dialogList = ""
                 for item in list_items:
                     dialogList += os.path.basename(item)+"\n"
-                ret = retDialogBox("Info", "Do you really want to move these items to the trashcan?", "", dialogList, self.window)
+                ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", dialogList, self.window)
             else:
-                ret = retDialogBox("Info", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
+                ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
                 TrashModule(list_items)
@@ -4137,9 +4146,9 @@ class LView(QBoxLayout):
                 dialogList = ""
                 for item in list_items:
                     dialogList += os.path.basename(item)+"\n"
-                ret = retDialogBox("Info", "Do you really want to delete these items?", "", dialogList, self.window)
+                ret = retDialogBox("Question", "Do you really want to delete these items?", "", dialogList, self.window)
             else:
-                ret = retDialogBox("Info", "Do you really want to delete these items?", "", "Too many items.\n", self.window)
+                ret = retDialogBox("Question", "Do you really want to delete these items?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
                 self.fdeleteItems(list_items)
@@ -4648,7 +4657,7 @@ class getDefaultApp():
                             if os.path.exists(applicationPath):
                                 return applicationPath
                             else:
-                                MyDialog("Error", "{} cannot be found".format(applicationPath), None)
+                                MyDialog("Info", "{} cannot be found".format(applicationPath), None)
                         else:
                             return "None"
                 #
@@ -4836,10 +4845,10 @@ class openTrash(QBoxLayout):
     def popTrash(self):
         llista = trash_module.ReadTrash(self.tdir).return_the_list()
         if llista == -2:
-            MyDialog("ERROR", "The trash directory and its subfolders have some problem.", self.window)
+            MyDialog("Info", "The trash directory and its subfolders have some problem.", self.window)
             return
         if llista == -1:
-            MyDialog("ERROR", "Got some problem during the reading of the trashed items.\nSolve the issue manually.", self.window)
+            MyDialog("Info", "Got some problem during the reading of the trashed items.\nSolve the issue manually.", self.window)
             return
         if llista != -1:
             for item in llista:
@@ -4889,7 +4898,7 @@ class openTrash(QBoxLayout):
                         self.model.appendRow(item)
                         self.list_trashed_items.append(fake_name+".trashinfo")
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
         #
         elif len(updated_list) < len(self.list_trashed_items):
             item_deleted = [x for x in self.list_trashed_items if x not in updated_list]
@@ -4943,10 +4952,10 @@ class openTrash(QBoxLayout):
             #
             ret = trash_module.RestoreTrash(self.tdir, restore_items).itemsRestore()
             if ret == -2:
-                MyDialog("ERROR", "The items cannot be restored.\nDo it manually.", self.window)
+                MyDialog("Error", "The items cannot be restored.\nDo it manually.", self.window)
                 return
             if ret != [1,-1]:
-                MyDialog("ERROR", ret, self.window)
+                MyDialog("Info", ret, self.window)
             else:
                 self.model.removeRow(index.row())
                 self.label6.setText("", self.window.size().width())
@@ -4976,11 +4985,11 @@ class openTrash(QBoxLayout):
             #
             ret = trash_module.deleteTrash(self.tdir, restore_items).itemsDelete()
             if ret == -2:
-                MyDialog("ERROR", "The items cannot be deleted.\nDo it manually.", self.window)
+                MyDialog("Info", "The items cannot be deleted.\nDo it manually.", self.window)
                 return
             #
             if ret != [1,-1]:
-                MyDialog("ERROR", ret, self.window)
+                MyDialog("Info", ret, self.window)
             else:
                 self.model.removeRow(index.row())
                 self.label6.setText("", self.window.size().width())
@@ -4993,7 +5002,7 @@ class openTrash(QBoxLayout):
     def ftbutton3(self):
         ret = trash_module.emptyTrash(self.tdir).tempty()
         if ret == -2:
-            MyDialog("ERROR", "The Recycle Bin cannot be empty.\nDo it manually.", self.window)
+            MyDialog("Info", "The Recycle Bin cannot be empty.\nDo it manually.", self.window)
             return
         self.model.clear()
         self.label6.setText("", self.window.size().width())
@@ -5002,7 +5011,7 @@ class openTrash(QBoxLayout):
         self.label9.setText("")
         self.label10.setText("")
         if ret == -1:
-            MyDialog("ERROR", "Error with some files in the Recycle Bin.\nTry to remove them manually.", self.window)
+            MyDialog("Info", "Error with some files in the Recycle Bin.\nTry to remove them manually.", self.window)
     
     # single click on item
     def flist(self, index):
@@ -5046,7 +5055,7 @@ class openTrash(QBoxLayout):
                 try:
                     self.window.openDir(path, 0)
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
             else:
                 MyDialog("Info", path+"\n\n   Not readable", self.window)
         elif os.path.isfile(path):
@@ -5147,7 +5156,7 @@ class openTrash(QBoxLayout):
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
+                MyDialog("Info", "The program\n"+ret+"\ncannot be found", self.window)
 
 
 
@@ -5193,19 +5202,19 @@ class TrashModule():
                     os.mkdir(self.Tinfo, 0o700)
                     self.can_trash = 1
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
                     return
                 finally:
                     return
             else:
-                MyDialog("ERROR", "Cannot create the Trash folder.", self.window)
+                MyDialog("Info", "Cannot create the Trash folder.", self.window)
                 return
         #
         if not os.access(self.Tfiles, os.W_OK):
-            MyDialog("ERROR", "Cannot create the files folder.", self.window)
+            MyDialog("Info", "Cannot create the files folder.", self.window)
             return
         if not os.access(self.Tinfo, os.W_OK):
-            MyDialog("ERROR", "Cannot create the info folder.", self.window)
+            MyDialog("Info", "Cannot create the info folder.", self.window)
             return
         #
         if os.access(self.trash_path, os.W_OK):
@@ -5213,21 +5222,21 @@ class TrashModule():
                 try:
                     os.mkdir(self.Tfiles, 0o700)
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
                     return
             #
             if not os.path.exists(self.Tinfo):
                 try:
                     os.mkdir(self.Tinfo, 0o700)
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
                     return
             #
             self.can_trash = 1
             return
         #
         else:
-            MyDialog("ERROR", "The Trash folder has wrong permissions.", self.window)
+            MyDialog("Info", "The Trash folder has wrong permissions.", self.window)
             return
         
     def Tcan_trash(self, list_items):
@@ -5249,7 +5258,7 @@ class TrashModule():
             try:
                 shutil.move(item_path, os.path.join(self.Tfiles, item))
             except Exception as E:
-                MyDialog("ERROR", str(E), self.window)
+                MyDialog("Error", str(E), self.window)
                 continue
             ifile = open(os.path.join(self.Tinfo, "{}.trashinfo".format(item)),"w")
             ifile.write("[Trash Info]\n")
@@ -5389,12 +5398,6 @@ class cTView(QBoxLayout):
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
         self.window.fileModel = self.tmodel
-        # bindings
-        # # reset the filter
-        # if self.window.fileModel:
-            # if self.window.searchBtn.isChecked():
-                # self.window.fileModel.setNameFilters(["*.*"])
-                # self.window.fileModel.setNameFilterDisables(True)
         # 
         self.tmodel.setIconProvider(IconProvider())
         self.tmodel.setReadOnly(False)
@@ -5462,9 +5465,9 @@ class cTView(QBoxLayout):
                     # scroll to top
                     self.tview.verticalScrollBar().setValue(0)
                 except Exception as E:
-                    MyDialog("ERROR", str(E), self.window)
+                    MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("ERROR", path+"\n\n   Not readable", self.window)
+                MyDialog("Info", path+"\n\n   Not readable", self.window)
         elif os.path.isfile(path):
             perms = QFileInfo(path).permissions()
             if perms & QFile.ExeOwner:
@@ -5491,7 +5494,7 @@ class cTView(QBoxLayout):
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("Error", "No programs found.", self.window)
+                MyDialog("Info", "No programs found.", self.window)
 
     #  send to trash or delete the selected items - function
     def itemsToTrash(self):
@@ -5766,7 +5769,7 @@ class cTView(QBoxLayout):
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
-                MyDialog("Error", "The program\n"+ret+"\ncannot be found", self.window)
+                MyDialog("Info", "The program\n"+ret+"\ncannot be found", self.window)
     
     # open the file
     def fprogAction(self, iprog, path):
@@ -5818,9 +5821,9 @@ class cTView(QBoxLayout):
                 dialogList = ""
                 for item in list_items:
                     dialogList += os.path.basename(item)+"\n"
-                ret = retDialogBox("Info", "Do you really want to move these items to the trashcan?", "", dialogList, self.window)
+                ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", dialogList, self.window)
             else:
-                ret = retDialogBox("Info", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
+                ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
                 TrashModule(list_items)
@@ -5838,9 +5841,9 @@ class cTView(QBoxLayout):
                 dialogList = ""
                 for item in list_items:
                     dialogList += os.path.basename(item)+"\n"
-                ret = retDialogBox("Info", "Do you really want to delete these items?", "", dialogList, self.window)
+                ret = retDialogBox("Question", "Do you really want to delete these items?", "", dialogList, self.window)
             else:
-                ret = retDialogBox("Info", "Do you really want to delete these items?", "", "Too many items.\n", self.window)
+                ret = retDialogBox("Question", "Do you really want to delete these items?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
                 self.fdeleteItems(list_items)

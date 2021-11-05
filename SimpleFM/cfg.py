@@ -10,7 +10,7 @@ X_EXTENDED_DRAG_ICON=20
 # y offset of each icon if USE_EXTENDED_DRAG_ICON is enabled
 Y_EXTENDED_DRAG_ICON=5
 # limit the number of icon overlay if USE_EXTENDED_DRAG_ICON is enabled
-NUM_OVERLAY=40
+NUM_OVERLAY=20
 # show the alternative view button: 0 no - 1 yes
 ALTERNATE_VIEW = 1
 # Open with... dialog: 0 simple - 1 list installed applications
@@ -42,9 +42,9 @@ ICON_SIZE2_ALT = 24
 # space between items
 ITEM_SPACE = 25
 # the size of the circle at top-left of each item
-CIRCLE_SIZE=20
+CIRCLE_SIZE=30
 # the circle color in the form #AARRGGBB
-CIRCLE_COLOR="#8858BB6A"
+CIRCLE_COLOR="#88DF5E0B"
 # tick symbol
 TICK_CHAR="✓"
 # tick size in pixels

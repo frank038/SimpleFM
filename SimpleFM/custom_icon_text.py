@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Custom text of each icon - time
+example: Custom text of each icon - time
 """
 import os, datetime
 
