@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.6
+# version 0.8.7
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2852,9 +2852,12 @@ class MainWin(QWidget):
             return
         #
         if can_poweroff:
-            ret = self.on_poweroff(ddrive)
-            if ret == -1:
-                MyDialog("Info", "The device cannot be turned off.", self)
+            try:
+                ret = self.on_poweroff(ddrive)
+                # if ret == -1:
+                    # MyDialog("Info", "The device cannot be turned off.", self)
+            except:
+                pass
         # close the open tabs
         self.close_open_tab(mountpoint)
     
@@ -3704,6 +3707,9 @@ class LView(QBoxLayout):
     #
     def doubleClick(self, index):
         path = self.fileModel.fileInfo(index).absoluteFilePath()
+        if not os.path.exists(path):
+            MyDialog("Info", "It doesn't exist.", self.window)
+            return
         if os.path.isdir(path):
             if os.access(path, os.R_OK):
                 try:
@@ -3786,6 +3792,11 @@ class LView(QBoxLayout):
         if self.flag == 0:
             return
         time.sleep(0.2)
+        #
+        if self.selection:
+            if self.selection[0] == None:
+                return
+        #
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
         pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
@@ -3818,6 +3829,10 @@ class LView(QBoxLayout):
                 csa = csaa+csab+csac+csad+csae+csaf+csag
                 menu.setStyleSheet(csa)
             ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
+            if not os.path.exists(ipath):
+                MyDialog("Info", "It doesn't exist.", self.window)
+                return
+            #
             if self.selection != None:
                 if len(self.selection) == 1:
                     if os.path.isfile(os.path.join(self.lvDir, itemName)):
@@ -3979,6 +3994,9 @@ class LView(QBoxLayout):
             menu.exec_(self.listview.mapToGlobal(position))
         ## background
         else:
+            if not os.path.exists(self.lvDir):
+                MyDialog("Info", "It doesn't exist.", self.window)
+                return
             self.listview.clearSelection()
             menu = QMenu("Menu", self.listview)
             if MENU_H_COLOR:
@@ -5454,6 +5472,11 @@ class cTView(QBoxLayout):
     # double click on item
     def doubleClick(self, index):
         path = self.tmodel.fileInfo(index).absoluteFilePath()
+        #
+        if not os.path.exists(path):
+            MyDialog("Info", "It doesn't exist.", self.window)
+            return
+        #
         if os.path.isdir(path):
             if os.access(path, os.R_OK):
                 try:
@@ -5516,12 +5539,22 @@ class cTView(QBoxLayout):
         if self.flag == 0:
             return
         time.sleep(0.2)
+        #
+        if self.selection:
+            if self.selection[0] == None:
+                return
+        #
         pointedItem = self.tview.indexAt(position)
         vr = self.tview.visualRect(pointedItem)
         pointedItem2 = self.tview.indexAt(QPoint(vr.x(),vr.y()))
         # the items
         if vr:
             itemName = self.tmodel.data(pointedItem2, Qt.DisplayRole)
+            #
+            if not os.path.exists(os.path.join(self.lvDir, itemName)):
+                MyDialog("Info", "It doesn't exist.", self.window)
+                return
+            #
             menu = QMenu("Menu", self.tview)
             if MENU_H_COLOR:
                 csaa = "QMenu { "
