@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.7
+# version 0.8.8
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -3882,6 +3882,11 @@ class LView(QBoxLayout):
                     pasteNmergeAction = QAction("Paste", self)
                     pasteNmergeAction.triggered.connect(lambda d:PastenMerge(os.path.join(self.lvDir, itemName), -3, "", self.window))
                     menu.addAction(pasteNmergeAction)
+                    # check the clipboard for data
+                    clipboard = QApplication.clipboard()
+                    mimeData = clipboard.mimeData(QClipboard.Clipboard)
+                    if "x-special/gnome-copied-files" not in mimeData.formats():
+                        pasteNmergeAction.setEnabled(False)
             #
             if USE_TRASH:
                 # only items in the HOME dir or in mass storages
@@ -4047,6 +4052,11 @@ class LView(QBoxLayout):
                 pasteNmergeAction = QAction("Paste", self)
                 pasteNmergeAction.triggered.connect(lambda d:PastenMerge(self.lvDir, -3, "", self.window))
                 menu.addAction(pasteNmergeAction)
+                # check the clipboard for data
+                clipboard = QApplication.clipboard()
+                mimeData = clipboard.mimeData(QClipboard.Clipboard)
+                if "x-special/gnome-copied-files" not in mimeData.formats():
+                    pasteNmergeAction.setEnabled(False)
             #
             menu.addSeparator()
             subm_customAction = menu.addMenu("Actions")
@@ -5649,6 +5659,11 @@ class cTView(QBoxLayout):
                 pasteNmergeAction = QAction("Paste", self)
                 pasteNmergeAction.triggered.connect(lambda d:PastenMerge(self.lvDir, -3, "", self.window))
                 menu.addAction(pasteNmergeAction)
+                # check the clipboard for data
+                clipboard = QApplication.clipboard()
+                mimeData = clipboard.mimeData(QClipboard.Clipboard)
+                if "x-special/gnome-copied-files" not in mimeData.formats():
+                    pasteNmergeAction.setEnabled(False)
             #
             menu.addSeparator()
             #
