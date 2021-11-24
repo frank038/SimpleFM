@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.8.9
+# version 0.8.10
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -109,9 +109,9 @@ if not os.access("winsize.cfg", os.R_OK):
     fm = firstMessage("Error", "The file winsize.cfg cannot be read.")
     sys.exit(app.exec_())
 
-WINW = 0
-WINH = 0
-WINM = ""
+WINW = 800
+WINH = 600
+WINM = "False"
 try:
     with open("winsize.cfg", "r") as ifile:
         fcontent = ifile.readline()
@@ -121,7 +121,12 @@ try:
     WINM = am.strip()
 except:
     app = QApplication(sys.argv)
-    fm = firstMessage("Error", "The file winsize.cfg cannot be read.")
+    fm = firstMessage("Error", "The file winsize.cfg cannot be read.\nRebuilded.")
+    try:
+        with open("winsize.cfg", "w") as ifile:
+            ifile.write("800;600;False")
+    except:
+        pass
     sys.exit(app.exec_())
 
 isXDGDATAHOME = 1
