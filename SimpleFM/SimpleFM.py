@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# version 0.8.10
+# version 0.9.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
-from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
+from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont)
 import dbus
 import psutil
@@ -3307,17 +3307,36 @@ class LView(QBoxLayout):
         self.hicombo = QComboBox()
         self.hicombo.setEditable(True)
         if BUTTON_SIZE:
-            self.hicombo.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+            self.hicombo.setSizePolicy(QSizePolicy.Ignored, QSizePolicy.Expanding)
         self.bhicombo.addWidget(self.hicombo, 1)
         self.hicombo.activated[str].connect(self.fhbmenuction)
         self.hicombo.insertItem(0, self.lvDir)
         self.hicombo.setCurrentIndex(0)
         #
         ### path button box
-        self.box_pb = FlowLayout()
-        self.insertLayout(1, self.box_pb)
-        self.on_box_pb(self.lvDir)
-        #
+        if FLOW_WIDGET:
+            self.scroll_widget = QWidget()
+            self.scroll_widget.setContentsMargins(QMargins(0,0,0,0))
+            self.scroll_layout = QHBoxLayout()
+            self.scroll_layout.setContentsMargins(QMargins(0,0,0,0))
+            self.scroll_layout.setSpacing(0)
+            self.scroll_widget.setLayout(self.scroll_layout)
+            self.scroll = QScrollArea()
+            self.scroll.installEventFilter(self)
+            self.scroll.setContentsMargins(QMargins(0,0,0,0))
+            self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOn)
+            self.scroll.setWidgetResizable(True)
+            self.scroll.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+            self.scroll.setWidget(self.scroll_widget)
+            self.box_pb = self.scroll_layout
+            self.insertWidget(1, self.scroll)
+            self.on_box_pb(self.lvDir)
+        else:
+            self.box_pb = FlowLayout()
+            self.insertLayout(1, self.box_pb)
+            self.on_box_pb(self.lvDir)
+        ####
+        ####
         self.fmf = 0
         self.selection = None
         self.listview = MyQlist()
@@ -3384,6 +3403,8 @@ class LView(QBoxLayout):
         self.box_pb_btn = None
         # item are added in the selected item list if clicked at its top-left position
         self.static_items = False
+        #
+        
     
     #
     def on_change_dir(self, path):
@@ -3468,6 +3489,7 @@ class LView(QBoxLayout):
             pb.setAutoExclusive(True)
             pb.setCheckable(True)
             pb.clicked.connect(self.btn_change_dir)
+            pb.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
             self.box_pb.addWidget(pb)
             pb.installEventFilter(self)
             pb.setObjectName('pbwidget')
@@ -3488,6 +3510,12 @@ class LView(QBoxLayout):
     
     #
     def eventFilter(self, obj, event):
+        if FLOW_WIDGET:
+            if event.type() == QEvent.Wheel and obj is self.scroll:
+                ddelta = event.angleDelta()
+                hbar = self.scroll.horizontalScrollBar()
+                hbar.setValue(hbar.value()-ddelta.y())
+                return True
         # select items continuosly without deselecting the others
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.LeftButton:
@@ -3809,7 +3837,7 @@ class LView(QBoxLayout):
         if self.static_items == True:
             self.static_items = False
             self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
-            if not pointedItem2 in self.selection:
+            if pointedItem2 and not pointedItem2 in self.selection:
                 # deselect all
                 self.listview.clearSelection()
                 self.selection = [pointedItem2]
