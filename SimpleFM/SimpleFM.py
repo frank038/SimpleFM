@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.0
+# version 0.9.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -216,15 +216,17 @@ class MyDialog(QMessageBox):
         super(MyDialog, self).__init__(args[-1])
         if args[0] == "Info":
             self.setIcon(QMessageBox.Information)
+            self.setStandardButtons(QMessageBox.Ok)
         elif args[0] == "Error":
             self.setIcon(QMessageBox.Critical)
+            self.setStandardButtons(QMessageBox.Ok)
         elif args[0] == "Question":
             self.setIcon(QMessageBox.Question)
+            self.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
         self.resize(DIALOGWIDTH,300)
         self.setText(args[1])
-        self.setStandardButtons(QMessageBox.Ok)
         retval = self.exec_()
     
     def event(self, e):
@@ -3041,9 +3043,46 @@ class MainWin(QWidget):
         except Exception as E:
             MyDialog("Error", str(E), self)
     
-    # the bookmark action
+    # the bookmark action - or remove the useless bookmark
     def on_bookmark_action(self):
-        self.openDir(self.sender().toolTip(), 1)
+        bpath = self.sender().toolTip()
+        if os.path.exists(bpath):
+            self.openDir(bpath, 1)
+        # the bookmark points to a missed folder
+        else:
+            msgBox = QMessageBox()
+            msgBox.setIcon(QMessageBox.Question)
+            msgBox.setWindowTitle("Question")
+            msgtext = "The folder\n{}\ndoesn't exist anymore.\nDo you want to remove its bookmark?".format(bpath)
+            msgBox.setText(msgtext)
+            msgBox.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
+            #
+            returnValue = msgBox.exec()
+            if returnValue == QMessageBox.Ok:
+                try:
+                    fb = open("Bookmarks", "r")
+                    fbdata = fb.readlines()
+                    fb.close()
+                except Exception as E:
+                    MyDialog("Error", str(E), self)
+                    return
+                # remove the bookmark
+                for item in fbdata[:]:
+                    if bpath == item.strip("\n"):
+                        fbdata.remove(item)
+                        self.bookmarkBtnMenu.removeAction(self.sender())
+                        break
+                # update the file
+                try:
+                    fb = open("Bookmarks", "w")
+                    for item in fbdata:
+                        fb.write(item)
+                    fb.close()
+                except Exception as E:
+                    MyDialog("Error", str(E), self)
+                    return
+            else:
+                return
     
     
     # open a new folder - used also by computer and home buttons
