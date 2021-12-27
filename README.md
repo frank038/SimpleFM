@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.9.0
+V. 0.9.1
 
 A file manager written in PyQt5.
 
