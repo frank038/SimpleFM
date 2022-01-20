@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.1
+# version 0.9.2
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1485,7 +1485,7 @@ class copyThread2(QThread):
                 if tdest[0:len_dfile] == dfile and not tdest == dfile:
                     items_skipped += "Recursive copying:\n{}".format(os.path.basename(dfile))
                     continue
-                # # trying to copy a dir into itself
+                # # trying to copy a dir into itself - do not uncomment
                 # if dfile == os.path.dirname(tdest):
                     # items_skipped += "Same folder:\n{}.".format(os.path.basename(dfile))
                     # continue
@@ -4231,7 +4231,7 @@ class LView(QBoxLayout):
                 ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
-                TrashModule(list_items)
+                TrashModule(list_items, self.window)
                 self.listview.viewport().update()
         
     # bypass the trashcan
@@ -5269,8 +5269,9 @@ class RestoreTrashedItems():
 
 class TrashModule():
     
-    def __init__(self, list_items):
+    def __init__(self, list_items, window):
         self.list_items = list_items
+        self.window = window
         self.trash_path = self.find_trash_path(self.list_items[0])
         self.Tfiles = os.path.join(self.trash_path, "files")
         self.Tinfo = os.path.join(self.trash_path, "info")
@@ -5946,7 +5947,7 @@ class cTView(QBoxLayout):
                 ret = retDialogBox("Question", "Do you really want to move these items to the trashcan?", "", "Too many items.\n", self.window)
             #
             if ret.getValue():
-                TrashModule(list_items)
+                TrashModule(list_items, self.window)
                 self.tview.viewport().update()
     
     # bypass the trashcan
