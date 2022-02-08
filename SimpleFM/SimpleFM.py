@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.2
+# version 0.9.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -3758,7 +3758,7 @@ class LView(QBoxLayout):
             # mimetype
             imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
             self.label7.setText(imime.name())
-            # size
+            # item count
             if os.access(path, os.R_OK):
                 num_items, hidd_items = self.num_itemh(path)
                 self.label2.setText("<i>Items </i>")
@@ -3834,30 +3834,40 @@ class LView(QBoxLayout):
     #
     def lselectionChanged(self):
         self.selection = self.listview.selectionModel().selectedIndexes()
-        if len(self.selection) == 1:
-            return
         if self.selection == []:
             self.tabLabels()
         else:
-            total_size = 0
-            for iitem in self.selection:
-                path = self.fileModel.fileInfo(iitem).absoluteFilePath()
-                #
-                if os.path.islink(path):
-                    # just a number
-                    total_size += 512
-                elif os.path.isfile(path):
-                    total_size += QFileInfo(path).size()
-                elif os.path.isdir(path):
-                    total_size += folder_size(path)
-                else:
-                    # just a number
-                    total_size += 512
             self.label2.setText("<i>Selected Items </i>")
             self.label6.setText(str(len(self.selection)))
-            self.label3.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Size </i>")
-            self.label7.setText(str(convert_size(total_size)))
+            self.label3.setText("")
+            self.label7.setText("")
             self.label8.setText("")
+        ###########
+        # if len(self.selection) == 1:
+            # return
+        # if self.selection == []:
+            # self.tabLabels()
+        #
+        # else:
+            # total_size = 0
+            # for iitem in self.selection:
+                # path = self.fileModel.fileInfo(iitem).absoluteFilePath()
+                # #
+                # if os.path.islink(path):
+                    # # just a number
+                    # total_size += 512
+                # elif os.path.isfile(path):
+                    # total_size += QFileInfo(path).size()
+                # elif os.path.isdir(path):
+                    # total_size += folder_size(path)
+                # else:
+                    # # just a number
+                    # total_size += 512
+            # self.label2.setText("<i>Selected Items </i>")
+            # self.label6.setText(str(len(self.selection)))
+            # self.label3.setText("<i>&nbsp;&nbsp;&nbsp;&nbsp;Size </i>")
+            # self.label7.setText(str(convert_size(total_size)))
+            # self.label8.setText("")
     
     # mouse right click on the pointed item
     def onRightClick(self, position):
