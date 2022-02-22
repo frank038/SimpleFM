@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.3
+# version 0.9.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -3476,19 +3476,14 @@ class LView(QBoxLayout):
             item = self.box_pb.itemAt(i)
             if isinstance(item.widget(), QPushButton):
                 ppath.append(item.widget().text())
-                if item.widget().text() == self.sender().text():
+                if i == self.sender().ind:
                     break
         #
-        new_dir = self.sender().text()
-        if new_dir in ppath:
-            new_dir_idx = ppath.index(new_dir)
-        else:
-            MyDialog("Info", new_dir+"\n\n   Directory missed.\n", self.window)
-            return
-        new_path = os.path.join(*ppath[0:new_dir_idx+1])
+        new_path = os.path.join(*ppath)
         #
         if os.path.exists(new_path):
-            self.on_btn_change_dir(new_path)
+            if new_path != self.lvDir:
+                self.on_btn_change_dir(new_path)
         else:
             MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
             
@@ -3523,8 +3518,11 @@ class LView(QBoxLayout):
         for p in range(0, ppath_len):
             if p == 0:
                 pb = QPushButton(QIcon("icons/drive-harddisk.svg"), "/")
+                # set the index as button attribute
+                pb.ind = 0
             else:
                 pb = QPushButton(ppath[p])
+                pb.ind = p
             pb.setAutoExclusive(True)
             pb.setCheckable(True)
             pb.clicked.connect(self.btn_change_dir)
@@ -3882,6 +3880,7 @@ class LView(QBoxLayout):
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
         pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
+        print("a")
         # in case of sticky selection
         if self.static_items == True:
             self.static_items = False
@@ -3893,7 +3892,9 @@ class LView(QBoxLayout):
                 # select the item
                 self.listview.setCurrentIndex(pointedItem2)
         # the items
+        print("b")
         if vr:
+            print("e")
             # the data of the selected item at the bottom
             self.singleClick(pointedItem)
             #
@@ -4085,6 +4086,7 @@ class LView(QBoxLayout):
                 MyDialog("Info", "It doesn't exist.", self.window)
                 return
             self.listview.clearSelection()
+            print("c")
             menu = QMenu("Menu", self.listview)
             if MENU_H_COLOR:
                 csaa = "QMenu { "
