@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.5
+# version 0.9.6
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2620,11 +2620,9 @@ class MainWin(QWidget):
         if len(sys.argv) > 1:
             parg = sys.argv[1]
             # remove the last slash character if useless
-            if len(parg) > 1 and parg[-1] == "/":
+            if parg != "trash://" and len(parg) > 1 and parg[-1] == "/":
                 parg = parg[:-1]
-            # "//" is not a directory
-            if len(parg) > 1 and parg.strip("/") == "":
-                parg = ""
+            #
             # for i in range(1, len(sys.argv) -1):
                 # parg += sys.argv[i]+" "
             # parg += sys.argv[len(sys.argv) - 1]
@@ -2640,6 +2638,9 @@ class MainWin(QWidget):
             else:
                 self.openDir(HOME, 1)
         else:
+            # "//" is not a directory
+            if len(parg) > 1 and parg.strip("/") == "":
+                parg = ""
             if os.path.exists(parg) and os.access(parg, os.R_OK):
                 self.openDir(parg, 1)
             else:
