@@ -66,7 +66,7 @@ def createimagethumb(fpath, el):
         if image == "Null":
             return "Null"
         # draw a colored border around the image
-        if USE_BORDERS:
+        if USE_BORDERS == 1:
             img_w = image.width()
             img_h = image.height()
             pen = QPen(QColor(BORDER_COLOR_R,BORDER_COLOR_G,BORDER_COLOR_B))

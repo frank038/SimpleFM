@@ -78,7 +78,7 @@ OBLUE = 235
 ORED2 = 223
 OGREEN2 = 223
 OBLUE2 = 223
-# use listview and treeview text color: 0 no - 1 yes
+# use listview and treeview text color: 0 no - 1 only alternate view - 2 main view too
 TCOLOR = 0
 # listview and treeview text color: red, green, blue (0 - 255)
 TRED = 123
@@ -99,11 +99,11 @@ COMMAND_EXTRACTOR="7z"
 ### needed by pythumb
 # use thumbnailer in the home dir only: 0 no - 1 yes
 USE_THUMB_HOME_ONLY=1
-# use borders: 0 no - 1 yes
-USE_BORDERS=1
+# use borders: 0 no - 1 yes - 2 yes and use the internal program mode
+USE_BORDERS=2
 # 
 BORDER_WIDTH=2
-# border color of the thumbnails
+# border color of the thumbnails - 0 to 255 per colour
 BORDER_COLOR_R = 0
 BORDER_COLOR_G = 0
 BORDER_COLOR_B = 0

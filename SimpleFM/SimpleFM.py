@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.4
+# version 0.9.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2293,6 +2293,21 @@ class itemDelegate(QItemDelegate):
         ypad = int((ITEM_HEIGHT - ph) / 2)
         painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
         #
+        # draw a colored border around the thumbnail image
+        if USE_BORDERS == 2:
+            # empiric method: draw a border if any name is not found
+            if iicon.name() == "":
+                painter.save()
+                img_w = pw
+                img_h = ph
+                pen = QPen(QColor(BORDER_COLOR_R,BORDER_COLOR_G,BORDER_COLOR_B))
+                pwidth = BORDER_WIDTH
+                pen.setWidth(pwidth)
+                painter.setPen(pen)
+                painter.drawRect(option.rect.x() + xpad,option.rect.y() + ypad,pw-pwidth+BORDER_WIDTH,ph-pwidth+BORDER_WIDTH)
+                painter.restore()
+        #
+        #
         # other text
         if iaddtext:
             st1 = QStaticText("<i>"+iaddtext+"</i>")
@@ -2305,7 +2320,12 @@ class itemDelegate(QItemDelegate):
             hh1 = st1.size().height()
         else:
             hh1 = 0
-        
+        # text color
+        if TCOLOR == 2:
+            painter.save()
+            pen = QPen(QColor(TRED,TGREEN,TBLUE))
+            painter.setPen(pen)
+        #
         qstring = index.data(QFileSystemModel.FileNameRole)
         st = QStaticText(qstring)
         st.setTextWidth(ITEM_WIDTH)
@@ -2313,7 +2333,10 @@ class itemDelegate(QItemDelegate):
         to.setWrapMode(QTextOption.WrapAnywhere)
         st.setTextOption(to)
         painter.drawStaticText(option.rect.x(), option.rect.y()+ITEM_HEIGHT+int(hh1), st)
-
+        #
+        if TCOLOR == 2:
+            painter.restore()
+        
         if not os.path.isdir(ppath):
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
@@ -2596,6 +2619,12 @@ class MainWin(QWidget):
         parg = ""
         if len(sys.argv) > 1:
             parg = sys.argv[1]
+            # remove the last slash character if useless
+            if len(parg) > 1 and parg[-1] == "/":
+                parg = parg[:-1]
+            # "//" is not a directory
+            if len(parg) > 1 and parg.strip("/") == "":
+                parg = ""
             # for i in range(1, len(sys.argv) -1):
                 # parg += sys.argv[i]+" "
             # parg += sys.argv[len(sys.argv) - 1]
@@ -3880,7 +3909,6 @@ class LView(QBoxLayout):
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
         pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
-        print("a")
         # in case of sticky selection
         if self.static_items == True:
             self.static_items = False
@@ -3892,9 +3920,7 @@ class LView(QBoxLayout):
                 # select the item
                 self.listview.setCurrentIndex(pointedItem2)
         # the items
-        print("b")
         if vr:
-            print("e")
             # the data of the selected item at the bottom
             self.singleClick(pointedItem)
             #
@@ -4086,7 +4112,6 @@ class LView(QBoxLayout):
                 MyDialog("Info", "It doesn't exist.", self.window)
                 return
             self.listview.clearSelection()
-            print("c")
             menu = QMenu("Menu", self.listview)
             if MENU_H_COLOR:
                 csaa = "QMenu { "
