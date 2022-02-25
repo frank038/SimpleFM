@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.6
+# version 0.9.7
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -658,7 +658,14 @@ class propertyDialog(QDialog):
                 label_real_link2 = clabel2()
                 label_real_link2.setText(os.path.realpath(self.itemPath), self.size().width()-12)
                 self.grid1.addWidget(label_real_link2, 5, 1, 1, 4, Qt.AlignLeft)
+                #
+                button1 = QPushButton("OK")
+                button1.clicked.connect(self.faccept)
+                hbox = QBoxLayout(QBoxLayout.LeftToRight)
+                vbox.addLayout(hbox)
+                hbox.addWidget(button1)
                 self.adjustSize()
+                #
                 self.exec_()
         elif os.path.exists(self.itemPath):
             if os.path.islink(self.itemPath):
@@ -2149,6 +2156,10 @@ class MyQlist(QListView):
             items = ddata[1:]
             #
             dest_path = self.model().rootPath()
+            #
+            if not os.access(dest_path, os.W_OK):
+                MyDialog("Info", "Not writable:\n{}".format(os.path.basename(dest_path)), None)
+                return
             curr_dir = QFileInfo(dest_path)
             pointedItem = self.indexAt(event.pos())
             if pointedItem.isValid():
@@ -2170,10 +2181,15 @@ class MyQlist(QListView):
                                 MyDialog("Info", "Cancelled.", None)
                                 return
                     # 
+                    ret = -5
                     for i in range(0, len(items), 3):
                         ttype = items[i]
                         item_type = items[i+1]
                         item_to_extract = items[i+2]
+                        #
+                        if item_to_extract == "":
+                            continue
+                        #
                         if item_type == "file":
                             # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
                             ret = os.system("{0} {1} '-i!{2}' '{3}' -y -aou -p{4} -o{5} 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, ARCHIVE_PASSWORD, dest_path))
@@ -2308,6 +2324,11 @@ class itemDelegate(QItemDelegate):
                 painter.restore()
         #
         #
+        # text color
+        if TCOLOR == 2:
+            painter.save()
+            pen = QPen(QColor(TRED,TGREEN,TBLUE))
+            painter.setPen(pen)
         # other text
         if iaddtext:
             st1 = QStaticText("<i>"+iaddtext+"</i>")
@@ -2320,11 +2341,6 @@ class itemDelegate(QItemDelegate):
             hh1 = st1.size().height()
         else:
             hh1 = 0
-        # text color
-        if TCOLOR == 2:
-            painter.save()
-            pen = QPen(QColor(TRED,TGREEN,TBLUE))
-            painter.setPen(pen)
         #
         qstring = index.data(QFileSystemModel.FileNameRole)
         st = QStaticText(qstring)
@@ -3940,8 +3956,9 @@ class LView(QBoxLayout):
                 menu.setStyleSheet(csa)
             ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
             if not os.path.exists(ipath):
-                MyDialog("Info", "It doesn't exist.", self.window)
-                return
+                if not os.path.islink(ipath):
+                    MyDialog("Info", "It doesn't exist.", self.window)
+                    return
             #
             if self.selection != None:
                 if len(self.selection) == 1:
@@ -5856,6 +5873,97 @@ class cTView(QBoxLayout):
                 propertyAction = QAction("Property", self)
                 propertyAction.triggered.connect(self.fpropertyActionMulti)
                 menu.addAction(propertyAction)
+            #
+            menu.exec_(self.tview.mapToGlobal(position))
+        # background
+        else:
+            menu = QMenu("Menu", self.tview)
+            if MENU_H_COLOR:
+                csaa = "QMenu { "
+                csab = "background: {}".format(QPalette.Window)
+                csac = "; margin: 1px; padding: 5px 5px 5px 5px;}"
+                csad = " QMenu::item:selected { "
+                csae = "background-color: {};".format(MENU_H_COLOR)
+                csaf = " padding: 10px;}"
+                csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
+                csa = csaa+csab+csac+csad+csae+csaf+csag
+                menu.setStyleSheet(csa)
+            #
+            if self.flag == 1 or self.flag == 3:
+                newFolderAction = QAction("New Folder", self)
+                newFolderAction.triggered.connect(self.fnewFolderAction)
+                menu.addAction(newFolderAction)
+                newFileAction = QAction("New File", self)
+                newFileAction.triggered.connect(self.fnewFileAction)
+                menu.addAction(newFileAction)
+                #
+                if shutil.which("xdg-user-dir"):
+                    templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
+                    if not os.path.exists(templateDir):
+                        optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
+                        if os.path.exists(optTemplateDir):
+                           templateDir = optTemplateDir
+                        else:
+                            templateDir = None
+                    #
+                    if templateDir:
+                        if os.path.exists(templateDir):
+                            menu.addSeparator()
+                            subm_templatesAction= menu.addMenu("Templates")
+                            listTemplate = os.listdir(templateDir)
+
+                            progActionListT = []
+                            for ifile in listTemplate:
+                                progActionListT.append(QAction(ifile))
+                                progActionListT.append(ifile)
+                            ii = 0
+                            for paction in progActionListT[::2]:
+                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
+                                subm_templatesAction.addAction(paction)
+                                ii += 2
+            #
+            menu.addSeparator()
+            #
+            subm_customAction = menu.addMenu("Actions")
+            #
+            if len(list_custom_modules) > 0:
+                listActions = []
+                for el in list_custom_modules:
+                    if el.mmodule_type(self) == 1 and self.selection and len(self.selection) == 1:
+                        icustomAction = QAction(el.mmodule_name(), self)
+                        listActions.append(icustomAction)
+                        listActions.append(el)
+                        listActions.append(1)
+                    elif el.mmodule_type(self) == 2 and self.selection and len(self.selection) > 1:
+                        icustomAction = QAction(el.mmodule_name(), self)
+                        listActions.append(icustomAction)
+                        listActions.append(el)
+                        listActions.append(2)
+                    elif el.mmodule_type(self) == 3 and self.selection and len(self.selection) > 0:
+                        icustomAction = QAction(el.mmodule_name(), self)
+                        listActions.append(icustomAction)
+                        listActions.append(el)
+                        listActions.append(3)
+                    elif el.mmodule_type(self) == 4 or el.mmodule_type(self) == 5:
+                        icustomAction = QAction(el.mmodule_name(), self)
+                        listActions.append(icustomAction)
+                        listActions.append(el)
+                        listActions.append(5)
+                ii = 0
+                for paction in listActions[::3]:
+                    paction.triggered.connect(lambda checked, index=ii:self.ficustomAction(listActions[index+1], listActions[index+2]))
+                    subm_customAction.addAction(paction)
+                    ii += 3
+            #
+            menu.addSeparator()
+            # upButton
+            upAction = QAction("Go Up", self)
+            upAction.triggered.connect(self.upButton)
+            menu.addAction(upAction)
+            # show the hidden items
+            hiddenAction = QAction("Hidden items", self)
+            hiddenAction.triggered.connect(self.fhidbtn)
+            menu.addAction(hiddenAction)
             #
             menu.exec_(self.tview.mapToGlobal(position))
 
