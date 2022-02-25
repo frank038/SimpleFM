@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.7
+# version 0.9.8
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -5944,7 +5944,12 @@ class cTView(QBoxLayout):
                         listActions.append(icustomAction)
                         listActions.append(el)
                         listActions.append(3)
-                    elif el.mmodule_type(self) == 4 or el.mmodule_type(self) == 5:
+                    elif el.mmodule_type(self) == 4:
+                        icustomAction = QAction(el.mmodule_name(), self)
+                        listActions.append(icustomAction)
+                        listActions.append(el)
+                        listActions.append(4)
+                    elif el.mmodule_type(self) == 5:
                         icustomAction = QAction(el.mmodule_name(), self)
                         listActions.append(icustomAction)
                         listActions.append(el)
@@ -6181,6 +6186,8 @@ class cTView(QBoxLayout):
             items_list = []
             for iitem in self.selection:
                 items_list.append(self.tmodel.fileInfo(iitem).absoluteFilePath())
+            el.ModuleCustom(self)
+        elif menuType == 4:
             el.ModuleCustom(self)
         elif menuType == 5:
             items_list = []
