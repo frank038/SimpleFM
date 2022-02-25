@@ -17,10 +17,12 @@ def mmodule_type(mainLView):
         if len(mainLView.selection) == 1:
             index = mainLView.selection[0]
             path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
-            if os.path.isdir(path) or stat.S_ISREG(os.stat(path).st_mode) and os.path.exists(path) and not os.path.islink(path):
-                desktop_home = os.path.join(os.path.expanduser("~"), "Desktop")
-                if os.path.exists(desktop_home):
-                    return 1
+            if os.path.exists(path):
+                if not os.path.islink(path):
+                    if (os.path.isdir(path) or stat.S_ISREG(os.stat(path).st_mode)):
+                        desktop_home = os.path.join(os.path.expanduser("~"), "Desktop")
+                        if os.path.exists(desktop_home):
+                            return 1
 
 
 class ModuleCustom():

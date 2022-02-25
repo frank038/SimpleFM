@@ -25,6 +25,8 @@ def mmodule_type(mainLView):
         if mainLView.selection:
             index = mainLView.selection[0]
             path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
+            if os.path.islink(path):
+                return 0
             fileInfo = QFileInfo(path)
             imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault)
             imime_name = imime.name()
