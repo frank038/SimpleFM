@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.8
+# version 0.9.9
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2669,6 +2669,8 @@ class MainWin(QWidget):
                         break
                 #
                 self.openDir(path, 1)
+        # for closing open tabs
+        self.device_mountPoint = []
     
     
     # check its state: empty or not empty
@@ -2701,7 +2703,11 @@ class MainWin(QWidget):
                     if isinstance(item, QPushButton):
                         if item.menu().block_device == args[0]:
                             item.deleteLater()
-                            # do not close the open tabs
+                            # close the tabs
+                            for el in self.device_mountPoint[:]:
+                                if el[0] == item.menu().device:
+                                    self.close_open_tab(el[1])
+                                    self.device_mountPoint.remove(el)
                             break
                 
     
@@ -2839,6 +2845,7 @@ class MainWin(QWidget):
         #
         if mountpoint:
             self.openDir(mountpoint, 1)
+            self.device_mountPoint.append([ddevice, mountpoint])
     
     # close the open tabs
     def close_open_tab(self, mountpoint):
@@ -2863,8 +2870,9 @@ class MainWin(QWidget):
         else:
             ret = self.on_mount_device(ddevice, 'Unmount')
             if ret == -1:
-                MyDialog("Info", "The device cannot be unmounted.", self)
-                return
+                # MyDialog("Info", "The device cannot be unmounted.", self)
+                MyDialog("Info", "Device busy.", self)
+                return -1
             # close the open tabs
             if ret == None:
                 self.close_open_tab(mountpoint)
@@ -2893,7 +2901,7 @@ class MainWin(QWidget):
         if mountpoint != "N":
             ret = self.mount_device(mountpoint, ddevice)
             if ret == -1:
-                MyDialog("Info", "Device busy.", self)
+                # MyDialog("Info", "Device busy.", self)
                 return
         # 
         bd2 = self.bus.get_object('org.freedesktop.UDisks2', ddrive)
@@ -2911,8 +2919,8 @@ class MainWin(QWidget):
                     # MyDialog("Info", "The device cannot be turned off.", self)
             except:
                 pass
-        # close the open tabs
-        self.close_open_tab(mountpoint)
+        # # close the open tabs
+        # self.close_open_tab(mountpoint)
     
     # self.eject_media
     def on_eject(self, ddrive):
@@ -3225,7 +3233,7 @@ class devicePropertyDialog(QDialog):
         label2_data = QLabel(data[2])
         grid.addWidget(label2_data, 3, 1, Qt.AlignLeft)
         #
-        label3 = QLabel("<i>Size</i>")
+        label3 = QLabel("<i>Size (Used)</i>")
         grid.addWidget(label3, 4, 0, Qt.AlignLeft)
         label3_data = QLabel(data[3])
         grid.addWidget(label3_data, 4, 1, Qt.AlignLeft)
@@ -3488,8 +3496,17 @@ class LView(QBoxLayout):
         self.box_pb_btn = None
         # item are added in the selected item list if clicked at its top-left position
         self.static_items = False
-        #
+        # a file has been added - hidden items are still skipped
+        self.fileModel.rowsInserted.connect(self.rowInserted)
+        self.fileModel.rowsRemoved.connect(self.rowRemoved)
         
+    #
+    def rowInserted(self, idx):
+        self.tabLabels()
+        
+    #
+    def rowRemoved(self, idx):
+        self.tabLabels()
     
     #
     def on_change_dir(self, path):
