@@ -1,7 +1,7 @@
 # SimpleFM
 V. 0.9.9
 
-A file manager written in PyQt5.
+A file manager written with PyQt5.
 
 Requirements:
 - python3 at least 3.3
