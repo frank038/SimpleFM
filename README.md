@@ -33,6 +33,8 @@ Features:
 
 Support for drag and drop from my archive manager. For this operation it is used a custom mimetype so no need of changing any window property.
 
+The 'Shift key' behaviour: to select a certain amount of contiguous items, select the first, press the shift key and select the last; to move the selected items by using the shift key, press the shift key and start dragging the last selected item.
+
 Tested a bit also under wayland.
 
 Customizations throu the cfg.py file.
