@@ -23,12 +23,12 @@ Features:
 - trashcan
 - media
 - bookmarks
-- mount some archive files through archivemount (more types can be added if supported by archivemount) 
+- mounts some archive files through archivemount (more types can be added if supported by archivemount) 
 - custom actions
 - custom thumbnailers
 - custom folder icon
 - sticky selection by pressing in the circle
-- send desktop files to the desktop (feature of my SimpleDesktop program)
+- sends items to the desktop as special desktop files (feature of my SimpleDesktop program)
 - and more...
 
 Support for drag and drop from my archive manager. For this operation it is used a custom mimetype so no need of changing any window property.
