@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.9
+# version 0.9.10
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1487,9 +1487,10 @@ class copyThread2(QThread):
             # item is dir and not link to dir
             if os.path.isdir(dfile) and not os.path.islink(dfile):
                 tdest = os.path.join(self.pathdest, os.path.basename(dfile))
-                # recursive copying
+                # recursive copying - not allowed
                 len_dfile = len(dfile)
-                if tdest[0:len_dfile] == dfile and not tdest == dfile:
+                # if tdest[0:len_dfile] == dfile and not tdest == dfile:
+                if os.path.dirname(tdest) == dfile and not tdest == dfile:
                     items_skipped += "Recursive copying:\n{}".format(os.path.basename(dfile))
                     continue
                 # # trying to copy a dir into itself - do not uncomment
@@ -2012,6 +2013,12 @@ class MyQlist(QListView):
         super(MyQlist, self).__init__()
         self.verticalScrollBar().setSingleStep(25)
         self.customMimeType = "application/x-customqt5archiver"
+    
+    # def keyPressEvent(self, e):
+        # # if e.key() == Qt.Key_K:
+            # # print("k")
+        # if (e.modifiers() & Qt.ShiftModifier):
+            # print("shift")
     
     def startDrag(self, supportedActions):
         item_list = []
@@ -3616,6 +3623,12 @@ class LView(QBoxLayout):
                 hbar = self.scroll.horizontalScrollBar()
                 hbar.setValue(hbar.value()-ddelta.y())
                 return True
+        # # the shift key is been pressed
+        # modifiers = QApplication.keyboardModifiers()
+        # if (modifiers & Qt.ShiftModifier):
+            # print("shift")
+            # return True
+        # 
         # select items continuosly without deselecting the others
         if event.type() == QEvent.MouseButtonPress:
             if event.button() == Qt.LeftButton:
