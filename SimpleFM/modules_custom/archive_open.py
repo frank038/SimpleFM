@@ -64,7 +64,7 @@ class ModuleCustom():
                 dest_dir = os.path.join(base_dest_dir, mount_name)
                 os.mkdir(dest_dir)
                 #
-                ret = os.system("archivemount {} {}". format(path, dest_dir))
+                ret = os.system("archivemount '{}' '{}'". format(path, dest_dir))
                 if ret == 0:
                     # add a button
                     self.win = mainLView.window
@@ -92,7 +92,7 @@ class ModuleCustom():
     
     # umount the mounted archive
     def fuserumountf(self, dest_dir, btn):
-        ret = os.system("fusermount -u {}".format(dest_dir))
+        ret = os.system("fusermount -u '{}'".format(dest_dir))
         if ret == 0:
             btn.deleteLater()
             try:
