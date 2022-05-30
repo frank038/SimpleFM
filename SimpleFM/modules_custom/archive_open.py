@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 """
-open a supported archive with archivemount
+Open a supported archive with archivemount
+Modify line 41 to TEST_PASSWORD = 1 to test passworded archives;
+a dialog is shows; 7z is required.
 """
 import os
 import stat
@@ -36,9 +38,10 @@ class ModuleCustom():
     def __init__(self, mainLView):
         index = mainLView.selection[0]
         path = mainLView.fileModel.fileInfo(index).absoluteFilePath()
-        # test the archive for password
+        ### test the archive for password: 0 no - 1 yes
+        TEST_PASSWORD = 0
         # archivemount do not support passworded archives
-        if shutil.which("7z"):
+        if TEST_PASSWORD and shutil.which("7z"):
             ret = self.test_archive(path)
             if ret == 2:
                 MyDialog("Info", "This archive is password-protected\nand cannot be mounted.")
@@ -64,7 +67,7 @@ class ModuleCustom():
                 dest_dir = os.path.join(base_dest_dir, mount_name)
                 os.mkdir(dest_dir)
                 #
-                ret = os.system("archivemount '{}' '{}'". format(path, dest_dir))
+                ret = os.system("archivemount '{}' '{}' -o readonly". format(path, dest_dir))
                 if ret == 0:
                     # add a button
                     self.win = mainLView.window
