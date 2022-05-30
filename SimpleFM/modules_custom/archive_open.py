@@ -2,7 +2,7 @@
 
 """
 Open a supported archive with archivemount
-Modify line 41 to TEST_PASSWORD = 1 to test passworded archives;
+Modify line 41 to TEST_PASSWORD = 1 to test passworded archives; 
 a dialog is shows; 7z is required.
 """
 import os
