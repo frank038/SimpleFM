@@ -67,7 +67,7 @@ USE_MEDIA = 1
 # in the form _yy.mm.dd_hh.mm.ss
 USE_DATE = 1
 # use background colour in the listview widgets: 0 no - 1 yes
-USE_BACKGROUND_COLOUR = 1
+USE_BACKGROUND_COLOUR = 0
 # list of opened folders - widget type: 0 flow widget - 1 scroll widget
 FLOW_WIDGET = 0
 # listview background color: red, green, blue
@@ -85,7 +85,7 @@ TRED = 123
 TGREEN = 123
 TBLUE = 123
 # icon theme name - if the qt5ct program overrides this use ""
-ICON_THEME = "gnome"
+ICON_THEME = ""
 # creation data and time of the item in the property dialog: 0 use os.stat - 1 use functions from bash (should be precise)
 DATE_TIME = 1
 # use additional data in each item: 0 no - 1 yes 

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.11.1
+# version 0.9.12
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2046,7 +2046,7 @@ class MyQlist(QListView):
                 psizeW = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetW) - poffsetW
                 psizeH = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetH) - poffsetH
                 pixmap = QPixmap(psizeW, psizeH)
-                pixmap.fill(QColor(253,253,253,0.0))
+                pixmap.fill(QColor(253,253,253,0))
                 incr_offsetW = poffsetW
                 incr_offsetH = poffsetH
                 #
@@ -2569,9 +2569,9 @@ class MainWin(QWidget):
             fPath = [os.path.join(trash_module.mountPoint("HOME").find_trash_path(), "files")]
             self.fileSystemWatcher = QFileSystemWatcher(fPath)
             self.fileSystemWatcher.directoryChanged.connect(self.checkTrash)
-        #
-        # check the trash state: empty or not empty
-        self.checkTrash()
+            #
+            # check the trash state: empty or not empty
+            self.checkTrash()
         #
         # show treeview of the current folder
         if ALTERNATE_VIEW:
