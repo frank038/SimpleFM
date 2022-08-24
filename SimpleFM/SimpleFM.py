@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.12
+# version 0.9.13
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2061,13 +2061,13 @@ class MyQlist(QListView):
                             painter = QPainter(pixmap)
                             woffset = int((ICON_SIZE - pixmap1.size().width())/2)
                             ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                            painter.drawPixmap(psizeW-ICON_SIZE+woffset, psizeH-ICON_SIZE+ioffset, pixmap1)
+                            painter.drawPixmap(int(psizeW-ICON_SIZE+woffset), int(psizeH-ICON_SIZE+ioffset), pixmap1)
                         else:
                             # limit the number of overlays
                             if i < NUM_OVERLAY:
                                 woffset = int((ICON_SIZE - pixmap1.size().width())/2)
                                 ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                                painter.drawPixmap(psizeW-ICON_SIZE-incr_offsetW+woffset, psizeH-ICON_SIZE-incr_offsetH+ioffset, pixmap1)
+                                painter.drawPixmap(int(psizeW-ICON_SIZE-incr_offsetW+woffset), int(psizeH-ICON_SIZE-incr_offsetH+ioffset), pixmap1)
                                 incr_offsetW += poffsetW
                                 incr_offsetH += poffsetH
                             else:
@@ -2314,7 +2314,7 @@ class itemDelegate(QItemDelegate):
         ph = size_pixmap.height()
         xpad = int((ITEM_WIDTH - pw) / 2)
         ypad = int((ITEM_HEIGHT - ph) / 2)
-        painter.drawPixmap(option.rect.x() + xpad,option.rect.y() + ypad, -1,-1, pixmap,0,0,-1,-1)
+        painter.drawPixmap(int(option.rect.x() + xpad),int(option.rect.y() + ypad), -1,-1, pixmap,0,0,-1,-1)
         #
         # draw a colored border around the thumbnail image
         if USE_BORDERS == 2:
@@ -2363,15 +2363,24 @@ class itemDelegate(QItemDelegate):
         if not os.path.isdir(ppath):
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
-                painter.drawPixmap(option.rect.x(), option.rect.y()+ITEM_HEIGHT-ICON_SIZE2,-1,-1, ppixmap,0,0,-1,-1)
+                painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, ppixmap,0,0,-1,-1)
+            # link emblem
+            if LINK_EMB:
+                if os.path.islink(ppath):
+                    lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
+                    painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
         else:
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ExeOwner:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
-                painter.drawPixmap(option.rect.x(), option.rect.y()+ITEM_HEIGHT-ICON_SIZE2,-1,-1, ppixmap,0,0,-1,-1)
-                 
-        if os.path.islink(ppath):
-            lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
-            painter.drawPixmap(option.rect.x()+ITEM_WIDTH-ICON_SIZE2, option.rect.y()+ITEM_HEIGHT-ICON_SIZE2,-1,-1, lpixmap,0,0,-1,-1)
+                painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, ppixmap,0,0,-1,-1)
+            # link emblem
+            if os.path.islink(ppath):
+                lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
+                painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
+#        # link icon
+#        if os.path.islink(ppath):
+#            lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
+#            painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
         
         painter.save()
         if option.state & QStyle.State_Selected:
@@ -3331,7 +3340,7 @@ class FlowLayout(QLayout):
         return True
 
     def heightForWidth(self, width):
-        height = self.doLayout(QRect(0, 0, width, 0), True)
+        height = self.doLayout(QRect(0, 0, int(width), 0), True)
         return height
 
     def setGeometry(self, rect):
@@ -3955,7 +3964,7 @@ class LView(QBoxLayout):
         #
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
-        pointedItem2 = self.listview.indexAt(QPoint(vr.x(),vr.y()))
+        pointedItem2 = self.listview.indexAt(QPoint(int(vr.x()),int(vr.y())))
         # in case of sticky selection
         if self.static_items == True:
             self.static_items = False
@@ -5275,7 +5284,7 @@ class openTrash(QBoxLayout):
         time.sleep(0.1)
         pointedItem = self.ilist.indexAt(position)
         vr = self.ilist.visualRect(pointedItem)
-        pointedItem2 = self.ilist.indexAt(QPoint(vr.x(),vr.y()))
+        pointedItem2 = self.ilist.indexAt(QPoint(int(vr.x()),int(vr.y())))
         if vr:
             itemName = self.model.data(pointedItem2, Qt.UserRole+1)
             menu = QMenu("Menu", self.ilist)
@@ -5510,15 +5519,24 @@ class itemDelegateT(QItemDelegate):
                 if not os.path.isdir(ppath):
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                         ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
-                        painter.drawPixmap(option.rect.x(), option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT,-1,-1, ppixmap,0,0,-1,-1)
+                        painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, ppixmap,0,0,-1,-1)
+                    # link emblem
+                    if LINK_EMB:
+                        if os.path.islink(ppath):
+                            lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
+                            painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, lpixmap,0,0,-1,-1)
                 else:
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ExeOwner:
                         ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
-                        painter.drawPixmap(option.rect.x(), option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT,-1,-1, ppixmap,0,0,-1,-1)
-                # link icon
-                if os.path.islink(ppath):
-                    lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
-                    painter.drawPixmap(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT, option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT,-1,-1, lpixmap,0,0,-1,-1)
+                        painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, ppixmap,0,0,-1,-1)
+                    # link emblem
+                    if os.path.islink(ppath):
+                        lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
+                        painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, lpixmap,0,0,-1,-1)
+#                # link icon
+#                if os.path.islink(ppath):
+#                    lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
+#                    painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, lpixmap,0,0,-1,-1)
         else:
             QItemDelegate.paint(self, painter, option, index)
 
@@ -5714,7 +5732,7 @@ class cTView(QBoxLayout):
         #
         pointedItem = self.tview.indexAt(position)
         vr = self.tview.visualRect(pointedItem)
-        pointedItem2 = self.tview.indexAt(QPoint(vr.x(),vr.y()))
+        pointedItem2 = self.tview.indexAt(QPoint(int(vr.x()),int(vr.y())))
         # the items
         if vr:
             itemName = self.tmodel.data(pointedItem2, Qt.DisplayRole)

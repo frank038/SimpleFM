@@ -35,6 +35,8 @@ ICON_SIZE = 64
 ICON_SIZE_ALT = 64
 # thumb size: greater than ICON_SIZE - same size of ICON_SIZE to disable bigger thumbnailers
 THUMB_SIZE = 100
+# draw link emblem (only not folders): 0 no - 1 yes
+LINK_EMB = 1
 # other icons size: link and permissions
 ICON_SIZE2 = 48
 # other icons size alternative view: link and permissions
