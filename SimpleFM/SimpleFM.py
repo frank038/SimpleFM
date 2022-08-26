@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.13
+# version 0.9.14
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2757,6 +2757,9 @@ class MainWin(QWidget):
                 #
                 pdevice = bd.Get('org.freedesktop.UDisks2.Block', 'Device', dbus_interface='org.freedesktop.DBus.Properties')
                 pdevice_dec = bytearray(pdevice).replace(b'\x00', b'').decode('utf-8')
+                # skip unwanted device in the bar
+                if pdevice_dec in MEDIA_SKIP:
+                    continue
                 #
                 # do not show the disk in which the OS has been installed, and the boot partition
                 ret_mountpoint = self.get_device_mountpoint(str(pdevice_dec))
