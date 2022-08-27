@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.14
+# version 0.9.15
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -65,6 +65,8 @@ if "/usr/share" not in xdgDataDirs:
     xdgDataDirs.append("/usr/share")
 if os.path.expanduser('~')+"/.local/share" not in xdgDataDirs:
     xdgDataDirs.append(os.path.expanduser('~')+"/.local/share")
+if "/usr/share/" in xdgDataDirs:
+    xdgDataDirs.remove("/usr/share/")
 
 # only one trashcan tab at time
 TrashIsOpen = 0
@@ -4659,7 +4661,8 @@ class getAppsByMime():
                         # skip the removed associations
                         if idesktop in lRemoved:
                             continue
-                        desktopPath = os.path.join(ddir+"/applications", idesktop)
+                        # 
+                        desktopPath = os.path.join(applicationsPath, idesktop)
                         # consinstency - do not crash if the desktop file is malformed
                         try:
                             if mimetype in DesktopEntry(desktopPath).getMimeTypes():
@@ -4829,7 +4832,6 @@ class getDefaultApp():
             associatedDesktopProgram = None
             #
             if USER_MIMEAPPSLIST:
-                #
                 try:
                     associatedDesktopProgram = subprocess.check_output([ret, "query", "default", mimetype], universal_newlines=False).decode()
                 except:
