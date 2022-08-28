@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.15
+# version 0.9.16
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2366,11 +2366,10 @@ class itemDelegate(QItemDelegate):
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
                 painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, ppixmap,0,0,-1,-1)
-            # link emblem
-            if LINK_EMB:
-                if os.path.islink(ppath):
-                    lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
-                    painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
+            # 
+            if os.path.islink(ppath):
+                lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
+                painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
         else:
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ExeOwner:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
@@ -5525,11 +5524,10 @@ class itemDelegateT(QItemDelegate):
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                         ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
                         painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, ppixmap,0,0,-1,-1)
-                    # link emblem
-                    if LINK_EMB:
-                        if os.path.islink(ppath):
-                            lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
-                            painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, lpixmap,0,0,-1,-1)
+                    # 
+                    if os.path.islink(ppath):
+                        lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
+                        painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH_ALT-ICON_SIZE2_ALT), int(option.rect.y()+ITEM_HEIGHT_ALT-ICON_SIZE2_ALT),-1,-1, lpixmap,0,0,-1,-1)
                 else:
                     if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ExeOwner:
                         ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2_ALT, ICON_SIZE2_ALT, Qt.KeepAspectRatio, Qt.FastTransformation)
