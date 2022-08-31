@@ -2460,13 +2460,13 @@ class IconProvider(QFileIconProvider):
                                     return file_icon
                                 else:
                                     file_icon = QIcon.fromTheme(imime.iconName())
-                                    if file_icon:
+                                    if not file_icon.isNull():
                                         return file_icon
                                     else:
                                         return QIcon("icons/empty.svg")
                             else:
                                 file_icon = QIcon.fromTheme(imime.iconName())
-                                if file_icon:
+                                if not file_icon.isNull():
                                     return file_icon
                                 else:
                                     return QIcon("icons/empty.svg")
