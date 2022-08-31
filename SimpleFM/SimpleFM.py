@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-# version 0.9.16
+# version 0.9.17
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont)
 import dbus
+# from pydbus import SessionBus
 import psutil
 import sys
 from pathlib import PosixPath
@@ -2366,7 +2367,7 @@ class itemDelegate(QItemDelegate):
             if not index.data(QFileSystemModel.FilePermissions) & QFile.WriteUser or not index.data(QFileSystemModel.FilePermissions) & QFile.ReadUser:
                 ppixmap = QPixmap('icons/emblem-readonly.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
                 painter.drawPixmap(option.rect.x(), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, ppixmap,0,0,-1,-1)
-            # 
+            #
             if os.path.islink(ppath):
                 lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
                 painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
@@ -2457,10 +2458,18 @@ class IconProvider(QFileIconProvider):
                                 file_icon = self.evaluate_pixbuf(ireal_path, imime.name())
                                 if file_icon != "Null":
                                     return file_icon
+                                else:
+                                    file_icon = QIcon.fromTheme(imime.iconName())
+                                    if file_icon:
+                                        return file_icon
+                                    else:
+                                        return QIcon("icons/empty.svg")
                             else:
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if file_icon:
                                     return file_icon
+                                else:
+                                    return QIcon("icons/empty.svg")
                         except:
                             pass
                 #
@@ -2499,10 +2508,51 @@ class IconProvider(QFileIconProvider):
                     elif fileInfo.fileName() == "Public":
                         return QIcon.fromTheme("folder-publicshare", QIcon.fromTheme("folder"))
                     else:
-                        return QIcon.fromTheme("folder")
+                        return QIcon.fromTheme("folder", QIcon("icons/folder.svg"))
+            else:
+                return QIcon("icons/empty.svg")
         return super(IconProvider, self).icon(fileInfo)
 
 ########################### MAIN WINDOW ############################
+# # from ranger
+# terminal_cmd = [""]
+# class SimplefmService(object):
+#     """
+#         <node>
+#             <interface name='org.freedesktop.FileManager1'>
+#                 <method name='ShowFolders'>
+#                     <arg type='as' name='URIs' direction='in'/>
+#                     <arg type='s' name='StartupId' direction='in'/>
+#                 </method>
+#                 <method name='ShowItems'>
+#                     <arg type='as' name='URIs' direction='in'/>
+#                     <arg type='s' name='StartupId' direction='in'/>
+#                 </method>
+#                 <method name='ShowItemProperties'>
+#                     <arg type='as' name='URIs' direction='in'/>
+#                     <arg type='s' name='StartupId' direction='in'/>
+#                 </method>
+#             </interface>
+#         </node>
+#     """
+# 
+#     def ShowFolders(self, uris, startup_id):
+#         uri = self.format_uri(uris[0])
+#         #subprocess.Popen([*terminal_cmd, 'ranger', uri])
+#         subprocess.Popen([*terminal_cmd, uri])
+# 
+#     def ShowItems(self, uris, startup_id):
+#         uri = self.format_uri(uris[0])
+#         #subprocess.Popen([*terminal_cmd, 'ranger', '--select', uri])
+#         subprocess.Popen([*terminal_cmd, uri])
+# 
+#     def ShowItemProperties(self, uris, startup_id):
+#         self.ShowItems(uris, startup_id)
+# 
+#     # def format_uri(uri: str):
+#     def format_uri(self, uri):
+#         return urllib.parse.unquote(uri).replace('file://', '')
+
 # 1
 class MainWin(QWidget):
     
@@ -2623,6 +2673,13 @@ class MainWin(QWidget):
             self.iface.connect_to_signal('InterfacesRemoved', self.device_removed_callback)
             #
             self.on_pop_devices()
+            #
+            # session_bus = SessionBus()
+            # try:
+                # session_bus.publish('org.freedesktop.FileManager1', SimplefmService())
+            # except:
+                # pass
+            #
         # close buttons
         qbtn = QPushButton(QIcon.fromTheme("window-close"), "")
         if BUTTON_SIZE:
@@ -2688,7 +2745,7 @@ class MainWin(QWidget):
                 self.openDir(path, 1)
         # for closing open tabs
         self.device_mountPoint = []
-    
+
     
     # check its state: empty or not empty
     def checkTrash(self):
