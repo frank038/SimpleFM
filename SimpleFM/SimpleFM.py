@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-# version 0.9.17
+# version 0.9.18
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
-from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont)
+from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont,QPen)
 import dbus
 # from pydbus import SessionBus
 import psutil
@@ -2320,7 +2320,7 @@ class itemDelegate(QItemDelegate):
         painter.drawPixmap(int(option.rect.x() + xpad),int(option.rect.y() + ypad), -1,-1, pixmap,0,0,-1,-1)
         #
         # draw a colored border around the thumbnail image
-        if USE_BORDERS == 2:
+        if USE_THUMB and USE_BORDERS == 2:
             # empiric method: draw a border if any name is not found
             if iicon.name() == "":
                 painter.save()
@@ -2432,7 +2432,8 @@ class itemDelegate(QItemDelegate):
 # used for main
 class IconProvider(QFileIconProvider):
     # set the icon theme
-    QIcon.setThemeName(ICON_THEME)
+    if ICON_THEME:
+        QIcon.setThemeName(ICON_THEME)
     
     def evaluate_pixbuf(self, ifull_path, imime):
         hmd5 = "Null"
@@ -2463,13 +2464,17 @@ class IconProvider(QFileIconProvider):
                                     if not file_icon.isNull():
                                         return file_icon
                                     else:
-                                        return QIcon("icons/empty.svg")
+                                        # return QIcon("icons/empty.svg")
+                                        pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                                        return QIcon(pxmi)
                             else:
                                 file_icon = QIcon.fromTheme(imime.iconName())
                                 if not file_icon.isNull():
                                     return file_icon
                                 else:
-                                    return QIcon("icons/empty.svg")
+                                    # return QIcon("icons/empty.svg")
+                                    pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                                    return QIcon(pxmi)
                         except:
                             pass
                 #
@@ -2510,7 +2515,9 @@ class IconProvider(QFileIconProvider):
                     else:
                         return QIcon.fromTheme("folder", QIcon("icons/folder.svg"))
             else:
-                return QIcon("icons/empty.svg")
+                # return QIcon("icons/empty.svg")
+                pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                return QIcon(pxmi)
         return super(IconProvider, self).icon(fileInfo)
 
 ########################### MAIN WINDOW ############################
