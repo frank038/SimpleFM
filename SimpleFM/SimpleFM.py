@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.18
+# version 0.9.19
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4807,20 +4807,29 @@ class getAppsByMime():
         lDefault = []
         #
         for el in self.lA:
-            if mimetype in el:
-                # item is type list
-                item = el.replace(mimetype+"=","").strip("\n").split(";")
-                lAdded = self.delNull(item)
+            # if mimetype in el:
+            if "=" in el:
+                if el.split("=")[0] == mimetype:
+                    # item is type list
+                    item = el.replace(mimetype+"=","").strip("\n").split(";")
+                    lAdded = self.delNull(item)
+                    break
         #
         for el in self.lR:
-            if mimetype in el:
-                item = el.replace(mimetype+"=","").strip("\n").split(";")
-                lRemoved = self.delNull(item)
+            # if mimetype in el:
+            if "=" in el:
+                if el.split("=")[0] == mimetype:
+                    item = el.replace(mimetype+"=","").strip("\n").split(";")
+                    lRemoved = self.delNull(item)
+                    break
         #
         for el in self.lD:
-            if mimetype in el:
-                item = el.replace(mimetype+"=","").strip("\n").split(";")
-                lDefault = self.delNull(item)
+            # if mimetype in el:
+            if "=" in el:
+                if el.split("=")[0] == mimetype:
+                    item = el.replace(mimetype+"=","").strip("\n").split(";")
+                    lDefault = self.delNull(item)
+                    break
         #
         #return lAdded,lRemoved,lDefault
         return lAdded,lRemoved
