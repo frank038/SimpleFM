@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.19
+# version 0.9.20
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1949,68 +1949,68 @@ class copyItems2():
 
 #################################
 
-# dialog for asking the archive password
-class passWord(QDialog):
-    def __init__(self, path, parent):
-        super(passWord, self).__init__(parent)
-        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.setWindowTitle("7z extractor")
-        self.setWindowModality(Qt.ApplicationModal)
-        self.resize(dialWidth,100)
-        #
-        self.path = path
-        # main box
-        mbox = QBoxLayout(QBoxLayout.TopToBottom)
-        mbox.setContentsMargins(5,5,5,5)
-        # label
-        self.label = QLabel("Enter The Password:")
-        mbox.addWidget(self.label)
-        # checkbox
-        self.ckb = QCheckBox("Hide/Show the password")
-        self.ckb.setChecked(True)
-        self.ckb.toggled.connect(self.on_checked)
-        mbox.addWidget(self.ckb)
-        # lineedit
-        self.le1 = QLineEdit()
-        self.le1.setEchoMode(QLineEdit.Password)
-        mbox.addWidget(self.le1)
-        ##
-        button_box = QBoxLayout(QBoxLayout.LeftToRight)
-        button_box.setContentsMargins(0,0,0,0)
-        mbox.addLayout(button_box)
-        #
-        button_ok = QPushButton("     Accept     ")
-        button_box.addWidget(button_ok)
-        #
-        button_close = QPushButton("     Cancel     ")
-        button_box.addWidget(button_close)
-        #
-        self.setLayout(mbox)
-        button_ok.clicked.connect(self.getpswd)
-        button_close.clicked.connect(self.close)
-        #
-        self.arpass = ""
-        #
-        self.exec_()
-    
-    def on_checked(self):
-        if self.ckb.isChecked():
-            self.le1.setEchoMode(QLineEdit.Password)
-        else:
-            self.le1.setEchoMode(QLineEdit.Normal)
-    
-    def getpswd(self):
-        passwd = self.le1.text()
-        try:
-            ptest = subprocess.check_output('{} t -p"{}" -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, passwd, self.path), shell=True)
-            if ptest.decode() == "":
-                self.arpass = passwd
-                self.close()
-        except:
-            self.label.setText("Wrong Password:")
-            self.le1.setText("")
-
-ARCHIVE_PASSWORD=""
+# # dialog for asking the archive password
+# class passWord(QDialog):
+    # def __init__(self, path, parent):
+        # super(passWord, self).__init__(parent)
+        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        # self.setWindowTitle("7z extractor")
+        # self.setWindowModality(Qt.ApplicationModal)
+        # self.resize(dialWidth,100)
+        # #
+        # self.path = path
+        # # main box
+        # mbox = QBoxLayout(QBoxLayout.TopToBottom)
+        # mbox.setContentsMargins(5,5,5,5)
+        # # label
+        # self.label = QLabel("Enter The Password:")
+        # mbox.addWidget(self.label)
+        # # checkbox
+        # self.ckb = QCheckBox("Hide/Show the password")
+        # self.ckb.setChecked(True)
+        # self.ckb.toggled.connect(self.on_checked)
+        # mbox.addWidget(self.ckb)
+        # # lineedit
+        # self.le1 = QLineEdit()
+        # self.le1.setEchoMode(QLineEdit.Password)
+        # mbox.addWidget(self.le1)
+        # ##
+        # button_box = QBoxLayout(QBoxLayout.LeftToRight)
+        # button_box.setContentsMargins(0,0,0,0)
+        # mbox.addLayout(button_box)
+        # #
+        # button_ok = QPushButton("     Accept     ")
+        # button_box.addWidget(button_ok)
+        # #
+        # button_close = QPushButton("     Cancel     ")
+        # button_box.addWidget(button_close)
+        # #
+        # self.setLayout(mbox)
+        # button_ok.clicked.connect(self.getpswd)
+        # button_close.clicked.connect(self.close)
+        # #
+        # self.arpass = ""
+        # #
+        # self.exec_()
+    # 
+    # def on_checked(self):
+        # if self.ckb.isChecked():
+            # self.le1.setEchoMode(QLineEdit.Password)
+        # else:
+            # self.le1.setEchoMode(QLineEdit.Normal)
+    # 
+    # def getpswd(self):
+        # passwd = self.le1.text()
+        # try:
+            # ptest = subprocess.check_output('{} t -p"{}" -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, passwd, self.path), shell=True)
+            # if ptest.decode() == "":
+                # self.arpass = passwd
+                # self.close()
+        # except:
+            # self.label.setText("Wrong Password:")
+            # self.le1.setText("")
+# 
+# ARCHIVE_PASSWORD=""
 class MyQlist(QListView):
     def __init__(self):
         super(MyQlist, self).__init__()
@@ -2161,69 +2161,82 @@ class MyQlist(QListView):
         if event.mimeData().hasFormat(self.customMimeType):
             ddata_temp = event.mimeData().data(self.customMimeType)
             ddata = str(ddata_temp, 'utf-8').split("\n")
-            archive_name = ddata[0]
-            # extraction mode (e or x) - item type (file or folder) - item name (with path)
-            items = ddata[1:]
             #
-            dest_path = self.model().rootPath()
-            #
-            if not os.access(dest_path, os.W_OK):
-                MyDialog("Info", "Not writable:\n{}".format(os.path.basename(dest_path)), None)
-                return
-            curr_dir = QFileInfo(dest_path)
-            pointedItem = self.indexAt(event.pos())
-            if pointedItem.isValid():
-                ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-                if os.path.isdir(ifp):
-                    if os.access(ifp, os.W_OK):
-                        dest_path = ifp
-                    else:
-                        MyDialog("Info", "Not writable:\n{}".format(os.path.basename(ifp)), None)
-            #
-            if shutil.which(COMMAND_EXTRACTOR):
+            if os.path.exists(ddata[0]):
                 try:
-                    global ARCHIVE_PASSWORD
-                    hasPassWord = self.test_archive(archive_name)
-                    if hasPassWord == 2:
-                        if not ARCHIVE_PASSWORD:
-                            ARCHIVE_PASSWORD = passWord(archive_name, None).arpass
-                            if not ARCHIVE_PASSWORD:
-                                MyDialog("Info", "Cancelled.", None)
-                                return
-                    # 
-                    ret = -5
-                    for i in range(0, len(items), 3):
-                        ttype = items[i]
-                        item_type = items[i+1]
-                        item_to_extract = items[i+2]
-                        #
-                        if item_to_extract == "":
-                            continue
-                        #
-                        if item_type == "file":
-                            # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
-                            ret = os.system("{0} {1} '-i!{2}' '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, ARCHIVE_PASSWORD, dest_path))
-                        elif item_type == "folder":
-                            ttype = "x"
-                            if ARCHIVE_PASSWORD:
-                                ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, ARCHIVE_PASSWORD, dest_path))
-                            else:
-                                ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -o'{4}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
-                    ### exit codes
-                    # 0 No error
-                    # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
-                    # 2 Fatal error
-                    # 7 Command line error
-                    # 8 Not enough memory for operation
-                    # 255 User stopped the process
-                    if ret == 0:
-                        MyDialog("Info", "Extracted.", None)
-                    elif ret != -5:
-                        MyDialog("Error", "{}".format(ret), None)
+                    ifile = open(os.path.join(ddata[0], "where_to_extract"), "w")
+                    ifile.write(self.model().rootPath())
+                    ifile.close()
                 except Exception as E:
                     MyDialog("Error", str(E), None)
+                    event.ignore()
+                event.accept()
+            else:
+                event.ignore()
             return
-        #
+            # archive_name = ddata[0]
+            # # extraction mode (e or x) - item type (file or folder) - item name (with path)
+            # items = ddata[1:]
+            # #
+            # dest_path = self.model().rootPath()
+            # #
+            # if not os.access(dest_path, os.W_OK):
+                # MyDialog("Info", "Not writable:\n{}".format(os.path.basename(dest_path)), None)
+                # return
+            # curr_dir = QFileInfo(dest_path)
+            # pointedItem = self.indexAt(event.pos())
+            # if pointedItem.isValid():
+                # ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+                # if os.path.isdir(ifp):
+                    # if os.access(ifp, os.W_OK):
+                        # dest_path = ifp
+                    # else:
+                        # MyDialog("Info", "Not writable:\n{}".format(os.path.basename(ifp)), None)
+            # #
+            # if shutil.which(COMMAND_EXTRACTOR):
+                # try:
+                    # global ARCHIVE_PASSWORD
+                    # hasPassWord = self.test_archive(archive_name)
+                    # if hasPassWord == 2:
+                        # if not ARCHIVE_PASSWORD:
+                            # ARCHIVE_PASSWORD = passWord(archive_name, None).arpass
+                            # if not ARCHIVE_PASSWORD:
+                                # MyDialog("Info", "Cancelled.", None)
+                                # return
+                    # # 
+                    # ret = -5
+                    # for i in range(0, len(items), 3):
+                        # ttype = items[i]
+                        # item_type = items[i+1]
+                        # item_to_extract = items[i+2]
+                        # #
+                        # if item_to_extract == "":
+                            # continue
+                        # #
+                        # if item_type == "file":
+                            # # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
+                            # ret = os.system("{0} {1} '-i!{2}' '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, ARCHIVE_PASSWORD, dest_path))
+                        # elif item_type == "folder":
+                            # ttype = "x"
+                            # if ARCHIVE_PASSWORD:
+                                # ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, ARCHIVE_PASSWORD, dest_path))
+                            # else:
+                                # ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -o'{4}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
+                    # ### exit codes
+                    # # 0 No error
+                    # # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
+                    # # 2 Fatal error
+                    # # 7 Command line error
+                    # # 8 Not enough memory for operation
+                    # # 255 User stopped the process
+                    # if ret == 0:
+                        # MyDialog("Info", "Extracted.", None)
+                    # elif ret != -5:
+                        # MyDialog("Error", "{}".format(ret), None)
+                # except Exception as E:
+                    # MyDialog("Error", str(E), None)
+            # return
+        ######################
         dest_path = self.model().rootPath()
         curr_dir = QFileInfo(dest_path)
         if not curr_dir.isWritable():
@@ -2273,21 +2286,21 @@ class MyQlist(QListView):
             event.ignore()
     
     
-    # check it the archive is password protected
-    def test_archive(self, path):
-        szdata = None
-        try:
-            szdata = subprocess.check_output('{} l -slt -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, path), shell=True)
-        except:
-            return 0
-        #
-        if szdata != None:
-            szdata_decoded = szdata.decode()
-            ddata = szdata_decoded.splitlines()
-            if "Encrypted = +" in ddata:
-                return 2
-            else:
-                return 1
+    # # check it the archive is password protected
+    # def test_archive(self, path):
+        # szdata = None
+        # try:
+            # szdata = subprocess.check_output('{} l -slt -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, path), shell=True)
+        # except:
+            # return 0
+        # #
+        # if szdata != None:
+            # szdata_decoded = szdata.decode()
+            # ddata = szdata_decoded.splitlines()
+            # if "Encrypted = +" in ddata:
+                # return 2
+            # else:
+                # return 1
 
 
 class itemDelegate(QItemDelegate):
