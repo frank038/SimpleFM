@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.20
+# version 0.9.21
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2016,6 +2016,7 @@ class MyQlist(QListView):
         super(MyQlist, self).__init__()
         self.verticalScrollBar().setSingleStep(25)
         self.customMimeType = "application/x-customqt5archiver"
+        self.user_action = 0
     
     # def keyPressEvent(self, e):
         # # if e.key() == Qt.Key_K:
@@ -2268,23 +2269,64 @@ class MyQlist(QListView):
                 #
                 pointedItem = self.indexAt(event.pos())
                 #
+                USER_HOME = os.path.expanduser("~")
+                event_action = event.proposedAction()
+                # into folder
                 if pointedItem.isValid():
                     ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+                    # move the items if the pointer folder is in the HOME directory
+                    if filePaths[0][0:len(USER_HOME)] == ifp[0:len(USER_HOME)]:
+                        #
+                        # pointedItem = self.tview.indexAt(position)
+                        position = event.pos()
+                        menu = QMenu("Menu", self)
+                        #
+                        copyAction = QAction("Copy", self)
+                        copyAction.uaction = "copy"
+                        copyAction.triggered.connect(self.fdragdrop)
+                        menu.addAction(copyAction)
+                        #
+                        moveAction = QAction("Move", self)
+                        moveAction.uaction = "move"
+                        moveAction.triggered.connect(self.fdragdrop)
+                        menu.addAction(moveAction)
+                        #
+                        menu.addSeparator()
+                        #
+                        cancelAction = QAction("Cancel", self)
+                        cancelAction.uaction = "cancel"
+                        cancelAction.triggered.connect(self.fdragdrop)
+                        menu.addAction(cancelAction)
+                        #
+                        menu.exec_(self.mapToGlobal(position))
+                        #
+                        if self.user_action:
+                            event_action = self.user_action
+                        else:
+                            event.ignore()
+                            return
                     if os.path.isdir(ifp):
                         if os.access(ifp, os.W_OK):
-                            PastenMerge(ifp, event.proposedAction(), filePaths, None)
+                            PastenMerge(ifp, event_action, filePaths, None)
                         else:
                             MyDialog("Info", "The following folder in not writable: "+os.path.basename(ifp), None)
                             return
+                    # not folder
                     else:
-                        PastenMerge(dest_path, event.proposedAction(), filePaths, None)
+                        PastenMerge(dest_path, event_action, filePaths, None)
+                # background
                 else:
-                    PastenMerge(dest_path, event.proposedAction(), filePaths, None)
+                    PastenMerge(dest_path, event_action, filePaths, None)
             else:
                 event.ignore()
         else:
             event.ignore()
     
+    def fdragdrop(self):
+        if self.sender().uaction == "copy":
+            self.user_action = 1
+        elif self.sender().uaction == "move":
+            self.user_action = 2
     
     # # check it the archive is password protected
     # def test_archive(self, path):
@@ -3969,7 +4011,42 @@ class LView(QBoxLayout):
         #
         elif os.path.isfile(path):
             perms = QFileInfo(path).permissions()
-            if perms & QFile.ExeOwner:
+            imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
+            # executable file
+            if imime == "application/x-desktop":
+                # desktop file
+                progExec = DesktopEntry(path).getExec()
+                progTryExec = DesktopEntry(path).getTryExec()
+                progPath = DesktopEntry(path).getPath()
+                progTerm = DesktopEntry(path).getTerminal()
+                #
+                if shutil.which(progExec):
+                    if progTerm:
+                        TTERM = USER_TERMINAL
+                        try:
+                            TTERM = os.environ["TERMINAL"]
+                        except KeyError:
+                            TTERM = USER_TERMINAL
+                        try:
+                            if progPath:
+                                os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
+                            else:
+                                subprocess.run([TTERM, "-e", progExec])
+                        except Exception as E:
+                            MyDialog("Error", str(E), self.window)
+                    else:
+                        try:
+                            if progPath:
+                                os.system("cd {0} && {1}".format(progPath, progExec))
+                            else:
+                                subprocess.run([progExec])
+                        except Exception as E:
+                            MyDialog("Error", str(E), self.window)
+                else:
+                    MyDialog("Info", "{} not found.".format(progExec), self)
+                return
+            #
+            if (perms & QFile.ExeOwner):
                 imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
                 if imime == "application/x-sharedlib":
                     ret = execfileDialog(path, 1, self.window).getValue()
