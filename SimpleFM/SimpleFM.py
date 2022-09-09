@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.21
+# version 0.9.22
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4022,11 +4022,18 @@ class LView(QBoxLayout):
                 #
                 if shutil.which(progExec):
                     if progTerm:
-                        TTERM = USER_TERMINAL
+                        TTERM = None
+                        if USER_TERMINAL:
+                            TTERM = USER_TERMINAL
                         try:
                             TTERM = os.environ["TERMINAL"]
                         except KeyError:
-                            TTERM = USER_TERMINAL
+                            pass
+                        #
+                        if not TTERM:
+                            MyDialog("Info", "No terminal found or setted.", self.window)
+                            return
+                        #
                         try:
                             if progPath:
                                 os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
