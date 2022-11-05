@@ -35,7 +35,7 @@ Support for drag and drop from my archive manager. For this operation it is used
 
 The 'Shift key' behaviour: to select a certain amount of contiguous items, select the first, press the shift key and select the last; to move the selected items by using the shift key, press the shift key and start dragging the last selected item.
 
-Tested a bit also under wayland.
+Tested a bit also under wayland. Pkexec (for higher privileges) could not work. A different solution has to be implemented.
 
 Customizations throu the cfg.py file.
 
