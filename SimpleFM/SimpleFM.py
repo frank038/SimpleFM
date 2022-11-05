@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.3
+# version 0.9.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -195,6 +195,7 @@ if not os.path.exists("icons"):
 #
 TCOMPUTER = 0
 
+PKEXEC = "./pkexec.sh"
 
 class clabel2(QLabel):
     def __init__(self, parent=None):
@@ -604,10 +605,11 @@ class propertyDialog(QDialog):
         #
         self.imime = ""
         self.imime = QMimeDatabase().mimeTypeForFile(self.itemPath, QMimeDatabase.MatchDefault)
-        # the external program pkexec is used
-        self.CAN_CHANGE_OWNER = 0
-        if shutil.which("pkexec"):
-            self.CAN_CHANGE_OWNER = 1
+        # the program pkexec/pkexec.sh is used
+        self.CAN_CHANGE_OWNER = 1
+        if PKEXEC_PROG == 1:
+            if not shutil.which("pkexec"):
+                self.CAN_CHANGE_OWNER = 0
         #
         storageInfo = QStorageInfo(self.itemPath)
         storageInfoIsReadOnly = storageInfo.isReadOnly()
@@ -809,6 +811,8 @@ class propertyDialog(QDialog):
             self.ibtn = QPushButton()
             self.ibtn.clicked.connect(self.ibtn_pkexec)
             self.grid3.addWidget(self.ibtn, 4, 6, 1, 1, Qt.AlignLeft)
+            if not self.CAN_CHANGE_OWNER:
+                self.ibtn.setEnabled(False)
             #
             button1 = QPushButton("OK")
             button1.clicked.connect(self.faccept)
@@ -852,34 +856,49 @@ class propertyDialog(QDialog):
     def ibtn_pkexec(self):
         # unset
         if "i" in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
-            ret = None
+            # ret = None
             try:
-                ret = subprocess.run(["pkexec", "chattr", "-i", self.itemPath])
+                if PKEXEC_PROG == 1:
+                    ret = subprocess.run(["pkexec", "chattr", "-i", self.itemPath])
+                elif PKEXEC_PROG == 2:
+                    # subprocess.run([PKEXEC, "2", self.itemPath])
+                    passWord(self.itemPath, 2, None)
             except:
                 pass
-            # if success
-            if ret:
-                if ret.returncode == 0:
-                    try:
-                        if "i" not in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
-                            self.ibtn.setText("Not Immutable")
-                    except:
-                        pass
+            # # if success
+            # if ret:
+                # if ret.returncode == 0:
+            try:
+                if "i" not in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
+                    self.ibtn.setText("Not Immutable")
+            except:
+                pass
         # set
         else:
-            ret = None
+            # SYS_PASSWORD = passWord("archive_name", None).arpass
+            # if not SYS_PASSWORD:
+                # MyDialog("Info", "Cancelled.", None)
+                # return
+            # else:
+                # print("882", SYS_PASSWORD)
+                # return
+            # ret = None
             try:
-                ret = subprocess.run(["pkexec", "chattr", "+i", self.itemPath])
+                if PKEXEC_PROG == 1:
+                    ret = subprocess.run(["pkexec", "chattr", "+i", self.itemPath])
+                elif PKEXEC_PROG == 2:
+                    # subprocess.run([PKEXEC, "1", self.itemPath])
+                    passWord(self.itemPath, 1, None)
             except:
                 pass
-            # if success
-            if ret:
-                if ret.returncode == 0:
-                    try:
-                        if "i" in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
-                            self.ibtn.setText("Immutable")
-                    except:
-                        pass
+            # # if success
+            # if ret:
+                # if ret.returncode == 0:
+            try:
+                if "i" in subprocess.check_output(['lsattr', self.itemPath]).decode()[:19]:
+                    self.ibtn.setText("Immutable")
+            except:
+                pass
         # repopulate
         self.tab()
         
@@ -1009,28 +1028,36 @@ class propertyDialog(QDialog):
     
     # change the owner to me
     def on_change_owner(self, me):
-        ret = None
+        # ret = None
         try:
-            ret = subprocess.run(["pkexec", "chown", me, self.itemPath])
+            if PKEXEC_PROG == 1:
+                ret = subprocess.run(["pkexec", "chown", me, self.itemPath])
+            elif PKEXEC_PROG == 2:
+                # subprocess.run([PKEXEC, "3", self.itemPath])
+                passWord(self.itemPath, 3, None)
         except:
             pass
-        # if success
-        if ret:
-            if ret.returncode == 0:
-                self.tab()
+        # # if success
+        # if ret:
+            # if ret.returncode == 0:
+        self.tab()
     
     # 
     # change the group to mine
     def on_change_grp(self, me):
-        ret = None
+        # ret = None
         try:
-            ret = subprocess.run(["pkexec", "chgrp", me, self.itemPath])
+            if PKEXEC_PROG == 1:
+                ret = subprocess.run(["pkexec", "chgrp", me, self.itemPath])
+            elif PKEXEC_PROG == 2:
+                # subprocess.run([PKEXEC, "4", self.itemPath])
+                passWord(self.itemPath, 4, None)
         except:
             pass
-        # if success
-        if ret:
-            if ret.returncode == 0:
-                self.tab()
+        # # if success
+        # if ret:
+            # if ret.returncode == 0:
+        self.tab()
     
     def tperms(self, perms):
         tperm = ""
@@ -1957,66 +1984,81 @@ class copyItems2():
 
 #################################
 
-# # dialog for asking the archive password
-# class passWord(QDialog):
-    # def __init__(self, path, parent):
-        # super(passWord, self).__init__(parent)
-        # self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        # self.setWindowTitle("7z extractor")
-        # self.setWindowModality(Qt.ApplicationModal)
-        # self.resize(dialWidth,100)
-        # #
-        # self.path = path
-        # # main box
-        # mbox = QBoxLayout(QBoxLayout.TopToBottom)
-        # mbox.setContentsMargins(5,5,5,5)
-        # # label
-        # self.label = QLabel("Enter The Password:")
-        # mbox.addWidget(self.label)
-        # # checkbox
-        # self.ckb = QCheckBox("Hide/Show the password")
-        # self.ckb.setChecked(True)
-        # self.ckb.toggled.connect(self.on_checked)
-        # mbox.addWidget(self.ckb)
-        # # lineedit
-        # self.le1 = QLineEdit()
-        # self.le1.setEchoMode(QLineEdit.Password)
-        # mbox.addWidget(self.le1)
-        # ##
-        # button_box = QBoxLayout(QBoxLayout.LeftToRight)
-        # button_box.setContentsMargins(0,0,0,0)
-        # mbox.addLayout(button_box)
-        # #
-        # button_ok = QPushButton("     Accept     ")
-        # button_box.addWidget(button_ok)
-        # #
-        # button_close = QPushButton("     Cancel     ")
-        # button_box.addWidget(button_close)
-        # #
-        # self.setLayout(mbox)
-        # button_ok.clicked.connect(self.getpswd)
-        # button_close.clicked.connect(self.close)
-        # #
-        # self.arpass = ""
-        # #
-        # self.exec_()
-    # 
-    # def on_checked(self):
-        # if self.ckb.isChecked():
-            # self.le1.setEchoMode(QLineEdit.Password)
-        # else:
-            # self.le1.setEchoMode(QLineEdit.Normal)
-    # 
-    # def getpswd(self):
-        # passwd = self.le1.text()
-        # try:
-            # ptest = subprocess.check_output('{} t -p"{}" -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, passwd, self.path), shell=True)
-            # if ptest.decode() == "":
-                # self.arpass = passwd
-                # self.close()
-        # except:
-            # self.label.setText("Wrong Password:")
-            # self.le1.setText("")
+# dialog for asking the password
+class passWord(QDialog):
+    def __init__(self, ppath, ttype, parent):
+        super(passWord, self).__init__(parent)
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        self.setWindowTitle("Password")
+        self.setWindowModality(Qt.ApplicationModal)
+        self.resize(dialWidth,100)
+        #
+        self.ppath = ppath
+        self.ttype = ttype
+        # main box
+        mbox = QBoxLayout(QBoxLayout.TopToBottom)
+        mbox.setContentsMargins(5,5,5,5)
+        # label
+        self.label = QLabel("Enter The Password:")
+        mbox.addWidget(self.label)
+        # checkbox
+        self.ckb = QCheckBox("Hide/Show the password")
+        self.ckb.setChecked(True)
+        self.ckb.toggled.connect(self.on_checked)
+        mbox.addWidget(self.ckb)
+        # lineedit
+        self.le1 = QLineEdit()
+        self.le1.setEchoMode(QLineEdit.Password)
+        mbox.addWidget(self.le1)
+        ##
+        button_box = QBoxLayout(QBoxLayout.LeftToRight)
+        button_box.setContentsMargins(0,0,0,0)
+        mbox.addLayout(button_box)
+        #
+        button_ok = QPushButton("     Accept     ")
+        button_box.addWidget(button_ok)
+        #
+        button_close = QPushButton("     Cancel     ")
+        button_box.addWidget(button_close)
+        #
+        self.setLayout(mbox)
+        button_ok.clicked.connect(self.setpswd)
+        button_close.clicked.connect(self.close)
+        #
+        self.exec_()
+    
+    def on_checked(self):
+        if self.ckb.isChecked():
+            self.le1.setEchoMode(QLineEdit.Password)
+        else:
+            self.le1.setEchoMode(QLineEdit.Normal)
+    
+    def setpswd(self):
+        passwd = self.le1.text()
+        print("2036", passwd)
+        if passwd:
+            if self.ttype == 1:
+                try:
+                    subprocess.run([PKEXEC, "1", passwd, self.ppath])
+                except:
+                    pass
+            elif self.ttype == 2:
+                try:
+                    subprocess.run([PKEXEC, "2", passwd, self.ppath])
+                except:
+                    pass
+            elif self.ttype == 3:
+                try:
+                    subprocess.run([PKEXEC, "3", passwd, self.ppath])
+                except:
+                    pass
+            elif self.ttype == 4:
+                try:
+                    subprocess.run([PKEXEC, "4", passwd, self.ppath])
+                except:
+                    pass
+        self.close()
+
 # 
 # ARCHIVE_PASSWORD=""
 class MyQlist(QListView):

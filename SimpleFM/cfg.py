@@ -101,6 +101,8 @@ DIALOGWIDTH=200
 ### needed for qt5archiver
 # usually 7z - or 7za
 COMMAND_EXTRACTOR="7z"
+# pkexec: 1 use default program - 2 use internal command
+PKEXEC_PROG=1
 
 ### needed by pythumb
 # use thumbnailer in the home dir only: 0 no - 1 yes
