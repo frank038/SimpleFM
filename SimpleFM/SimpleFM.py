@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.22
+# version 0.9.3
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -111,6 +111,14 @@ if not os.access("winsize.cfg", os.R_OK):
     app = QApplication(sys.argv)
     fm = firstMessage("Error", "The file winsize.cfg cannot be read.")
     sys.exit(app.exec_())
+
+if not os.path.exists("Bookmarks"):
+    try:
+        ifile = open("Bookmarks", "w")
+        ifile.close()
+    except Exception as E:
+        fm = firstMessage("Error", str(E))
+        sys.exit(app.exec_())
 
 WINW = 800
 WINH = 600
@@ -4354,30 +4362,24 @@ class LView(QBoxLayout):
                 newFileAction.triggered.connect(self.fnewFileAction)
                 menu.addAction(newFileAction)
                 #
-                if shutil.which("xdg-user-dir"):
-                    templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
-                    if not os.path.exists(templateDir):
-                        optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
-                        if os.path.exists(optTemplateDir):
-                           templateDir = optTemplateDir
-                        else:
-                            templateDir = None
+                templateDir = None
+                optTemplateDir = os.path.join(os.path.expanduser("~"), TEMPLATE_DIR)
+                if os.path.exists(optTemplateDir):
+                    templateDir = optTemplateDir
                     #
-                    if templateDir:
-                        if os.path.exists(templateDir):
-                            menu.addSeparator()
-                            subm_templatesAction= menu.addMenu("Templates")
-                            listTemplate = os.listdir(templateDir)
-                            #
-                            progActionListT = []
-                            for ifile in listTemplate:
-                                progActionListT.append(QAction(ifile))
-                                progActionListT.append(ifile)
-                            ii = 0
-                            for paction in progActionListT[::2]:
-                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
-                                subm_templatesAction.addAction(paction)
-                                ii += 2
+                    menu.addSeparator()
+                    subm_templatesAction= menu.addMenu(TEMPLATE_DIR)
+                    listTemplate = os.listdir(templateDir)
+                    #
+                    progActionListT = []
+                    for ifile in listTemplate:
+                        progActionListT.append(QAction(ifile))
+                        progActionListT.append(ifile)
+                    ii = 0
+                    for paction in progActionListT[::2]:
+                        paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
+                        subm_templatesAction.addAction(paction)
+                        ii += 2
             #
             if self.flag == 1 or self.flag == 3:
                 pasteNmergeAction = QAction("Paste", self)
@@ -4441,12 +4443,11 @@ class LView(QBoxLayout):
     # copy the template choosen - the rename dialog appears
     def ftemplateAction(self, templateName):
         templateDir = None
-        if shutil.which("xdg-user-dir"):
-            templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
-            if not os.path.exists(templateDir):
-                optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
-                if os.path.exists(optTemplateDir):
-                   templateDir = optTemplateDir
+        optTemplateDir = os.path.join(os.path.expanduser("~"), TEMPLATE_DIR)
+        if os.path.exists(optTemplateDir):
+           templateDir = optTemplateDir
+        else:
+            return
         #
         if os.access(self.lvDir, os.W_OK): 
             ret = self.wrename3(templateName, self.lvDir)
@@ -5969,30 +5970,24 @@ class cTView(QBoxLayout):
                 newFileAction.triggered.connect(self.fnewFileAction)
                 menu.addAction(newFileAction)
                 #
-                if shutil.which("xdg-user-dir"):
-                    templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
-                    if not os.path.exists(templateDir):
-                        optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
-                        if os.path.exists(optTemplateDir):
-                           templateDir = optTemplateDir
-                        else:
-                            templateDir = None
+                templateDir = None
+                optTemplateDir = os.path.join(os.path.expanduser("~"), TEMPLATE_DIR)
+                if os.path.exists(optTemplateDir):
+                    templateDir = optTemplateDir
                     #
-                    if templateDir:
-                        if os.path.exists(templateDir):
-                            menu.addSeparator()
-                            subm_templatesAction= menu.addMenu("Templates")
-                            listTemplate = os.listdir(templateDir)
+                    menu.addSeparator()
+                    subm_templatesAction= menu.addMenu(TEMPLATE_DIR)
+                    listTemplate = os.listdir(templateDir)
 
-                            progActionListT = []
-                            for ifile in listTemplate:
-                                progActionListT.append(QAction(ifile))
-                                progActionListT.append(ifile)
-                            ii = 0
-                            for paction in progActionListT[::2]:
-                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
-                                subm_templatesAction.addAction(paction)
-                                ii += 2
+                    progActionListT = []
+                    for ifile in listTemplate:
+                        progActionListT.append(QAction(ifile))
+                        progActionListT.append(ifile)
+                    ii = 0
+                    for paction in progActionListT[::2]:
+                        paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
+                        subm_templatesAction.addAction(paction)
+                        ii += 2
             #
             menu.addSeparator()
             copyAction = QAction("Copy", self)
@@ -6118,30 +6113,24 @@ class cTView(QBoxLayout):
                 newFileAction.triggered.connect(self.fnewFileAction)
                 menu.addAction(newFileAction)
                 #
-                if shutil.which("xdg-user-dir"):
-                    templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
-                    if not os.path.exists(templateDir):
-                        optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
-                        if os.path.exists(optTemplateDir):
-                           templateDir = optTemplateDir
-                        else:
-                            templateDir = None
+                templateDir = None
+                optTemplateDir = os.path.join(os.path.expanduser("~"), TEMPLATE_DIR)
+                if os.path.exists(optTemplateDir):
+                    templateDir = optTemplateDir
                     #
-                    if templateDir:
-                        if os.path.exists(templateDir):
-                            menu.addSeparator()
-                            subm_templatesAction= menu.addMenu("Templates")
-                            listTemplate = os.listdir(templateDir)
+                    menu.addSeparator()
+                    subm_templatesAction= menu.addMenu(TEMPLATE_DIR)
+                    listTemplate = os.listdir(templateDir)
 
-                            progActionListT = []
-                            for ifile in listTemplate:
-                                progActionListT.append(QAction(ifile))
-                                progActionListT.append(ifile)
-                            ii = 0
-                            for paction in progActionListT[::2]:
-                                paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
-                                subm_templatesAction.addAction(paction)
-                                ii += 2
+                    progActionListT = []
+                    for ifile in listTemplate:
+                        progActionListT.append(QAction(ifile))
+                        progActionListT.append(ifile)
+                    ii = 0
+                    for paction in progActionListT[::2]:
+                        paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
+                        subm_templatesAction.addAction(paction)
+                        ii += 2
             #
             menu.addSeparator()
             #
@@ -6219,12 +6208,11 @@ class cTView(QBoxLayout):
     
     def ftemplateAction(self, templateName):
         templateDir = None
-        if shutil.which("xdg-user-dir"):
-            templateDir = subprocess.check_output(["xdg-user-dir", "TEMPLATES"], universal_newlines=False).decode().strip()
-            if not os.path.exists(templateDir):
-                optTemplateDir = os.path.join(os.path.expanduser("~"), "Templates")
-                if os.path.exists(optTemplateDir):
-                   templateDir = optTemplateDir
+        optTemplateDir = os.path.join(os.path.expanduser("~"), TEMPLATE_DIR)
+        if os.path.exists(optTemplateDir):
+            templateDir = optTemplateDir
+        else:
+            return
         #
         if os.access(self.lvDir, os.W_OK): 
             ret = self.wrename3(templateName, self.lvDir)
