@@ -1,5 +1,5 @@
 # SimpleFM
-V. 0.9.3
+V. 0.9.4
 
 A file manager written with PyQt5.
 
@@ -35,7 +35,7 @@ Support for drag and drop from my archive manager. For this operation it is used
 
 The 'Shift key' behaviour: to select a certain amount of contiguous items, select the first, press the shift key and select the last; to move the selected items by using the shift key, press the shift key and start dragging the last selected item.
 
-Tested a bit also under wayland. Pkexec (for higher privileges) could not work. A different solution has to be implemented.
+Tested a bit also under wayland. Pkexec (for higher privileges) could not work. A different solution has been implemented: if chosed in the config file, sudo - with user password - will be used; alternatively, also the su command - with the root password - can be used, just comment out the sudo section and uncomment the su section in the file pkexec.sh. A dialog for asking the password will appear.
 
 Customizations throu the cfg.py file.
 
