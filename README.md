@@ -39,5 +39,6 @@ Tested a bit also under wayland.
 
 Customizations throu the cfg.py file.
 
+Some custom modules are disabled: just remove "-t" from its file name to be enabled.
 
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
