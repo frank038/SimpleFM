@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.50
+# version 0.9.60
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -5729,7 +5729,7 @@ class itemDelegateT(QItemDelegate):
                 hh = int(st.size().height())
                 to = QTextOption(Qt.AlignLeft)
                 st.setTextOption(to)
-                painter.drawStaticText(option.rect.x()+ITEM_WIDTH_ALT, option.rect.y()+hh, st)
+                painter.drawStaticText(option.rect.x()+ITEM_WIDTH_ALT, option.rect.y()+int(hh/2), st)
                 #
                 painter.restore()
                 # permissions icon
