@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.4
+# version 0.9.50
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -237,7 +237,7 @@ class MyDialog(QMessageBox):
             self.setStandardButtons(QMessageBox.Ok|QMessageBox.Cancel)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(DIALOGWIDTH,300)
+        self.resize(dialWidth,100)
         self.setText(args[1])
         retval = self.exec_()
     
@@ -260,7 +260,7 @@ class MyMessageBox(QMessageBox):
         self.setIcon(QMessageBox.Information)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(dialWidth,300)
+        self.resize(dialWidth,100)
         self.setText(args[1])
         self.setInformativeText(args[2])
         self.setDetailedText("The details are as follows:\n\n"+args[3])
@@ -298,7 +298,7 @@ class MyDialogRename2(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Rename")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(dialWidth,300)
+        self.resize(dialWidth,100)
         #
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -360,7 +360,7 @@ class MyDialogRename3(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Set a new name")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(dialWidth,300)
+        self.resize(dialWidth,100)
         #
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -459,7 +459,7 @@ class PlistMenu(QDialog):
         self.setWindowTitle("Open with...")
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.resize(dialWidth, 600)
+        self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -1893,7 +1893,7 @@ class copyItems2():
         self.mydialog.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.mydialog.setWindowTitle("Copying...")
         self.mydialog.setWindowModality(Qt.ApplicationModal)
-        self.mydialog.resize(dialWidth,300)
+        self.mydialog.resize(dialWidth,100)
         # 
         grid = QGridLayout()
         grid.setContentsMargins(5,5,5,5)
@@ -3400,7 +3400,7 @@ class devicePropertyDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Device Properties")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(300,300)
+        self.resize(dialWidth,100)
         # data = [label, vendor, model, size, file_system, read_only, mountpoint, ddevice, media_type]
         self.data = data
         #
@@ -4788,7 +4788,8 @@ class clabel(QLabel):
         super(clabel, self).__init__(parent)
     
     def setText(self, text, wWidth):
-        boxWidth = wWidth-400*QApplication.instance().devicePixelRatio()
+        # boxWidth = wWidth-400*QApplication.instance().devicePixelRatio()
+        boxWidth = (wWidth-400)
         font = self.font()
         metric = QFontMetrics(font)
         string = text
@@ -4804,7 +4805,6 @@ class clabel(QLabel):
                 ctempT += "\n"
                 ctempT += str(cchar)
                 ctemp = str(cchar)
-        
         ntext = ctempT
         super(clabel, self).setText(ntext)
 
