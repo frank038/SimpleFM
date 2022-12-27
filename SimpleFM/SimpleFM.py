@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-# version 0.9.70
+# version 0.9.80
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
-from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
+from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont,QPen)
 import dbus
 # from pydbus import SessionBus
@@ -49,6 +49,13 @@ if OPEN_WITH:
 #
 if ICON_SIZE > ITEM_WIDTH:
     ITEM_WIDTH = ICON_SIZE
+    ITEM_HEIGHT = ITEM_WIDTH
+
+if THUMB_SIZE > ITEM_HEIGHT:
+    ITEM_HEIGHT = THUMB_SIZE
+
+if THUMB_SIZE > ITEM_WIDTH:
+    ITEM_WIDTH = THUMB_SIZE
 
 # max number of items - 1 to show in the message dialog
 ITEMSDELETED = 30
@@ -341,10 +348,11 @@ class MyDialogRename2(QDialog):
     
     def faccept(self, item_name):
         newName = self.lineedit.text()
+        newName = newName.lstrip(" ").rstrip(" ")
         if newName != "":
             if newName != item_name:
                 if not os.path.exists(os.path.join(self.dest_path, newName)):
-                    self.Value = self.lineedit.text()
+                    self.Value = newName
                     self.close()
     
     def fcancel(self):
@@ -395,9 +403,11 @@ class MyDialogRename3(QDialog):
         return self.Value
     
     def faccept(self, item_name, destDir):
-        if self.lineedit.text() != "":
-            if not os.path.exists(os.path.join(destDir, self.lineedit.text())):
-                self.Value = self.lineedit.text()
+        newName = self.lineedit.text()
+        newName = newName.lstrip(" ").rstrip(" ")
+        if newName != "":
+            if not os.path.exists(os.path.join(destDir, newName)):
+                self.Value = newName
                 self.close()
     
     def fcancel(self):
@@ -880,7 +890,6 @@ class propertyDialog(QDialog):
                 # MyDialog("Info", "Cancelled.", None)
                 # return
             # else:
-                # print("882", SYS_PASSWORD)
                 # return
             # ret = None
             try:
@@ -2035,7 +2044,6 @@ class passWord(QDialog):
     
     def setpswd(self):
         passwd = self.le1.text()
-        print("2036", passwd)
         if passwd:
             if self.ttype == 1:
                 try:
@@ -6530,6 +6538,13 @@ class cTView(QBoxLayout):
 if __name__ == '__main__':
 
     app = QApplication(sys.argv)
+    # set new style globally
+    if theme_style:
+        appStyle = QStyleFactory.create(theme_style)
+        app.setStyle(appStyle)
+    # set the icon style globally
+    if icon_theme:
+        QIcon.setThemeName(icon_theme)
     window = MainWin()
     window.show()
     ret = app.exec_()

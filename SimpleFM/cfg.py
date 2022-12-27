@@ -117,3 +117,7 @@ BORDER_COLOR_G = 0
 BORDER_COLOR_B = 0
 # thumbnail images cache
 XDG_CACHE_LARGE = "sh_thumbnails/large/"
+# theme style: "" to use the default theme
+theme_style=""
+# icon theme: "" to use the default theme
+icon_theme=""
