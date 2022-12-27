@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.60
+# version 0.9.70
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2213,16 +2213,33 @@ class MyQlist(QListView):
             ddata_temp = event.mimeData().data(self.customMimeType)
             ddata = str(ddata_temp, 'utf-8').split("\n")
             #
-            if os.path.exists(ddata[0]):
-                try:
-                    ifile = open(os.path.join(ddata[0], "where_to_extract"), "w")
-                    ifile.write(self.model().rootPath())
-                    ifile.close()
-                except Exception as E:
-                    MyDialog("Error", str(E), None)
-                    event.ignore()
+            # if os.path.exists(ddata[0]):
+                # try:
+                    # ifile = open(os.path.join(ddata[0], "where_to_extract"), "w")
+                    # ifile.write(self.model().rootPath())
+                    # ifile.close()
+                # except Exception as E:
+                    # MyDialog("Error", str(E), None)
+                    # event.ignore()
+                #
+            if ddata[0] == "R":
+                data = QByteArray()
+                dest_path = self.model().rootPath()
+                drop_data = "{}\n{}".format("A", dest_path)
+                data.append(bytes(drop_data, encoding="utf-8"))
+                mimedata = QMimeData()
+                mimedata.setData(self.customMimeType, data)
+                QApplication.clipboard().setMimeData(mimedata)
+                #
                 event.accept()
             else:
+                data = QByteArray()
+                drop_data = "{}\n{}".format("E", "")
+                data.append(bytes(drop_data, encoding="utf-8"))
+                mimedata = QMimeData()
+                mimedata.setData(self.customMimeType, data)
+                QApplication.clipboard().setMimeData(mimedata)
+                #
                 event.ignore()
             return
             # archive_name = ddata[0]
