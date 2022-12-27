@@ -23,3 +23,14 @@ elif [[ "$1" -eq 4 ]]; then
 fi
 
 exit 0
+
+# ##### su command - root password is required - preserve the environment
+# # if [[ "$1" -eq 1 ]]; then
+# #   echo "$2" | su root -p -c "chattr +i '$3'"
+# # elif [[ "$1" -eq 2 ]]; then
+# #   echo "$2" | su root  -p-c "chattr -i '$3'"
+# # elif [[ "$1" -eq 3 ]]; then
+# #   echo "$2" | su root -p -c "chown `whoami` '$3'"
+# # elif [[ "$1" -eq 4 ]]; then
+# #   echo "$2" | su root -p -c "chgrp `whoami` '$3'"
+# # fi
