@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.90
+# version 0.9.100
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -23,6 +23,75 @@ import threading
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from cfg import *
+
+USE_SHADOW = 1
+
+############## user directory names
+USER_DIRS = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
+FILE_DIRS_CONTENT_TEMP = []
+if os.path.exists(USER_DIRS):
+    ff = open(USER_DIRS, "r")
+    FILE_DIRS_CONTENT_TEMP = ff.readlines()
+    ff.close()
+
+FILE_DIRS = []
+
+DIR_XDG_DESKTOP_DIR=None
+DIR_XDG_DOCUMENTS_DIR=None
+DIR_XDG_DOWNLOAD_DIR=None
+DIR_XDG_MUSIC_DIR=None
+DIR_XDG_PICTURES_DIR=None
+DIR_XDG_PUBLICSHARE_DIR=None
+DIR_XDG_TEMPLATES_DIR=None
+DIR_XDG_VIDEOS_DIR=None
+
+def _find_dir_name(name):
+    dir_name = None
+    fdir_name = name.strip("\n").split("=")[1].strip('"')
+    return fdir_name.split("/")[1].lstrip(" ").rstrip(" ")
+    
+for fdir in FILE_DIRS_CONTENT_TEMP:
+    if "XDG_DESKTOP_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_DESKTOP_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "desktop"])
+    #
+    elif "XDG_DOCUMENTS_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_DOCUMENTS_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-documents"])
+    #
+    elif "XDG_DOWNLOAD_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_DOWNLOAD_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-download"])
+    #
+    elif "XDG_MUSIC_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_MUSIC_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-music"])
+    #
+    elif "XDG_PICTURES_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_PICTURES_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-pictures"])
+    #
+    elif "XDG_PUBLICSHARE_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_PUBLICSHARE_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-publicshare"])
+    #
+    elif "XDG_TEMPLATES_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_EMPLATES_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-templates"])
+    #
+    elif "XDG_VIDEOS_DIR" in fdir:
+        _dir_name = _find_dir_name(fdir)
+        DIR_XDG_VIDEOS_DIR=_dir_name
+        FILE_DIRS.append([_dir_name, "folder-videos"])
+##############
+
 
 # the mimeapps.list used by this program
 if USER_MIMEAPPSLIST:
@@ -2440,9 +2509,10 @@ class itemDelegate(QItemDelegate):
         #
         painter.restore()
         #
-        if not index.data(QFileSystemModel.FileIconRole).name():
-        # if index.data(QFileSystemModel.FileIconRole) and not index.data(QFileSystemModel.FileIconRole).name():
+        _is_thumb = 0
+        if not iicon.name():
             pixmap = iicon.pixmap(QSize(THUMB_SIZE, THUMB_SIZE))
+            _is_thumb = 1
         else:
             pixmap = iicon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
         size_pixmap = pixmap.size()
@@ -2450,6 +2520,31 @@ class itemDelegate(QItemDelegate):
         ph = size_pixmap.height()
         xpad = int((ITEM_WIDTH - pw) / 2)
         ypad = int((ITEM_HEIGHT - ph) / 2)
+        # shadow
+        if USE_SHADOW and _is_thumb:
+            painter.save()
+            pen = QPen(QColor(0,0,0, 40))
+            pen.setWidth(6)
+            pen.setCapStyle(Qt.RoundCap)
+            painter.setPen(pen)
+            x1 = option.rect.x() + xpad + 2
+            y1 = option.rect.y() + ypad + ph
+            x2 = x1 + pw - 4
+            y2 = y1
+            painter.drawLine(x1, y1, x2, y2)
+            #
+            pen = QPen(QColor(0,0,0, 160))
+            pen.setWidth(3)
+            pen.setCapStyle(Qt.RoundCap)
+            painter.setPen(pen)
+            x1 = option.rect.x() + xpad + 1
+            y1 = option.rect.y() + ypad + ph
+            x2 = x1 + pw - 2
+            y2 = y1
+            painter.drawLine(x1, y1, x2, y2)
+            #
+            painter.restore()
+        #
         painter.drawPixmap(int(option.rect.x() + xpad),int(option.rect.y() + ypad), -1,-1, pixmap,0,0,-1,-1)
         #
         # draw a colored border around the thumbnail image
@@ -2512,11 +2607,11 @@ class itemDelegate(QItemDelegate):
             if os.path.islink(ppath):
                 lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
                 painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
-#        # link icon
-#        if os.path.islink(ppath):
-#            lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
-#            painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
-        
+        # # link icon
+        # if os.path.islink(ppath):
+        # lpixmap = QPixmap('icons/emblem-symbolic-link.svg').scaled(ICON_SIZE2, ICON_SIZE2, Qt.KeepAspectRatio, Qt.FastTransformation)
+        # painter.drawPixmap(int(option.rect.x()+ITEM_WIDTH-ICON_SIZE2), int(option.rect.y()+ITEM_HEIGHT-ICON_SIZE2),-1,-1, lpixmap,0,0,-1,-1)
+        #
         painter.save()
         if option.state & QStyle.State_Selected:
             painter.setRenderHint(QPainter.Antialiasing)
@@ -2561,7 +2656,7 @@ class itemDelegate(QItemDelegate):
         hh = st.size().height()
         return QSize(int(ww), int(hh)+int(hh1)+ITEM_HEIGHT)
 
-        
+
 # used for main
 class IconProvider(QFileIconProvider):
     # set the icon theme
@@ -2585,31 +2680,47 @@ class IconProvider(QFileIconProvider):
             ireal_path = os.path.realpath(fileInfo.absoluteFilePath())
             if fileInfo.exists():
                 if fileInfo.isFile():
-                    imime = QMimeDatabase().mimeTypeForFile(ireal_path, QMimeDatabase.MatchDefault)
+                    if search_for_file_type == 1:
+                        imime = QMimeDatabase().mimeTypeForFile(ireal_path, QMimeDatabase.MatchDefault)
+                    else:
+                        imime = QMimeDatabase().mimeTypeForFile(ireal_path, QMimeDatabase.MatchContent)
+                    #
                     if imime:
                         try:
                             if USE_THUMB == 1:
                                 file_icon = self.evaluate_pixbuf(ireal_path, imime.name())
                                 if file_icon != "Null":
                                     return file_icon
-                                else:
-                                    file_icon = QIcon.fromTheme(imime.iconName())
-                                    if not file_icon.isNull():
-                                        return file_icon
-                                    else:
-                                        # return QIcon("icons/empty.svg")
-                                        pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
-                                        return QIcon(pxmi)
+                                # else:
+                            file_icon = QIcon.fromTheme(imime.iconName())
+                            if not file_icon.isNull():
+                                return file_icon
                             else:
-                                file_icon = QIcon.fromTheme(imime.iconName())
+                                file_icon = QIcon.fromTheme(imime.genericIconName())
                                 if not file_icon.isNull():
                                     return file_icon
                                 else:
-                                    # return QIcon("icons/empty.svg")
-                                    pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
-                                    return QIcon(pxmi)
+                                    file_icon = QIcon.fromTheme("text-plain")
+                                    if not file_icon.isNull():
+                                        return file_icon
+                                    else:
+                                        pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                                        return QIcon(pxmi)
+                            # else:
+                                # file_icon = QIcon.fromTheme(imime.iconName())
+                                # if not file_icon.isNull():
+                                    # return file_icon
+                                # else:
+                                    # # return QIcon("icons/empty.svg")
+                                    # pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                                    # return QIcon(pxmi)
                         except:
-                            pass
+                            file_icon = QIcon.fromTheme("text-plain")
+                            if not file_icon.isNull():
+                                return file_icon
+                            else:
+                                pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                                return QIcon(pxmi)
                 #
                 elif fileInfo.isDir():
                     # use custom icons
@@ -2637,20 +2748,33 @@ class IconProvider(QFileIconProvider):
                                     return QIcon(icon_name_path)
                                 else:
                                     return QIcon.fromTheme("folder")
-                    # else:
                     # 
+                    for _ddir in FILE_DIRS:
+                        if fileInfo.fileName().lower() == _ddir[0].lower():
+                            _user_dir_name = _ddir[1]
+                            if QIcon.hasThemeIcon(_user_dir_name):
+                                return QIcon.fromTheme(_user_dir_name)
+                    #
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
-                    elif fileInfo.fileName() == "Desktop":
-                        return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
-                    elif fileInfo.fileName() == "Public":
-                        return QIcon.fromTheme("folder-publicshare", QIcon.fromTheme("folder"))
                     else:
                         return QIcon.fromTheme("folder", QIcon("icons/folder.svg"))
+                    # 
+                    # # if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
+                        # # return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
+                    # # elif fileInfo.fileName() == "Desktop":
+                        # # return QIcon.fromTheme("folder_home", QIcon.fromTheme("folder"))
+                    # # elif fileInfo.fileName() == "Public":
+                        # # return QIcon.fromTheme("folder-publicshare", QIcon.fromTheme("folder"))
+                    # # else:
+                        # # return QIcon.fromTheme("folder", QIcon("icons/folder.svg"))
             else:
-                # return QIcon("icons/empty.svg")
-                pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
-                return QIcon(pxmi)
+                file_icon = QIcon.fromTheme("text-plain")
+                if not file_icon.isNull():
+                    return file_icon
+                else:
+                    pxmi = QPixmap("icons/empty.svg").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
+                    return QIcon(pxmi)
         return super(IconProvider, self).icon(fileInfo)
 
 ########################### MAIN WINDOW ############################
