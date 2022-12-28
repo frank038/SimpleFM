@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.100
+# version 0.9.101
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2749,11 +2749,12 @@ class IconProvider(QFileIconProvider):
                                 else:
                                     return QIcon.fromTheme("folder")
                     # 
-                    for _ddir in FILE_DIRS:
-                        if fileInfo.fileName().lower() == _ddir[0].lower():
-                            _user_dir_name = _ddir[1]
-                            if QIcon.hasThemeIcon(_user_dir_name):
-                                return QIcon.fromTheme(_user_dir_name)
+                    if FILE_DIRS:
+                        for _ddir in FILE_DIRS:
+                            if fileInfo.fileName().lower() == _ddir[0].lower():
+                                _user_dir_name = _ddir[1]
+                                if QIcon.hasThemeIcon(_user_dir_name):
+                                    return QIcon.fromTheme(_user_dir_name)
                     #
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
