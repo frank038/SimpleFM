@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.80
+# version 0.9.90
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2429,6 +2429,8 @@ class itemDelegate(QItemDelegate):
         painter.save()
         painter.setRenderHint(QPainter.Antialiasing)
         iicon = index.data(QFileSystemModel.FileIconRole)
+        if not iicon:
+            return
         ppath = index.data(QFileSystemModel.FilePathRole)
         # additional icon text
         if USE_AD:
@@ -2439,6 +2441,7 @@ class itemDelegate(QItemDelegate):
         painter.restore()
         #
         if not index.data(QFileSystemModel.FileIconRole).name():
+        # if index.data(QFileSystemModel.FileIconRole) and not index.data(QFileSystemModel.FileIconRole).name():
             pixmap = iicon.pixmap(QSize(THUMB_SIZE, THUMB_SIZE))
         else:
             pixmap = iicon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
@@ -3644,7 +3647,7 @@ class LView(QBoxLayout):
             self.on_box_pb(self.lvDir)
         ####
         ####
-        self.fmf = 0
+        # self.fmf = 0
         self.selection = None
         self.listview = MyQlist()
         self.listview.setViewMode(QListView.IconMode)
@@ -3970,6 +3973,7 @@ class LView(QBoxLayout):
         self.bhicombo.addWidget(invbtn)
         #
         hidbtn = QPushButton()
+        hidbtn.setCheckable(True)
         if BUTTON_SIZE:
             hidbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
         hidbtn.setIcon(QIcon(QPixmap("icons/hidden.svg")))
@@ -4796,14 +4800,20 @@ class LView(QBoxLayout):
 
     # toggle show hidden items
     def fhidbtn(self):
-        if self.fmf == 0:
+        # if self.fmf == 0:
+        if self.sender().isChecked():
             self.fileModel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System | QDir.Hidden)
-            self.fmf = 1
+            # self.fmf = 1
+            self.listview.scrollToTop()
+            self.sender().setToolTip("Hide the hidden Items")
         else:
+            self.listview.clearSelection()
+            #
             self.fileModel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System)
-            self.fmf = 0
-
-
+            # self.fmf = 0
+            self.listview.scrollToTop()
+            self.sender().setToolTip("Show the hidden Items")
+            
 
 ###########################
 
@@ -6525,11 +6535,15 @@ class cTView(QBoxLayout):
 
     def fhidbtn(self):
         if self.fmf == 0:
+            self.tview.clearSelection()
             self.tmodel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System | QDir.Hidden)
             self.fmf = 1
+            self.tview.scrollToTop()
         else:
+            self.tview.clearSelection()
             self.tmodel.setFilter(QDir.AllDirs | QDir.Files | QDir.NoDotAndDotDot | QDir.System)
             self.fmf = 0
+            self.tview.scrollToTop()
 
 ############## END TREEVIEW
 
