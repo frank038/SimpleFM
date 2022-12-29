@@ -15,7 +15,7 @@ Optionals:
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
 - 7z (for custom actions - recommended)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
-- archivemount (for mounting archive files - custom action)
+- archivemount (and 7z for mounting archive files - custom action)
 - coreurils at least 8.31 to get the right creation date and time of items.
 
 Features:
