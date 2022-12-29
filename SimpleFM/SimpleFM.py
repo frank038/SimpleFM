@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.101
+# version 0.9.102
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -24,7 +24,6 @@ from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from cfg import *
 
-USE_SHADOW = 1
 
 ############## user directory names
 USER_DIRS = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
@@ -255,7 +254,6 @@ mmod_custom = glob.glob("modules_custom/*.py")
 list_custom_modules = []
 for el in reversed(mmod_custom):
     try:
-        # from python 3.4 exec_module instead of import_module
         ee = importlib.import_module(os.path.basename(el)[:-3])
         list_custom_modules.append(ee)
     except ImportError as ioe:
@@ -647,7 +645,8 @@ class PlistMenu(QDialog):
         self.Value = -1
         self.close()
 
-# get the folder size
+
+# calculate the folder size 
 def folder_size(path):
     total_size = 0
     for dirpath, dirnames, filenames in os.walk(path):
@@ -658,6 +657,35 @@ def folder_size(path):
                     continue
                 total_size += os.path.getsize(flp)
     return total_size
+
+# total size of the items in the list
+def listTotSize(newList):
+    total_size = 0
+    skipped = ""
+    for sitem in newList:
+        try:
+            if os.path.islink(sitem):
+                # just a number
+                total_size += 512
+            elif os.path.isfile(sitem):
+                item_size = QFileInfo(sitem).size()
+                total_size += max(item_size, 512)
+            elif os.path.isdir(sitem):
+                item_size = self.folder_size(sitem)
+                total_size += max(item_size, 512)
+        except:
+            skipped += sitem+"\n"
+    #
+    return total_size
+
+def dest_size_free(path):
+    disc_size_free = shutil.disk_usage(path).free
+    return disc_size_free
+
+def check_free_disc_space(path, dest):
+    total_items_size = listTotSize(path)
+    disc_free = dest_size_free(dest)
+    return (disc_free > total_items_size)
 
 def convert_size(fsize2):
     if fsize2 == 0 or fsize2 == 1:
@@ -1508,41 +1536,7 @@ class copyThread2(QThread):
     def run(self):
         time.sleep(1)
         self.item_op()
-
     
-    # calculate the folder size 
-    def folder_size(self, path):
-        total_size = 0
-        for dirpath, dirnames, filenames in os.walk(path):
-            for fl in filenames:
-                flp = os.path.join(dirpath, fl)
-                if os.access(flp, os.R_OK):
-                    if os.path.islink(flp):
-                        continue
-                    total_size += os.path.getsize(flp)
-        return total_size
-
-    
-    # total size of the list
-    def listTotSize(self):
-        total_size = 0
-        skipped = ""
-        for sitem in newList:
-            try:
-                if os.path.islink(sitem):
-                    # just a number
-                    total_size += 512
-                elif os.path.isfile(sitem):
-                    item_size = QFileInfo(sitem).size()
-                    total_size += max(item_size, 512)
-                elif os.path.isdir(sitem):
-                    item_size = self.folder_size(sitem)
-                    total_size += max(item_size, 512)
-            except:
-                skipped += sitem+"\n"
-        #
-        return total_size
-
     ## self.atype 4 or 5
     # add a suffix to the filename if the file exists at destination
     def faddSuffix(self, dest):
@@ -1964,8 +1958,14 @@ class copyItems2():
         #
         self.newDtype = ""
         self.newAtype = ""
-        self.myDialog()
-
+        # check if free disc size at destination
+        free_space_left = check_free_disc_space(self.newList, self.pathdest)
+        #
+        if free_space_left:
+            self.myDialog()
+        else:
+            MyDialog("Info", "Not enough space on disc.", None)
+    
     def myDialog(self):
         self.mydialog = QDialog(parent = self.window)
         self.mydialog.setWindowIcon(QIcon("icons/file-manager-red.svg"))
@@ -3987,8 +3987,14 @@ class LView(QBoxLayout):
                         new_path_temp.append(self.box_pb.itemAt(i).widget().text())
                     new_path = os.path.join(*new_path_temp)
                     if os.path.exists(new_path):
-                        self.on_btn_change_dir(new_path)
-                        obj.setChecked(True)
+                        # # open the folder in the same view
+                        # self.on_btn_change_dir(new_path)
+                        # obj.setChecked(True)
+                        try:
+                            # open the selected folder in a new tab
+                            self.fnewtabAction(new_path, 1)
+                        except Exception as E:
+                            MyDialog("Error", str(E), self.window)
                     else:
                         MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
                     #
@@ -4097,15 +4103,15 @@ class LView(QBoxLayout):
         invbtn.setToolTip("Invert the selection")
         self.bhicombo.addWidget(invbtn)
         #
-        hidbtn = QPushButton()
-        hidbtn.setCheckable(True)
+        self.hidbtn = QPushButton()
+        self.hidbtn.setCheckable(True)
         if BUTTON_SIZE:
-            hidbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
-        hidbtn.setIcon(QIcon(QPixmap("icons/hidden.svg")))
-        hidbtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
-        hidbtn.clicked.connect(self.fhidbtn)
-        hidbtn.setToolTip("Show the hidden Items")
-        self.bhicombo.addWidget(hidbtn)
+            self.hidbtn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
+        self.hidbtn.setIcon(QIcon(QPixmap("icons/hidden.svg")))
+        self.hidbtn.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Expanding)
+        self.hidbtn.clicked.connect(self.fhidbtn)
+        self.hidbtn.setToolTip("Show the hidden Items")
+        self.bhicombo.addWidget(self.hidbtn)
         # status box
         hboxd = QBoxLayout(QBoxLayout.LeftToRight)
         hboxd.setContentsMargins(QMargins(0,0,0,0))
@@ -4906,13 +4912,16 @@ class LView(QBoxLayout):
             self.tabLabels()
             ## highlight the file passed as argument
             index = self.fileModel.index(upperdir)
-            self.listview.selectionModel().select(index, QItemSelectionModel.Select)
-            self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+            # skip hidden folders
+            if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
+                self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+                self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
             #
             self.hicombo.insertItem(0, self.lvDir)
             self.hicombo.setCurrentIndex(0)
             #
             self.on_box_pb(self.lvDir)
+            
     
     # invert the selection
     def finvbtn(self):
@@ -5971,9 +5980,10 @@ class cTView(QBoxLayout):
         self.tview.setSortingEnabled(True)
         self.tview.sortByColumn(0, 0)
         # DnD
-        self.tview.setDragEnabled(True)
-        self.tview.setAcceptDrops(True)
-        self.tview.setDropIndicatorShown(True)
+        self.tview.setDragDropMode(QAbstractItemView.NoDragDrop)
+        # self.tview.setDragEnabled(True)
+        # self.tview.setAcceptDrops(True)
+        # self.tview.setDropIndicatorShown(True)
         # default model
         self.tmodel = QFileSystemModel(self.tview)
         self.fileModel = self.tmodel
@@ -6333,6 +6343,17 @@ class cTView(QBoxLayout):
                         paction.triggered.connect(lambda checked, index=ii:self.ftemplateAction(progActionListT[index+1]))
                         subm_templatesAction.addAction(paction)
                         ii += 2
+                #
+                menu.addSeparator()
+                # paste operation
+                pasteNmergeAction = QAction("Paste", self)
+                pasteNmergeAction.triggered.connect(lambda d:PastenMerge(self.lvDir, -3, "", self.window))
+                menu.addAction(pasteNmergeAction)
+                # check the clipboard for data
+                clipboard = QApplication.clipboard()
+                mimeData = clipboard.mimeData(QClipboard.Clipboard)
+                if "x-special/gnome-copied-files" not in mimeData.formats():
+                    pasteNmergeAction.setEnabled(False)
             #
             menu.addSeparator()
             #
@@ -6654,8 +6675,10 @@ class cTView(QBoxLayout):
             self.tview.setRootIndex(self.tmodel.setRootPath(path))
             #
             index = self.tmodel.index(upperdir)
-            self.tview.selectionModel().select(index, QItemSelectionModel.Select)
-            self.tview.scrollTo(index, QAbstractItemView.EnsureVisible)
+            # skip hidden folders
+            if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
+                self.tview.selectionModel().select(index, QItemSelectionModel.Select)
+                self.tview.scrollTo(index, QAbstractItemView.EnsureVisible)
 
 
     def fhidbtn(self):

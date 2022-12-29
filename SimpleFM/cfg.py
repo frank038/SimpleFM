@@ -123,3 +123,5 @@ theme_style=""
 icon_theme=""
 # how to find the icon type: 1 by extention - 0 by content
 search_for_file_type = 1
+# draw a little shadow under the thumbnails: 0 no - 1 yes
+USE_SHADOW=1
