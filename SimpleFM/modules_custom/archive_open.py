@@ -2,7 +2,7 @@
 
 """
 Open a supported archive with archivemount
-Modify line 41 to TEST_PASSWORD = 1 to test passworded archives; 
+Modify line 41 to TEST_PASSWORD = 1 to test passworded archives;
 a dialog is shows; 7z is required.
 """
 import os
@@ -53,10 +53,28 @@ class ModuleCustom():
                 os.mkdir(base_dest_dir)
         except Exception as E:
             MyDialog("ERROR", "\n{}".format(str(E)))
-        #
+            return
+        # file /tmp/archivemount/fuse_mounted - first: archive name - second: mount name
         self.fuse_mounted = os.path.join(base_dest_dir, "fuse_mounted")
         file_name = os.path.basename(path)
         mount_name = file_name
+        #
+        # skip already mounted archives
+        fuse_mounted_list = []
+        with open(self.fuse_mounted, "r") as ff:
+            fuse_mounted_list = ff.readlines()
+        #
+        len_fuse_mounted_list = len(fuse_mounted_list)
+        # first: archive name - second: mount name
+        for idx in range(len_fuse_mounted_list-1, -1, -2):
+            # # mount name
+            # item_mount = fuse_mounted_list[idx]
+            # archive name
+            item_name = fuse_mounted_list[idx-1]
+            #
+            if item_name.strip("\n") == path:
+                MyDialog("Info", "Already mounted:\n{}.".format(os.path.basename(path)))
+                return
         #
         if os.access(path, os.R_OK):
             try:
@@ -75,17 +93,18 @@ class ModuleCustom():
                     if BUTTON_SIZE:
                         self.media_btn.setIconSize(QSize(BUTTON_SIZE, BUTTON_SIZE))
                     self.win.disk_box.addWidget(self.media_btn)
-                    if mount_name == file_name:
-                        self.media_btn.setToolTip(file_name)
-                    else:
-                        self.media_btn.setToolTip(file_name+" - ("+mount_name+")")
+                    # if mount_name == file_name:
+                        # self.media_btn.setToolTip(file_name)
+                    # else:
+                    self.media_btn.setToolTip(path+" - ("+mount_name+")")
+                    #
                     self.media_btn_menu = QMenu()
-                    self.media_btn_menu.addAction("Open", lambda x=dest_dir: self.win.openDir(x, 1))
+                    self.media_btn_menu.addAction("Open", lambda x=dest_dir: self.fusermountf(x))
                     self.media_btn_menu.addAction("Umount", lambda x=dest_dir,y=self.media_btn: self.fuserumountf(x,y))
                     self.media_btn.setMenu(self.media_btn_menu)
                     # 
                     with open(self.fuse_mounted, "a") as ff:
-                        ff.write("{}\n{}\n".format(file_name, mount_name))
+                        ff.write("{}\n{}\n".format(path, mount_name))
                     #
                     MyDialog("Info", "{}\nmounted".format(file_name))
                 else:
@@ -93,22 +112,52 @@ class ModuleCustom():
             except Exception as E:
                 MyDialog("ERROR", "Issues while opening the archive:\n{}\n{}".format(file_name, str(E)))
     
+    # open an archive, or open the tab
+    def fusermountf(self, dest_dir):
+        num_tabs = self.win.mtab.count()
+        tab_found = None
+        for i in range(num_tabs):
+            i_tab_text = self.win.mtab.tabText(i)
+            if i_tab_text == os.path.basename(dest_dir):
+                tab_found = i
+                break
+        if tab_found == None:
+            self.win.openDir(dest_dir, 1)
+        else:
+            self.win.mtab.setCurrentIndex(tab_found)
+    
     # umount the mounted archive
     def fuserumountf(self, dest_dir, btn):
         ret = os.system("fusermount -u '{}'".format(dest_dir))
         if ret == 0:
-            btn.deleteLater()
+            # btn.deleteLater()
+            #
             try:
+                archive_mount_name = os.path.basename(dest_dir)
                 os.rmdir(dest_dir)
                 fuse_mounted_list = []
                 with open(self.fuse_mounted, "r") as ff:
                     fuse_mounted_list = ff.readlines()
                 #
                 len_fuse_mounted_list = len(fuse_mounted_list)
-                #
+                # first: archive name - second: mount name
                 for idx in range(len_fuse_mounted_list-1, -1, -2):
+                    # mount name
                     item_mount = fuse_mounted_list[idx]
-                    item = fuse_mounted_list[idx-1]
+                    # # archive name
+                    # item_name = fuse_mounted_list[idx-1]
+                    #
+                    # close the tabs
+                    num_tabs = self.win.mtab.count()
+                    for i in range(num_tabs):
+                        curr_tab_text = self.win.mtab.tabText(i)
+                        if curr_tab_text == archive_mount_name:
+                            self.win.mtab.removeTab(i)
+                            break
+                    #
+                    # remove the button
+                    btn.deleteLater()
+                    #
                     if os.path.basename(dest_dir) == item_mount.strip("\n"):
                         del fuse_mounted_list[idx]
                         del fuse_mounted_list[idx-1]
@@ -117,8 +166,12 @@ class ModuleCustom():
                         ff.write(item)
             except Exception as E:
                 MyDialog("Info", "Error while umount the folder\n{}\n{}".format(dest_dir, str(E)))
+            # open one tab if there are none
+            num_tabs = self.win.mtab.count()
+            if num_tabs == 0:
+                self.win.openDir(os.path.expanduser("~"), 1)
         else:
-            MyDialog("Info", "Error while umount the folder\n{}\n{}".format(dest_dir, ret))
+            MyDialog("Info", "Error while umounting the folder\n{}\n{}".format(dest_dir, ret))
 
         
     # test the archive for password using 7z
