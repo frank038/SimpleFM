@@ -2,7 +2,7 @@
 
 import os
 from xdg import DesktopEntry
-# from xdg import IconTheme
+from xdg import IconTheme
 # to get the language
 import locale
 
@@ -109,8 +109,10 @@ class getMenu():
                             continue
                         hidden = entry.getHidden()
                         nodisplay = entry.getNoDisplay()
-                        # do not show those marked as hidden or not to display
-                        if hidden or nodisplay:
+                        # # do not show those marked as hidden or not to display
+                        # if hidden or nodisplay:
+                        # do not show those marked as hidden
+                        if hidden:
                             continue
                         # item.name
                         fname = entry.getName()
