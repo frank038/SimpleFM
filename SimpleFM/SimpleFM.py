@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.102
+# version 0.9.103
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2520,30 +2520,30 @@ class itemDelegate(QItemDelegate):
         ph = size_pixmap.height()
         xpad = int((ITEM_WIDTH - pw) / 2)
         ypad = int((ITEM_HEIGHT - ph) / 2)
-        # shadow
-        if USE_SHADOW and _is_thumb:
-            painter.save()
-            pen = QPen(QColor(0,0,0, 40))
-            pen.setWidth(6)
-            pen.setCapStyle(Qt.RoundCap)
-            painter.setPen(pen)
-            x1 = option.rect.x() + xpad + 2
-            y1 = option.rect.y() + ypad + ph
-            x2 = x1 + pw - 4
-            y2 = y1
-            painter.drawLine(x1, y1, x2, y2)
-            #
-            pen = QPen(QColor(0,0,0, 160))
-            pen.setWidth(3)
-            pen.setCapStyle(Qt.RoundCap)
-            painter.setPen(pen)
-            x1 = option.rect.x() + xpad + 1
-            y1 = option.rect.y() + ypad + ph
-            x2 = x1 + pw - 2
-            y2 = y1
-            painter.drawLine(x1, y1, x2, y2)
-            #
-            painter.restore()
+        # # shadow
+        # if USE_SHADOW and _is_thumb:
+            # painter.save()
+            # pen = QPen(QColor(0,0,0, 40))
+            # pen.setWidth(6)
+            # pen.setCapStyle(Qt.RoundCap)
+            # painter.setPen(pen)
+            # x1 = option.rect.x() + xpad + 2
+            # y1 = option.rect.y() + ypad + ph
+            # x2 = x1 + pw - 4
+            # y2 = y1
+            # painter.drawLine(x1, y1, x2, y2)
+            # #
+            # pen = QPen(QColor(0,0,0, 160))
+            # pen.setWidth(3)
+            # pen.setCapStyle(Qt.RoundCap)
+            # painter.setPen(pen)
+            # x1 = option.rect.x() + xpad + 1
+            # y1 = option.rect.y() + ypad + ph
+            # x2 = x1 + pw - 2
+            # y2 = y1
+            # painter.drawLine(x1, y1, x2, y2)
+            # #
+            # painter.restore()
         #
         painter.drawPixmap(int(option.rect.x() + xpad),int(option.rect.y() + ypad), -1,-1, pixmap,0,0,-1,-1)
         #
