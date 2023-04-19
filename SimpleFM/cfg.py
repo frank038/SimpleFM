@@ -7,11 +7,13 @@ USER_TERMINAL=""
 FOLDER_TO_OPEN = "HOME"
 # template folder
 TEMPLATE_DIR="Templates"
-# multi items drag picture: 0 use simple icon - 1 enable extended icon
+# multi items drag picture: 0 use simple icon - 1 extended icons - 2 very extended icons
 USE_EXTENDED_DRAG_ICON=1
-# x offset of each icon if USE_EXTENDED_DRAG_ICON is enabled
+# icon size if USE_EXTENDED_DRAG_ICON=1
+mini_icon_size=32
+# x offset of each icon if USE_EXTENDED_DRAG_ICON 2 is enabled
 X_EXTENDED_DRAG_ICON=40
-# y offset of each icon if USE_EXTENDED_DRAG_ICON is enabled
+# y offset of each icon if USE_EXTENDED_DRAG_ICON 2 is enabled
 Y_EXTENDED_DRAG_ICON=20
 # limit the number of icon overlay if USE_EXTENDED_DRAG_ICON is enabled
 NUM_OVERLAY=20

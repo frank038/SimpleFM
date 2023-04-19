@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.103
+# version 0.9.104
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2166,46 +2166,105 @@ class MyQlist(QListView):
         #
         drag = QDrag(self)
         if len(item_list) > 1:
-            if not USE_EXTENDED_DRAG_ICON:
+            if USE_EXTENDED_DRAG_ICON == 0:
                 pixmap = QPixmap("icons/items_multi.png").scaled(ICON_SIZE, ICON_SIZE, Qt.KeepAspectRatio, Qt.FastTransformation)
             else:
                 painter = None
-                # number of selected items
-                num_item = len(self.selectionModel().selectedIndexes())
-                poffsetW = X_EXTENDED_DRAG_ICON
-                poffsetH = Y_EXTENDED_DRAG_ICON
-                psizeW = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetW) - poffsetW
-                psizeH = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetH) - poffsetH
-                pixmap = QPixmap(psizeW, psizeH)
-                pixmap.fill(QColor(253,253,253,0))
-                incr_offsetW = poffsetW
-                incr_offsetH = poffsetH
                 #
-                model = self.model()
-                for i in reversed(range(min(NUM_OVERLAY, num_item))):
-                    index = self.selectionModel().selectedIndexes()[i]
-                    filepath = index.data(Qt.UserRole+1)
-                    if stat.S_ISREG(os.stat(filepath).st_mode) or stat.S_ISDIR(os.stat(filepath).st_mode) or stat.S_ISLNK(os.stat(filepath).st_mode):
-                        file_icon = model.fileIcon(index)
-                        pixmap1 = file_icon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
-                        if not painter:
-                            painter = QPainter(pixmap)
-                            woffset = int((ICON_SIZE - pixmap1.size().width())/2)
-                            ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                            painter.drawPixmap(int(psizeW-ICON_SIZE+woffset), int(psizeH-ICON_SIZE+ioffset), pixmap1)
-                        else:
+                if USE_EXTENDED_DRAG_ICON == 1:
+                    # number of selected items
+                    num_item = min(NUM_OVERLAY, len(self.selectionModel().selectedIndexes()))
+                    #
+                    num_col_tmp = num_item ** (1/2)
+                    num_col = 0
+                    if (num_col_tmp - int(num_col_tmp)) > 0:
+                        num_col = int(num_col_tmp) + 1
+                    else:
+                        num_col = int(num_col_tmp)
+                    #
+                    num_row_tmp = num_item / num_col
+                    num_row = 0
+                    if (num_row_tmp - int(num_row_tmp)) > 0:
+                        num_row = int(num_row_tmp) + 1
+                    else:
+                        num_row = int(num_row_tmp)
+                    #
+                    poffsetW = 4
+                    poffsetH = 4
+                    psizeW = mini_icon_size * num_col + (poffsetW * num_col + poffsetW)
+                    psizeH = mini_icon_size * num_row + (poffsetH * num_row + poffsetH)
+                    pixmap = QPixmap(psizeW, psizeH)
+                    pixmap.fill(QColor(253,253,253,0))
+                    incr_offsetW = poffsetW
+                    incr_offsetH = poffsetH
+                    #
+                    model = self.model()
+                    # 
+                    for i in range(num_item):
+                        index = self.selectionModel().selectedIndexes()[i]
+                        filepath = index.data(Qt.UserRole+1)
+                        if stat.S_ISREG(os.stat(filepath).st_mode) or stat.S_ISDIR(os.stat(filepath).st_mode) or stat.S_ISLNK(os.stat(filepath).st_mode):
+                            file_icon = model.fileIcon(index)
+                            pixmap1 = file_icon.pixmap(QSize(mini_icon_size, mini_icon_size))
+                            if not painter:
+                                painter = QPainter(pixmap)
                             # limit the number of overlays
                             if i < NUM_OVERLAY:
-                                woffset = int((ICON_SIZE - pixmap1.size().width())/2)
-                                ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
-                                painter.drawPixmap(int(psizeW-ICON_SIZE-incr_offsetW+woffset), int(psizeH-ICON_SIZE-incr_offsetH+ioffset), pixmap1)
-                                incr_offsetW += poffsetW
-                                incr_offsetH += poffsetH
+                                woffset = int((mini_icon_size - pixmap1.size().width())/2)
+                                hoffset = int((mini_icon_size - pixmap1.size().height())/2)
+                                # 
+                                tmp_col = i/num_col
+                                if i and tmp_col % 1 == 0:
+                                    incr_offsetW = 4
+                                    incr_offsetH += (poffsetH + mini_icon_size)
+                                #
+                                painter.drawPixmap(incr_offsetW+woffset, incr_offsetH+hoffset, pixmap1)
+                                #
+                                incr_offsetW += (poffsetW + mini_icon_size)
                             else:
                                 break
-                    else:
-                        continue
+                        else:
+                            continue
+                #
+                elif USE_EXTENDED_DRAG_ICON == 2:
+                    # number of selected items
+                    num_item = len(self.selectionModel().selectedIndexes())
+                    poffsetW = X_EXTENDED_DRAG_ICON
+                    poffsetH = Y_EXTENDED_DRAG_ICON
+                    psizeW = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetW) - poffsetW
+                    psizeH = ICON_SIZE + (min(NUM_OVERLAY, num_item) * poffsetH) - poffsetH
+                    pixmap = QPixmap(psizeW, psizeH)
+                    pixmap.fill(QColor(253,253,253,0))
+                    incr_offsetW = poffsetW
+                    incr_offsetH = poffsetH
+                    #
+                    model = self.model()
+                    for i in reversed(range(min(NUM_OVERLAY, num_item))):
+                        index = self.selectionModel().selectedIndexes()[i]
+                        filepath = index.data(Qt.UserRole+1)
+                        if stat.S_ISREG(os.stat(filepath).st_mode) or stat.S_ISDIR(os.stat(filepath).st_mode) or stat.S_ISLNK(os.stat(filepath).st_mode):
+                            file_icon = model.fileIcon(index)
+                            pixmap1 = file_icon.pixmap(QSize(ICON_SIZE, ICON_SIZE))
+                            if not painter:
+                                painter = QPainter(pixmap)
+                                woffset = int((ICON_SIZE - pixmap1.size().width())/2)
+                                ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
+                                painter.drawPixmap(int(psizeW-ICON_SIZE+woffset), int(psizeH-ICON_SIZE+ioffset), pixmap1)
+                            else:
+                                # limit the number of overlays
+                                if i < NUM_OVERLAY:
+                                    woffset = int((ICON_SIZE - pixmap1.size().width())/2)
+                                    ioffset = int((ICON_SIZE - pixmap1.size().height())/2)
+                                    painter.drawPixmap(int(psizeW-ICON_SIZE-incr_offsetW+woffset), int(psizeH-ICON_SIZE-incr_offsetH+ioffset), pixmap1)
+                                    incr_offsetW += poffsetW
+                                    incr_offsetH += poffsetH
+                                else:
+                                    break
+                        else:
+                            continue
+                #
                 painter.end()
+        #
         elif len(item_list) == 1:
             try:
                 model = self.model()
@@ -4386,10 +4445,12 @@ class LView(QBoxLayout):
                         if listPrograms:
                             for iprog in listPrograms[::2]:
                                 if iprog == defApp:
-                                    progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    # progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    progActionList.insert(0, QAction("{} (Default)".format(listPrograms[ii+1]), self))
                                     progActionList.insert(1, iprog)
                                 else:
-                                    progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    # progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
+                                    progActionList.append(QAction("{}".format(listPrograms[ii+1]), self))
                                     progActionList.append(iprog)
                                 ii += 2
                             ii = 0
