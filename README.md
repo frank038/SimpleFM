@@ -11,7 +11,7 @@ Requirements:
 
 Optionals:
 - pkexec (alternatively a su/sudo method can be used)
-- python3-dbus.mainloop.pyqt5 (for mass storage devices)
+- udisk2 and python3-dbus.mainloop.pyqt5 (for mass storage devices)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
 - 7z (for custom actions - recommended)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
