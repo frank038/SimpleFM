@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.104
+# version 0.9.105
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2144,6 +2144,35 @@ class MyQlist(QListView):
         self.verticalScrollBar().setSingleStep(25)
         self.customMimeType = "application/x-customqt5archiver"
         self.user_action = 0
+        #
+        #
+        ###########
+        cssa = ("QScrollBar:vertical {"
+    "border: 0px solid #999999;"
+    "background:white;"
+    "width:8px;"
+    "margin: 0px 0px 0px 0px;"
+"}"
+"QScrollBar::handle:vertical {")
+        cssb = ("min-height: 0px;"
+    "border: 0px solid red;"
+    "border-radius: 4px;"
+    "background-color: {};".format(scroll_handle_col))
+        cssc = ("}"
+"QScrollBar::add-line:vertical {"       
+    "height: 0px;"
+    "subcontrol-position: bottom;"
+    "subcontrol-origin: margin;"
+"}"
+"QScrollBar::sub-line:vertical {"
+    "height: 0 px;"
+    "subcontrol-position: top;"
+    "subcontrol-origin: margin;"
+"}")
+        #
+        if scroll_handle_col:
+            css = cssa+cssb+cssc
+            self.verticalScrollBar().setStyleSheet(css)
     
     # def keyPressEvent(self, e):
         # # if e.key() == Qt.Key_K:
@@ -4319,7 +4348,7 @@ class LView(QBoxLayout):
                         except Exception as E:
                             MyDialog("Error", str(E), self.window)
                 else:
-                    MyDialog("Info", "{} not found.".format(progExec), self)
+                    MyDialog("Info", "{} not found.".format(progExec), self.window)
                 return
             #
             if (perms & QFile.ExeOwner):
@@ -6768,6 +6797,14 @@ if __name__ == '__main__':
     # set the icon style globally
     if icon_theme:
         QIcon.setThemeName(icon_theme)
+    #
+    if HIRED != "" and HIGREEN != "" and HIBLUE != "":
+        palette = QPalette()
+        # palette.setColor(QPalette.Base, QColor(245, 245, 245))
+        # palette.setColor(QPalette.Window, QColor(225, 225, 225))
+        palette.setColor(QPalette.Highlight, QColor(HIRED, HIGREEN, HIBLUE))
+        app.setPalette(palette)
+    #
     window = MainWin()
     window.show()
     ret = app.exec_()
