@@ -5,7 +5,7 @@ extract the content of the selected archive
 import os
 import stat
 from PyQt5.QtWidgets import (QDialog,QBoxLayout,QLabel,QPushButton,QLineEdit,QApplication)
-from PyQt5.QtCore import (Qt,QFileInfo,QMimeDatabase,QTimer)
+from PyQt5.QtCore import (Qt, QFileInfo,QMimeDatabase)
 from PyQt5.QtGui import (QIcon,QFontMetrics,QFont)
 import subprocess
 import shutil
@@ -48,87 +48,15 @@ class MyDialog(QDialog):
         self.setLayout(mbox)
         #
         label = QLabel(args[1])
-        label.setAlignment(Qt.AlignCenter)
         label.setWordWrap(True)
         mbox.addWidget(label)
         #
-        button_ok = QPushButton("   Close   ")
+        button_ok = QPushButton("     Ok     ")
         mbox.addWidget(button_ok)
         #
         button_ok.clicked.connect(self.close)
         self.exec_()
 
-
-class MyDialogExtract(QDialog):
-    def __init__(self, *args, parent=None):
-        super(MyDialogExtract, self).__init__(parent)
-        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.setWindowTitle(args[0])
-        self.resize(400,300)
-        # main box
-        mbox = QBoxLayout(QBoxLayout.TopToBottom)
-        mbox.setContentsMargins(5,5,5,5)
-        self.setLayout(mbox)
-        #
-        label_text = ""
-        self.rret = args[1]
-        self.pret = args[2]
-        self.ppath = args[3]
-        if self.rret == "1" or self.rret == "2":
-            label_text = "Extracting..."
-        self.label = QLabel(label_text)
-        self.label.setAlignment(Qt.AlignCenter)
-        self.label.setWordWrap(True)
-        mbox.addWidget(self.label)
-        #
-        self.button_ok = QPushButton("   Close   ")
-        mbox.addWidget(self.button_ok)
-        #
-        self.button_ok.clicked.connect(self.close)
-        #
-        self.timer=QTimer()
-        self.timer.timeout.connect(self.startTime)
-        self.timer.start(1000)
-        self.timer_count = 0
-        #
-        self.exec_()
-        
-    def closeEvent(self, event):
-        if self.timer_count == -1:
-            super(MyDialogExtract, self).closeEvent(event)
-        else:
-            event.ignore()
-        
-    def startTime(self):
-        self.timer_count += 1
-        if self.timer_count == 6:
-            self.timer_count = -1
-            self.timer.stop()
-            # # close this dialog
-            # self.done(1)
-        #
-        if self.isVisible():
-            if self.rret == "1":
-                try:
-                    ret = subprocess.check_output('7z x "-o{}" -y -aou -- "{}"'.format(os.path.dirname(self.ppath), self.ppath), shell=True)
-                    if "Everything is Ok" in ret.decode():
-                        self.label.setText("Archive extracted.")
-                    else:
-                        self.label.setText("Issues while extracting the archive.")
-                except Exception as E:
-                    self.label.setText("Issues while extracting the archive:\n{}.".format(E))
-            elif self.rret == "2":
-                try:
-                    ret = subprocess.check_output('7z x "-p{}" "-o{}" -y -aou -- "{}"'.format(self.pret, os.path.dirname(self.ppath), self.ppath), shell=True)
-                    if "Everything is Ok" in ret.decode():
-                        self.label.setText("Archive extracted.")
-                    else:
-                        self.label.setText("Issues while extracting the archive.")
-                except Exception as E:
-                    self.label.setText("Issues while extracting the archive:\n{}.".format(E))
-            #
-            self.timer_count = -1
-            self.timer.stop()
 
 class passWord(QDialog):
     def __init__(self, path, parent=None):
@@ -188,18 +116,27 @@ class ModuleCustom():
             if stat.S_ISREG(os.stat(path).st_mode):
                 if os.access(mainLView.lvDir, os.W_OK):
                     ret = self.test_archive(path)
-                    #
-                    if ret == 0:
+                    if ret == 1:
+                        try:
+                            ret = subprocess.check_output('7z x "-o{}" -y -aou -- "{}"'.format(os.path.dirname(path), path), shell=True)
+                            if "Everything is Ok" in ret.decode():
+                                MyDialog("Info", "Archive extracted.")
+                            else:
+                                MyDialog("ERROR", "Issues while extracting the archive.")
+                        except Exception as E:
+                            MyDialog("ERROR", "Issues while extracting the archive:\n{}.".format(E))
+                    elif ret == 2:
+                        pret = passWord(path).arpass
+                        try:
+                            ret = subprocess.check_output('7z x "-p{}" "-o{}" -y -aou -- "{}"'.format(pret, os.path.dirname(path), path), shell=True)
+                            if "Everything is Ok" in ret.decode():
+                                MyDialog("Info", "Archive extracted.")
+                            else:
+                                MyDialog("ERROR", "Issues while extracting the archive.")
+                        except Exception as E:
+                            MyDialog("ERROR", "Issues while extracting the archive:\n{}.".format(E))
+                    elif ret == 0:
                         MyDialog("ERROR", "Issues while checking the archive.")
-                    else:
-                        pret = ""
-                        if ret == 2:
-                            pret = passWord(path).arpass
-                            if pret == "":
-                                return
-                        #
-                        MyDialogExtract("Info", str(ret), pret, path)
-                    
     
     def test_archive(self, path):
         szdata = None
