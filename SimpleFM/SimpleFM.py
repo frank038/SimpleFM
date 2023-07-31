@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.106
+# version 0.9.107
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4754,7 +4754,8 @@ class LView(QBoxLayout):
     # launch the application choosen
     def fprogAction(self, iprog, path):
         try:
-            subprocess.Popen([iprog, path])
+            # subprocess.Popen([iprog, path])
+            subprocess.Popen(iprog.split(" ") + [path])
         except Exception as E:
             MyDialog("Error", str(E), self.window)
     
@@ -5145,7 +5146,16 @@ class getAppsByMime():
                                 #
                                 if retw is not None:
                                     if os.path.exists(retw):
-                                        listPrograms.append(retw)
+                                        # listPrograms.append(retw)
+                                        
+                                        ######
+                                        execArgs = [" %f", " %F", " %u", " %U", " %d", " %D", " %n", " %N", " %k", " %v"]
+                                        for aargs in execArgs:
+                                            if aargs in mimeProg2:
+                                                mimeProg2 = mimeProg2.strip(aargs)
+                                        listPrograms.append(mimeProg2)
+                                        ######
+                                        
                                         try:
                                             progName = DesktopEntry(desktopPath).getName()
                                             if progName != "":
@@ -6568,7 +6578,8 @@ class cTView(QBoxLayout):
     # open the file
     def fprogAction(self, iprog, path):
         try:
-            subprocess.Popen([iprog, path])
+            # subprocess.Popen([iprog, path])
+            subprocess.Popen(iprog.split(" ") + [path])
         except Exception as E:
             MyDialog("Error", str(E), self.window)
     
