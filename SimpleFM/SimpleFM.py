@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.107
+# version 0.9.108
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2490,10 +2490,41 @@ class MyQlist(QListView):
                     webUrl = uurl.url()
                     if webUrl[0:5] == "http:" or webUrl[0:6] == "https:":
                         webPaths.append(webUrl)
-            # TO-DO
-            if webPaths:
-                MyDialog("Info", "Not supported.", None)
+            # TO-DO for more than one item
+            if webPaths and len(webPaths) == 1:
+                path_to_store = dest_path
+                #
+                pointedItem = self.indexAt(event.pos())
+                if pointedItem.isValid():
+                    ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+                    if os.path.isdir(ifp):
+                        if os.access(ifp, os.W_OK):
+                            path_to_store = ifp
+                        else:
+                            MyDialog("Info", "The following folder in not writable: "+os.path.basename(ifp), None)
+                            event.ignore()
+                            return
+                #
+                data_req = event.mimeData().html()
+                if data_req[0:4] == "<img":
+                    event.accept()
+                    dd1 = data_req.rfind("src=")
+                    dd2 = data_req[dd1+5:].find('"')
+                    data_path = str(data_req[dd1+5:dd1+dd2+5])
+                    data_name = os.path.basename(data_path)
+                    #
+                    data_req = event.mimeData().data('application/octet-stream')
+                    with open(path_to_store+"/"+data_name, 'wb') as ff:
+                        ff.write(data_req)
+                else:
+                    event.ignore()
+                    MyDialog("Info", "Not supported.", None)
+                    return
+            #
+            else:
                 event.ignore()
+                MyDialog("Info", "Not supported.", None)
+                return
             #
             filePaths = filePathsTemp
             # if not empty
@@ -2837,12 +2868,13 @@ class IconProvider(QFileIconProvider):
                                 else:
                                     return QIcon.fromTheme("folder")
                     # 
-                    if FILE_DIRS:
-                        for _ddir in FILE_DIRS:
-                            if fileInfo.fileName().lower() == _ddir[0].lower():
-                                _user_dir_name = _ddir[1]
-                                if QIcon.hasThemeIcon(_user_dir_name):
-                                    return QIcon.fromTheme(_user_dir_name)
+                    if os.path.dirname(os.path.realpath(fileInfo.absoluteFilePath())) == os.path.expanduser("~"):
+                        if FILE_DIRS:
+                            for _ddir in FILE_DIRS:
+                                if fileInfo.fileName().lower() == _ddir[0].lower():
+                                    _user_dir_name = _ddir[1]
+                                    if QIcon.hasThemeIcon(_user_dir_name):
+                                        return QIcon.fromTheme(_user_dir_name)
                     #
                     if QIcon.hasThemeIcon("folder-{}".format(fileInfo.fileName().lower())):
                         return QIcon.fromTheme("folder-{}".format(fileInfo.fileName().lower()), QIcon.fromTheme("folder"))
