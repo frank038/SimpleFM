@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.108
+# version 0.9.109
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -942,7 +942,7 @@ class propertyDialog(QDialog):
             self.listPrograms.append([listPrograms_temp[i], listPrograms_temp[i+1]])
         if self.listPrograms:
             for i in range(len(self.listPrograms)):
-                if self.listPrograms[i][0] == self.defApp:
+                if self.listPrograms[i][0] == self.defApp or self.listPrograms[i][0] == self.defApp.split("/")[-1]:
                     self.btnOpenWith.setText(self.listPrograms[i][1])
         else:
             self.btnOpenWith.setText("----------")
