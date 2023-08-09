@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.109
+# version 0.9.110
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -940,9 +940,16 @@ class propertyDialog(QDialog):
         self.listPrograms = []
         for i in range(0, len(listPrograms_temp), 2):
             self.listPrograms.append([listPrograms_temp[i], listPrograms_temp[i+1]])
+        #
+        r_defApp = self.defApp
+        if self.defApp:
+            for eel in ["%f","%F","%u","%U"]:
+                r_defApp = r_defApp.strip(eel).rstrip(" ")
+        #
         if self.listPrograms:
             for i in range(len(self.listPrograms)):
-                if self.listPrograms[i][0] == self.defApp or self.listPrograms[i][0] == self.defApp.split("/")[-1]:
+                # if self.listPrograms[i][0] == self.defApp or self.listPrograms[i][0] == self.defApp.split("/")[-1]:
+                if self.listPrograms[i][0] == r_defApp or self.listPrograms[i][0] == r_defApp.split("/")[-1]:
                     self.btnOpenWith.setText(self.listPrograms[i][1])
         else:
             self.btnOpenWith.setText("----------")
@@ -4403,7 +4410,17 @@ class LView(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
-                    subprocess.Popen([defApp, path])
+                    if "%f" in defApp:
+                        r_defApp = defApp.replace("%f", path)
+                    elif "%F" in defApp:
+                        r_defApp = defApp.replace("%F", path)
+                    elif "%u" in defApp:
+                        r_defApp = defApp.replace("%u", "file://"+path)
+                    elif "%U" in defApp:
+                        r_defApp = defApp.replace("%U", "file://"+path)
+                    r_comm = r_defApp.split(" ")
+                    subprocess.Popen(r_comm)
+                    # subprocess.Popen([defApp, path])
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
@@ -4502,17 +4519,23 @@ class LView(QBoxLayout):
                         #
                         ii = 0
                         defApp = getDefaultApp(os.path.join(self.lvDir, itemName)).defaultApplication()
+                        r_defApp = defApp
+                        if defApp:
+                            for eel in ["%f","%F","%u","%U"]:
+                                r_defApp = r_defApp.strip(eel).rstrip(" ")
                         progActionList = []
                         if listPrograms:
                             for iprog in listPrograms[::2]:
-                                if iprog == defApp:
+                                if iprog == r_defApp:
                                     # progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.insert(0, QAction("{} (Default)".format(listPrograms[ii+1]), self))
-                                    progActionList.insert(1, iprog)
+                                    # progActionList.insert(1, iprog)
+                                    progActionList.insert(1, defApp)
                                 else:
                                     # progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
                                     progActionList.append(QAction("{}".format(listPrograms[ii+1]), self))
-                                    progActionList.append(iprog)
+                                    # progActionList.append(iprog)
+                                    progActionList.append(defApp)
                                 ii += 2
                             ii = 0
                             for paction in progActionList[::2]:
@@ -4784,10 +4807,21 @@ class LView(QBoxLayout):
                         MyDialog("Error", str(E), self.window)
     
     # launch the application choosen
-    def fprogAction(self, iprog, path):
+    # def fprogAction(self, iprog, path):
+    def fprogAction(self, defApp, path):
         try:
-            # subprocess.Popen([iprog, path])
-            subprocess.Popen(iprog.split(" ") + [path])
+            if "%f" in defApp:
+                r_defApp = defApp.replace("%f", path)
+            elif "%F" in defApp:
+                r_defApp = defApp.replace("%F", path)
+            elif "%u" in defApp:
+                r_defApp = defApp.replace("%u", "file://"+path)
+            elif "%U" in defApp:
+                r_defApp = defApp.replace("%U", "file://"+path)
+            r_comm = r_defApp.split(" ")
+            subprocess.Popen(r_comm)
+            # # subprocess.Popen([iprog, path])
+            # subprocess.Popen(iprog.split(" ") + [path])
         except Exception as E:
             MyDialog("Error", str(E), self.window)
     
@@ -5359,15 +5393,19 @@ class getDefaultApp():
                     desktopPath = os.path.join(ddir+"/applications", associatedDesktopProgram.strip())
                     #
                     if os.path.exists(desktopPath):
+                        applicationName = DesktopEntry(desktopPath).getTryExec()
                         applicationName2 = DesktopEntry(desktopPath).getExec()
-                        if applicationName2:
-                            applicationName = applicationName2.split()[0]
-                        else:
-                            return "None"
+                        #
+                        if not applicationName:
+                            if applicationName2:
+                                applicationName = applicationName2.split()[0]
+                            else:
+                                return "None"
                         applicationPath = shutil.which(applicationName)
                         if applicationPath:
                             if os.path.exists(applicationPath):
-                                return applicationPath
+                                # return applicationPath
+                                return applicationName2
                             else:
                                 MyDialog("Info", "{} cannot be found".format(applicationPath), None)
                         else:
@@ -5793,7 +5831,17 @@ class openTrash(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
-                    subprocess.Popen([defApp, path])
+                    if "%f" in defApp:
+                        r_defApp = defApp.replace("%f", path)
+                    elif "%F" in defApp:
+                        r_defApp = defApp.replace("%F", path)
+                    elif "%u" in defApp:
+                        r_defApp = defApp.replace("%u", "file://"+path)
+                    elif "%U" in defApp:
+                        r_defApp = defApp.replace("%U", "file://"+path)
+                    r_comm = r_defApp.split(" ")
+                    subprocess.Popen(r_comm)
+                    # subprocess.Popen([defApp, path])
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
     
@@ -5823,15 +5871,21 @@ class openTrash(QBoxLayout):
                 #
                 ii = 0
                 defApp = getDefaultApp(os.path.join(Tpath, "files", itemName)).defaultApplication()
+                r_defApp = defApp
+                if defApp:
+                    for eel in ["%f","%F","%u","%U"]:
+                        r_defApp = r_defApp.strip(eel).rstrip(" ")
                 progActionList = []
-                if listPrograms: #!= []:
+                if listPrograms:
                     for iprog in listPrograms[::2]:
-                        if iprog == defApp:
+                        if iprog == r_defApp:
                             progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                            progActionList.insert(1, iprog)
+                            # progActionList.insert(1, iprog)
+                            progActionList.insert(1, defApp)
                         else:
                             progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                            progActionList.append(iprog)
+                            # progActionList.append(iprog)
+                            progActionList.append(defApp)
                         ii += 2
                     #
                     ii = 0
@@ -5847,9 +5901,20 @@ class openTrash(QBoxLayout):
             menu.exec_(self.ilist.mapToGlobal(position))
     
     # execute the application
-    def fprogAction(self, iprog, path):
+    # def fprogAction(self, iprog, path):
+    def fprogAction(self, defApp, path):
         try:
-            subprocess.Popen([iprog, path])
+            if "%f" in defApp:
+                r_defApp = defApp.replace("%f", path)
+            elif "%F" in defApp:
+                r_defApp = defApp.replace("%F", path)
+            elif "%u" in defApp:
+                r_defApp = defApp.replace("%u", "file://"+path)
+            elif "%U" in defApp:
+                r_defApp = defApp.replace("%U", "file://"+path)
+            r_comm = r_defApp.split(" ")
+            subprocess.Popen(r_comm)
+            # subprocess.Popen([iprog, path])
         except Exception as E:
             MyDialog("Error", str(E), self.window)
     
@@ -6217,7 +6282,17 @@ class cTView(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
-                    subprocess.Popen([defApp, path])
+                    if "%f" in defApp:
+                        r_defApp = defApp.replace("%f", path)
+                    elif "%F" in defApp:
+                        r_defApp = defApp.replace("%F", path)
+                    elif "%u" in defApp:
+                        r_defApp = defApp.replace("%u", "file://"+path)
+                    elif "%U" in defApp:
+                        r_defApp = defApp.replace("%U", "file://"+path)
+                    r_comm = r_defApp.split(" ")
+                    subprocess.Popen(r_comm)
+                    # subprocess.Popen([defApp, path])
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
             else:
@@ -6278,15 +6353,21 @@ class cTView(QBoxLayout):
                         listPrograms = getAppsByMime(os.path.join(self.lvDir, itemName)).appByMime()
                         ii = 0
                         defApp = getDefaultApp(os.path.join(self.lvDir, itemName)).defaultApplication()
+                        r_defApp = defApp
+                        if defApp:
+                            for eel in ["%f","%F","%u","%U"]:
+                                r_defApp = r_defApp.strip(eel).rstrip(" ")
                         progActionList = []
                         if listPrograms:
                             for iprog in listPrograms[::2]:
-                                if iprog == defApp:
+                                if iprog == r_defApp:
                                     progActionList.insert(0, QAction("{} - {} (Default)".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    progActionList.insert(1, iprog)
+                                    # progActionList.insert(1, iprog)
+                                    progActionList.insert(1, defApp)
                                 else:
                                     progActionList.append(QAction("{} - {}".format(os.path.basename(iprog), listPrograms[ii+1]), self))
-                                    progActionList.append(iprog)
+                                    # progActionList.append(iprog)
+                                    progActionList.append(defApp)
                                 ii += 2
                             ii = 0
                             for paction in progActionList[::2]:
@@ -6608,10 +6689,21 @@ class cTView(QBoxLayout):
                 MyDialog("Info", "The program\n"+ret+"\ncannot be found", self.window)
     
     # open the file
-    def fprogAction(self, iprog, path):
+    # def fprogAction(self, iprog, path):
+    def fprogAction(self, defApp, path):
         try:
-            # subprocess.Popen([iprog, path])
-            subprocess.Popen(iprog.split(" ") + [path])
+            if "%f" in defApp:
+                r_defApp = defApp.replace("%f", path)
+            elif "%F" in defApp:
+                r_defApp = defApp.replace("%F", path)
+            elif "%u" in defApp:
+                r_defApp = defApp.replace("%u", "file://"+path)
+            elif "%U" in defApp:
+                r_defApp = defApp.replace("%U", "file://"+path)
+            r_comm = r_defApp.split(" ")
+            subprocess.Popen(r_comm)
+            # # subprocess.Popen([iprog, path])
+            # subprocess.Popen(iprog.split(" ") + [path])
         except Exception as E:
             MyDialog("Error", str(E), self.window)
     
