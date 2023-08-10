@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.113
+# version 0.9.114
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4440,6 +4440,7 @@ class LView(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
+                    r_defApp = defApp
                     if "%f" in defApp:
                         r_defApp = defApp.replace("%f", path)
                     elif "%F" in defApp:
@@ -4448,6 +4449,8 @@ class LView(QBoxLayout):
                         r_defApp = defApp.replace("%u", "file://"+path)
                     elif "%U" in defApp:
                         r_defApp = defApp.replace("%U", "file://"+path)
+                    else:
+                        r_defApp = r_defApp+" "+path
                     r_comm = r_defApp.split(" ")
                     subprocess.Popen(r_comm)
                     # subprocess.Popen([defApp, path])
@@ -4839,6 +4842,7 @@ class LView(QBoxLayout):
     # def fprogAction(self, iprog, path):
     def fprogAction(self, defApp, path):
         try:
+            r_defApp = defApp
             if "%f" in defApp:
                 r_defApp = defApp.replace("%f", path)
             elif "%F" in defApp:
@@ -4847,6 +4851,8 @@ class LView(QBoxLayout):
                 r_defApp = defApp.replace("%u", "file://"+path)
             elif "%U" in defApp:
                 r_defApp = defApp.replace("%U", "file://"+path)
+            else:
+                r_defApp = r_defApp+" "+path
             r_comm = r_defApp.split(" ")
             subprocess.Popen(r_comm)
             # # subprocess.Popen([iprog, path])
@@ -5867,6 +5873,7 @@ class openTrash(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
+                    r_defApp = defApp
                     if "%f" in defApp:
                         r_defApp = defApp.replace("%f", path)
                     elif "%F" in defApp:
@@ -5875,6 +5882,8 @@ class openTrash(QBoxLayout):
                         r_defApp = defApp.replace("%u", "file://"+path)
                     elif "%U" in defApp:
                         r_defApp = defApp.replace("%U", "file://"+path)
+                    else:
+                        r_defApp = r_defApp+" "+path
                     r_comm = r_defApp.split(" ")
                     subprocess.Popen(r_comm)
                     # subprocess.Popen([defApp, path])
@@ -5907,7 +5916,7 @@ class openTrash(QBoxLayout):
                 #
                 ii = 0
                 defApp = getDefaultApp(os.path.join(Tpath, "files", itemName)).defaultApplication()
-                r_defApp = defApp
+                # r_defApp = defApp
                 # if defApp:
                     # for eel in ["%f","%F","%u","%U"]:
                         # r_defApp = r_defApp.strip(eel).rstrip(" ")
@@ -5939,6 +5948,7 @@ class openTrash(QBoxLayout):
     # def fprogAction(self, iprog, path):
     def fprogAction(self, defApp, path):
         try:
+            r_defApp = defApp
             if "%f" in defApp:
                 r_defApp = defApp.replace("%f", path)
             elif "%F" in defApp:
@@ -5947,6 +5957,8 @@ class openTrash(QBoxLayout):
                 r_defApp = defApp.replace("%u", "file://"+path)
             elif "%U" in defApp:
                 r_defApp = defApp.replace("%U", "file://"+path)
+            else:
+                r_defApp = r_defApp+" "+path
             r_comm = r_defApp.split(" ")
             subprocess.Popen(r_comm)
             # subprocess.Popen([iprog, path])
@@ -6320,6 +6332,7 @@ class cTView(QBoxLayout):
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
                 try:
+                    r_defApp = defApp
                     if "%f" in defApp:
                         r_defApp = defApp.replace("%f", path)
                     elif "%F" in defApp:
@@ -6328,6 +6341,8 @@ class cTView(QBoxLayout):
                         r_defApp = defApp.replace("%u", "file://"+path)
                     elif "%U" in defApp:
                         r_defApp = defApp.replace("%U", "file://"+path)
+                    else:
+                        r_defApp = r_defApp+" "+path
                     r_comm = r_defApp.split(" ")
                     subprocess.Popen(r_comm)
                     # subprocess.Popen([defApp, path])
@@ -6391,7 +6406,7 @@ class cTView(QBoxLayout):
                         listPrograms = getAppsByMime(os.path.join(self.lvDir, itemName)).appByMime()
                         ii = 0
                         defApp = getDefaultApp(os.path.join(self.lvDir, itemName)).defaultApplication()
-                        r_defApp = defApp
+                        # r_defApp = defApp
                         # if defApp:
                             # for eel in ["%f","%F","%u","%U"]:
                                 # r_defApp = r_defApp.strip(eel).rstrip(" ")
@@ -6729,6 +6744,7 @@ class cTView(QBoxLayout):
     # def fprogAction(self, iprog, path):
     def fprogAction(self, defApp, path):
         try:
+            r_defApp = defApp
             if "%f" in defApp:
                 r_defApp = defApp.replace("%f", path)
             elif "%F" in defApp:
@@ -6737,6 +6753,8 @@ class cTView(QBoxLayout):
                 r_defApp = defApp.replace("%u", "file://"+path)
             elif "%U" in defApp:
                 r_defApp = defApp.replace("%U", "file://"+path)
+            else:
+                r_defApp = r_defApp+" "+path
             r_comm = r_defApp.split(" ")
             subprocess.Popen(r_comm)
             # # subprocess.Popen([iprog, path])
