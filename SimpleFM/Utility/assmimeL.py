@@ -30,7 +30,7 @@ if USER_MIMEAPPSLIST:
 else:
     MIMEAPPSLIST = "mimeapps.list"
 
-# create the menu: name - categoty - exec - desktop file
+# create the menu: name - categoty - exec - desktop file with full path - list of mimetypes
 THE_MENU = pop_menu.getMenu().retList()
 
 ##########################
@@ -179,6 +179,17 @@ class MainWin(QDialog):
         self.extLabel2.setText(self.mimetype)
         self.fitem2(self.mimetype)
     
+    # # populate
+    # def fitem(self, item, col):
+        # ##### find the index of the item in the category
+        # p = item.parent()
+        # if p:
+            # # clear the plist
+            # self.plist.clear()
+            # self.extLabel2.setText(item.text(1))
+            # self.imime = p.text(0)+"/"+item.text(0)
+            # self.fitem2(self.imime)
+    
     # 3
     def fitem2(self, imime):
         # clear the plist
@@ -192,10 +203,19 @@ class MainWin(QDialog):
             defApp = "None"
         # desktop files found
         desktop_found = []
-        # name - category - exec - desktop file - mimetypes
+        # desktop files in HOME
+        apps_home_dir = os.listdir(os.path.expanduser('~')+"/.local/share"+"/applications")
+        # name - category - exec - desktop file with full path - mimetypes
         for el in THE_MENU:
+            desk_dir = os.path.dirname(el[3])
+            desk_name = os.path.basename(el[3])
             # search for the mimetype
             if imime in el[4]:
+                # skip desktop files overrided in HOME
+                if desk_dir != os.path.expanduser('~')+"/.local/share"+"/applications":
+                    if desk_name in apps_home_dir:
+                        continue
+                #
                 if os.path.basename(el[3]) in lAdded:
                     if os.path.basename(el[3]) == defApp:
                         # code - exec - desktop file
@@ -225,6 +245,9 @@ class MainWin(QDialog):
                 for elx in xdgDataDirs:
                     app_dir = os.path.join(elx, "applications")
                     for ellx in os.listdir(app_dir):
+                        # skip desktop files in HOME
+                        if ellx in apps_home_dir:
+                            continue
                         if el == ellx:
                             desktop_found.append(os.path.basename(ellx))
                             entry = DesktopEntry.DesktopEntry(os.path.join(app_dir, el))
