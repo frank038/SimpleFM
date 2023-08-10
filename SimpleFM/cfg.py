@@ -121,7 +121,5 @@ BORDER_COLOR_B = 0
 XDG_CACHE_LARGE = "sh_thumbnails/large/"
 # theme style: "" to use the default theme
 theme_style=""
-# icon theme: "" to use the default theme
-icon_theme=""
 # how to find the icon type: 1 by extention - 0 by content
 search_for_file_type = 1

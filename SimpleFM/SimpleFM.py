@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.111
+# version 0.9.112
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -959,7 +959,10 @@ class propertyDialog(QDialog):
     def fbtnOpenWith(self):
         if self.imime or not self.imime.isNull():
             from Utility import assmimeL as AL
-            self.AW = AL.MainWin(self.imime.name(), self)
+            if self.imime.name() in ["application/x-zerosize", "application/x-trash", "application/x-desktop"]:
+                self.AW = AL.MainWin("text/plain", self)
+            else:
+                self.AW = AL.MainWin(self.imime.name(), self)
             if self.AW.exec_() == QDialog.Accepted:
                 ret = self.AW.getValue()
                 if ret:
@@ -2785,9 +2788,9 @@ class itemDelegate(QItemDelegate):
 
 # used for main
 class IconProvider(QFileIconProvider):
-    # set the icon theme
-    if ICON_THEME:
-        QIcon.setThemeName(ICON_THEME)
+    # # set the icon theme
+    # if ICON_THEME:
+        # QIcon.setThemeName(ICON_THEME)
     
     def evaluate_pixbuf(self, ifull_path, imime):
         hmd5 = "Null"
@@ -4352,6 +4355,30 @@ class LView(QBoxLayout):
             # executable file
             if imime == "application/x-desktop":
                 # desktop file
+                _onlyShowIn = DesktopEntry(path).getOnlyShowIn()
+                _de = None
+                try:
+                    _de = os.environ['XDG_CURRENT_DESKTOP'].lower()
+                except KeyError:
+                    try:
+                        _de = os.environ['XDG_SESSION_DESKTOP'].lower()
+                    except KeyError:
+                        try:
+                            _de = os.environ['WINDOW_MANAGER'].lower()
+                        except:
+                            pass
+                #
+                _de_found = 2
+                if _onlyShowIn:
+                    _de_found = 0
+                    for eel in _onlyShowIn:
+                        if eel.lower() == _de:
+                            _de_found = 1
+                            break
+                if _de_found == 0:
+                    MyDialog("Info", "Cannot execute this file.", self.window)
+                    return
+                #
                 progExec = DesktopEntry(path).getExec()
                 progTryExec = DesktopEntry(path).getTryExec()
                 progPath = DesktopEntry(path).getPath()
@@ -4373,17 +4400,19 @@ class LView(QBoxLayout):
                         #
                         try:
                             if progPath:
-                                os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
-                            else:
-                                subprocess.run([TTERM, "-e", progExec])
+                                # os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
+                                os.system("cd {0}".format(progPath))
+                            # else
+                            subprocess.Popen([TTERM, "-e", progExec])
                         except Exception as E:
                             MyDialog("Error", str(E), self.window)
                     else:
                         try:
                             if progPath:
-                                os.system("cd {0} && {1}".format(progPath, progExec))
-                            else:
-                                subprocess.run([progExec])
+                                # os.system("cd {0} && {1}".format(progPath, progExec))
+                                os.system("cd {0}".format(progPath))
+                            # else:
+                                subprocess.Popen([progExec])
                         except Exception as E:
                             MyDialog("Error", str(E), self.window)
                 else:
@@ -5172,10 +5201,10 @@ class getAppsByMime():
     def appByMime(self):
         listPrograms = []
         imimetype = QMimeDatabase().mimeTypeForFile(self.path, QMimeDatabase.MatchDefault).name()
-        if imimetype != "application/x-zerosize":
-            mimetype = imimetype
-        else:
+        if imimetype in ["application/x-zerosize", "application/x-trash", "application/x-desktop"]:
             mimetype = "text/plain"
+        else:
+            mimetype = imimetype
         # the action for the mimetype also depends on the file mimeapps.list in the home folder 
         #lAdded,lRemoved,lDefault = self.addMime(mimetype)
         lAdded,lRemoved = self.addMime(mimetype)
@@ -5370,7 +5399,7 @@ class getDefaultApp():
         if ret:
             imime = QMimeDatabase().mimeTypeForFile(self.path, QMimeDatabase.MatchDefault).name()
             #
-            if imime in ["application/x-zerosize", "application/x-trash"]:
+            if imime in ["application/x-zerosize", "application/x-trash", "application/x-desktop"]:
                 mimetype = "text/plain"
             else:
                 mimetype = imime
@@ -5811,21 +5840,28 @@ class openTrash(QBoxLayout):
             perms = QFileInfo(path).permissions()
             # can be execute
             if perms & QFile.ExeOwner:
-                imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
-                if imime == "application/x-sharedlib":
-                    MyDialog("Info", "This is a binary file.", self.window)
-                    return
-                else:
-                    ret = execfileDialog(path, 3, self.window).getValue()
-                if ret == 2:
-                    try:
-                        subprocess.Popen(path, shell=True)
-                    except Exception as E:
-                        MyDialog("Error", str(E), self.window)
-                    finally:
-                        return
-                elif ret == -1:
-                    return
+                MyDialog("Info", "Cannot execute this file.", self.window)
+                return
+                # imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
+                # #
+                # if imime == "application/x-desktop":
+                    # MyDialog("Info", "Cannot execute this file.", self.window)
+                    # return
+                # #
+                # if imime == "application/x-sharedlib":
+                    # MyDialog("Info", "This is a binary file.", self.window)
+                    # return
+                # else:
+                    # ret = execfileDialog(path, 3, self.window).getValue()
+                # if ret == 2:
+                    # try:
+                        # subprocess.Popen(path, shell=True)
+                    # except Exception as E:
+                        # MyDialog("Error", str(E), self.window)
+                    # finally:
+                        # return
+                # elif ret == -1:
+                    # return
             #
             defApp = getDefaultApp(path).defaultApplication()
             if defApp != "None":
@@ -6262,6 +6298,9 @@ class cTView(QBoxLayout):
             perms = QFileInfo(path).permissions()
             if perms & QFile.ExeOwner:
                 imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
+                if imime == "application/x-desktop":
+                    MyDialog("Info", "Cannot execute this file.", self.window)
+                    return
                 if imime == "application/x-sharedlib":
                     ret = execfileDialog(path, 1, self.window).getValue()
                 else:
@@ -6927,8 +6966,8 @@ if __name__ == '__main__':
         appStyle = QStyleFactory.create(theme_style)
         app.setStyle(appStyle)
     # set the icon style globally
-    if icon_theme:
-        QIcon.setThemeName(icon_theme)
+    if ICON_THEME:
+        QIcon.setThemeName(ICON_THEME)
     #
     # if HIRED != "" and HIGREEN != "" and HIBLUE != "":
         # palette = QPalette()
