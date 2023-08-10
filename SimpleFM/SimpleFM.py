@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.114
+# version 0.9.115
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4323,7 +4323,7 @@ class LView(QBoxLayout):
         #
         # self.listview.viewport().update()
     
-    #
+    # double click
     def doubleClick(self, index):
         path = self.fileModel.fileInfo(index).absoluteFilePath()
         if not os.path.exists(path):
@@ -4355,70 +4355,72 @@ class LView(QBoxLayout):
             imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
             # executable file
             if imime == "application/x-desktop":
-                # desktop file
-                _onlyShowIn = DesktopEntry(path).getOnlyShowIn()
-                _de = None
-                try:
-                    _de = os.environ['XDG_CURRENT_DESKTOP'].lower()
-                except KeyError:
+                ret = execfileDialog(path, 0, self.window).getValue()
+                if ret == 2:
+                    # desktop file
+                    _onlyShowIn = DesktopEntry(path).getOnlyShowIn()
+                    _de = None
                     try:
-                        _de = os.environ['XDG_SESSION_DESKTOP'].lower()
+                        _de = os.environ['XDG_CURRENT_DESKTOP'].lower()
                     except KeyError:
                         try:
-                            _de = os.environ['WINDOW_MANAGER'].lower()
-                        except:
-                            pass
-                #
-                _de_found = 2
-                if _onlyShowIn:
-                    _de_found = 0
-                    for eel in _onlyShowIn:
-                        if eel.lower() == _de:
-                            _de_found = 1
-                            break
-                if _de_found == 0:
-                    MyDialog("Info", "Cannot execute this file.", self.window)
-                    return
-                #
-                progExec = DesktopEntry(path).getExec()
-                progTryExec = DesktopEntry(path).getTryExec()
-                progPath = DesktopEntry(path).getPath()
-                progTerm = DesktopEntry(path).getTerminal()
-                #
-                if shutil.which(progExec):
-                    if progTerm:
-                        TTERM = None
-                        if USER_TERMINAL:
-                            TTERM = USER_TERMINAL
-                        try:
-                            TTERM = os.environ["TERMINAL"]
+                            _de = os.environ['XDG_SESSION_DESKTOP'].lower()
                         except KeyError:
-                            pass
-                        #
-                        if not TTERM:
-                            MyDialog("Info", "No terminal found or setted.", self.window)
-                            return
-                        #
-                        try:
-                            if progPath:
-                                # os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
-                                os.system("cd {0}".format(progPath))
-                            # else
-                            subprocess.Popen([TTERM, "-e", progExec])
-                        except Exception as E:
-                            MyDialog("Error", str(E), self.window)
-                    else:
-                        try:
-                            if progPath:
-                                # os.system("cd {0} && {1}".format(progPath, progExec))
-                                os.system("cd {0}".format(progPath))
-                            # else:
+                            try:
+                                _de = os.environ['WINDOW_MANAGER'].lower()
+                            except:
+                                pass
+                    #
+                    _de_found = 2
+                    if _onlyShowIn:
+                        _de_found = 0
+                        for eel in _onlyShowIn:
+                            if eel.lower() == _de:
+                                _de_found = 1
+                                break
+                    if _de_found == 0:
+                        MyDialog("Info", "Cannot execute this file.", self.window)
+                        return
+                    #
+                    progExec = DesktopEntry(path).getExec()
+                    progTryExec = DesktopEntry(path).getTryExec()
+                    progPath = DesktopEntry(path).getPath()
+                    progTerm = DesktopEntry(path).getTerminal()
+                    #
+                    if shutil.which(progExec):
+                        if progTerm:
+                            TTERM = None
+                            if USER_TERMINAL:
+                                TTERM = USER_TERMINAL
+                            try:
+                                TTERM = os.environ["TERMINAL"]
+                            except KeyError:
+                                pass
+                            #
+                            if not TTERM:
+                                MyDialog("Info", "No terminal found or setted.", self.window)
+                                return
+                            #
+                            try:
+                                if progPath:
+                                    # os.system("cd {0} && {1} -e {2}".format(progPath, TTERM, progExec))
+                                    os.system("cd {0}".format(progPath))
+                                # else
+                                subprocess.Popen([TTERM, "-e", progExec])
+                            except Exception as E:
+                                MyDialog("Error", str(E), self.window)
+                        else:
+                            try:
+                                if progPath:
+                                    # os.system("cd {0} && {1}".format(progPath, progExec))
+                                    os.system("cd {0}".format(progPath))
+                                # else:
                                 subprocess.Popen([progExec])
-                        except Exception as E:
-                            MyDialog("Error", str(E), self.window)
-                else:
-                    MyDialog("Info", "{} not found.".format(progExec), self.window)
-                return
+                            except Exception as E:
+                                MyDialog("Error", str(E), self.window)
+                    else:
+                        MyDialog("Info", "{} not found.".format(progExec), self.window)
+                    return
             #
             if (perms & QFile.ExeOwner):
                 imime = QMimeDatabase().mimeTypeForFile(path, QMimeDatabase.MatchDefault).name()
