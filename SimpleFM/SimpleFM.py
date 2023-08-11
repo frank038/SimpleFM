@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.116
+# version 0.9.117
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -3830,7 +3830,34 @@ class FlowLayout(QLayout):
             x = nextX
             lineHeight = max(lineHeight, item.sizeHint().height())
         return y + lineHeight - rect.y()
-        
+
+# function for executing the command
+def _flaunch_prog(r_defApp, path, USE_TERM):
+    try:
+        for eel in r_defApp[:]:
+            if eel == "%f":
+                ridx = r_defApp.index(eel)
+                r_defApp[ridx] = path
+                break
+            elif eel == "%F":
+                ridx = r_defApp.index(eel)
+                r_defApp[ridx] = path
+                break
+            elif eel == "%u":
+                ridx = r_defApp.index(eel)
+                r_defApp[ridx] = "file://"+path
+                break
+            elif eel == "%U":
+                ridx = r_defApp.index(eel)
+                r_defApp[ridx] = "file://"+path
+                break
+        #
+        if USE_TERM:
+            subprocess.Popen([USER_TERMINAL, "-e"]+r_defApp)
+        else:
+            subprocess.Popen(r_defApp)
+    except Exception as E:
+        MyDialog("Error", str(E), self.window)        
 
 class LView(QBoxLayout):
     # dir/file to open - MainWin - flag: 1 new tab - 0 same tab
@@ -4446,30 +4473,41 @@ class LView(QBoxLayout):
                         # if USE_TERM:
                             # return
                         break
-                #
-                try:
-                    r_defApp = defApp
-                    if "%f" in defApp:
-                        r_defApp = defApp.replace("%f", path)
-                    elif "%F" in defApp:
-                        r_defApp = defApp.replace("%F", path)
-                    elif "%u" in defApp:
-                        r_defApp = defApp.replace("%u", "file://"+path)
-                    elif "%U" in defApp:
-                        r_defApp = defApp.replace("%U", "file://"+path)
-                    else:
-                        r_defApp = r_defApp+" "+path
-                    r_comm = r_defApp.split(" ")
-                    if USE_TERM:
-                        subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-                    else:
-                        subprocess.Popen(r_comm)
-                    # subprocess.Popen([defApp, path])
-                except Exception as E:
-                    MyDialog("Error", str(E), self.window)
+                # execute the command
+                r_defApp = defApp.split(" ")
+                # self._flaunch_prog(r_defApp, path, USE_TERM)
+                _flaunch_prog(r_defApp, path, USE_TERM)
             else:
                 MyDialog("Info", "No programs found.", self.window)
-     
+    
+    # # function for executing the command
+    # def _flaunch_prog(self, r_defApp, path, USE_TERM):
+        # try:
+            # for eel in r_defApp[:]:
+                # if eel == "%f":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%F":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%u":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+                # elif eel == "%U":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+            # #
+            # if USE_TERM:
+                # subprocess.Popen([USER_TERMINAL, "-e"]+r_defApp)
+            # else:
+                # subprocess.Popen(r_defApp)
+        # except Exception as E:
+            # MyDialog("Error", str(E), self.window)
+    
     #
     def lselectionChanged(self):
         self.selection = self.listview.selectionModel().selectedIndexes()
@@ -4870,49 +4908,10 @@ class LView(QBoxLayout):
     def fprogAction(self, iprog, path):
         defApp = iprog[0]
         USE_TERM = DesktopEntry(iprog[2]).getTerminal()
-        try:
-            r_defApp = defApp
-            if "%f" in defApp:
-                r_defApp = defApp.replace("%f", path)
-            elif "%F" in defApp:
-                r_defApp = defApp.replace("%F", path)
-            elif "%u" in defApp:
-                r_defApp = defApp.replace("%u", "file://"+path)
-            elif "%U" in defApp:
-                r_defApp = defApp.replace("%U", "file://"+path)
-            else:
-                r_defApp = r_defApp+" "+path
-            r_comm = r_defApp.split(" ")
-            if USE_TERM:
-                subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-            else:
-                subprocess.Popen(r_comm)
-            # # subprocess.Popen([iprog, path])
-            # subprocess.Popen(iprog.split(" ") + [path])
-        except Exception as E:
-            MyDialog("Error", str(E), self.window)
-    
-    # # launch the application choosen
-    # # def fprogAction(self, iprog, path):
-    # def fprogAction2(self, defApp, path):
-        # try:
-            # r_defApp = defApp
-            # if "%f" in defApp:
-                # r_defApp = defApp.replace("%f", path)
-            # elif "%F" in defApp:
-                # r_defApp = defApp.replace("%F", path)
-            # elif "%u" in defApp:
-                # r_defApp = defApp.replace("%u", "file://"+path)
-            # elif "%U" in defApp:
-                # r_defApp = defApp.replace("%U", "file://"+path)
-            # else:
-                # r_defApp = r_defApp+" "+path
-            # r_comm = r_defApp.split(" ")
-            # subprocess.Popen(r_comm)
-            # # # subprocess.Popen([iprog, path])
-            # # subprocess.Popen(iprog.split(" ") + [path])
-        # except Exception as E:
-            # MyDialog("Error", str(E), self.window)
+        # execute the command
+        r_defApp = defApp.split(" ")
+        # self._flaunch_prog(r_defApp, path, USE_TERM)
+        _flaunch_prog(r_defApp, path, USE_TERM)
     
     # a new tab opens
     def fnewtabAction(self, ldir, flag):
@@ -5972,26 +5971,39 @@ class openTrash(QBoxLayout):
                             # return
                         break
                 #
-                try:
-                    r_defApp = defApp
-                    if "%f" in defApp:
-                        r_defApp = defApp.replace("%f", path)
-                    elif "%F" in defApp:
-                        r_defApp = defApp.replace("%F", path)
-                    elif "%u" in defApp:
-                        r_defApp = defApp.replace("%u", "file://"+path)
-                    elif "%U" in defApp:
-                        r_defApp = defApp.replace("%U", "file://"+path)
-                    else:
-                        r_defApp = r_defApp+" "+path
-                    r_comm = r_defApp.split(" ")
-                    if USE_TERM:
-                        subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-                    else:
-                        subprocess.Popen(r_comm)
-                    # subprocess.Popen([defApp, path])
-                except Exception as E:
-                    MyDialog("Error", str(E), self.window)
+                # execute the command
+                r_defApp = defApp.split(" ")
+                # self._flaunch_prog(r_defApp, path, USE_TERM)
+                _flaunch_prog(r_defApp, path, USE_TERM)
+    
+    # # function for executing the command
+    # def _flaunch_prog(self, r_defApp, path, USE_TERM):
+        # try:
+            # for eel in r_defApp[:]:
+                # if eel == "%f":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%F":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%u":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+                # elif eel == "%U":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+            # #
+            # if USE_TERM:
+                # subprocess.Popen([USER_TERMINAL, "-e"]+r_defApp)
+            # else:
+                # subprocess.Popen(r_defApp)
+        # except Exception as E:
+            # MyDialog("Error", str(E), self.window)
+    
     
     # show a menu
     def onRightClick(self, position):
@@ -6064,48 +6076,10 @@ class openTrash(QBoxLayout):
     def fprogAction(self, iprog, path):
         defApp = iprog[0]
         USE_TERM = DesktopEntry(iprog[2]).getTerminal()
-        try:
-            r_defApp = defApp
-            if "%f" in defApp:
-                r_defApp = defApp.replace("%f", path)
-            elif "%F" in defApp:
-                r_defApp = defApp.replace("%F", path)
-            elif "%u" in defApp:
-                r_defApp = defApp.replace("%u", "file://"+path)
-            elif "%U" in defApp:
-                r_defApp = defApp.replace("%U", "file://"+path)
-            else:
-                r_defApp = r_defApp+" "+path
-            r_comm = r_defApp.split(" ")
-            if USE_TERM:
-                subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-            else:
-                subprocess.Popen(r_comm)
-            # # subprocess.Popen([iprog, path])
-            # subprocess.Popen(iprog.split(" ") + [path])
-        except Exception as E:
-            MyDialog("Error", str(E), self.window)
-    
-    # # execute the application
-    # # def fprogAction(self, iprog, path):
-    # def fprogAction2(self, defApp, path):
-        # try:
-            # r_defApp = defApp
-            # if "%f" in defApp:
-                # r_defApp = defApp.replace("%f", path)
-            # elif "%F" in defApp:
-                # r_defApp = defApp.replace("%F", path)
-            # elif "%u" in defApp:
-                # r_defApp = defApp.replace("%u", "file://"+path)
-            # elif "%U" in defApp:
-                # r_defApp = defApp.replace("%U", "file://"+path)
-            # else:
-                # r_defApp = r_defApp+" "+path
-            # r_comm = r_defApp.split(" ")
-            # subprocess.Popen(r_comm)
-            # # subprocess.Popen([iprog, path])
-        # except Exception as E:
-            # MyDialog("Error", str(E), self.window)
+        # execute the command
+        r_defApp = defApp.split(" ")
+        # self._flaunch_prog(r_defApp, path, USE_TERM)
+        _flaunch_prog(r_defApp, path, USE_TERM)
     
     # show a menu with all the installed applications
     def fotherAction(self, itemPath):
@@ -6488,29 +6462,42 @@ class cTView(QBoxLayout):
                             # return
                         break
                 #
-                try:
-                    r_defApp = defApp
-                    if "%f" in defApp:
-                        r_defApp = defApp.replace("%f", path)
-                    elif "%F" in defApp:
-                        r_defApp = defApp.replace("%F", path)
-                    elif "%u" in defApp:
-                        r_defApp = defApp.replace("%u", "file://"+path)
-                    elif "%U" in defApp:
-                        r_defApp = defApp.replace("%U", "file://"+path)
-                    else:
-                        r_defApp = r_defApp+" "+path
-                    r_comm = r_defApp.split(" ")
-                    if USE_TERM:
-                        subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-                    else:
-                        subprocess.Popen(r_comm)
-                    # subprocess.Popen([defApp, path])
-                except Exception as E:
-                    MyDialog("Error", str(E), self.window)
+                # execute the command
+                r_defApp = defApp.split(" ")
+                # self._flaunch_prog(r_defApp, path, USE_TERM)
+                _flaunch_prog(r_defApp, path, USE_TERM)
             else:
                 MyDialog("Info", "No programs found.", self.window)
-
+    
+    # # function for executing the command
+    # def _flaunch_prog(self, r_defApp, path, USE_TERM):
+        # try:
+            # for eel in r_defApp[:]:
+                # if eel == "%f":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%F":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = path
+                    # break
+                # elif eel == "%u":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+                # elif eel == "%U":
+                    # ridx = r_defApp.index(eel)
+                    # r_defApp[ridx] = "file://"+path
+                    # break
+            # #
+            # if USE_TERM:
+                # subprocess.Popen([USER_TERMINAL, "-e"]+r_defApp)
+            # else:
+                # subprocess.Popen(r_defApp)
+        # except Exception as E:
+            # MyDialog("Error", str(E), self.window)
+    
+    
     #  send to trash or delete the selected items - function
     def itemsToTrash(self):
         if self.selection:
@@ -6843,8 +6830,17 @@ class cTView(QBoxLayout):
             menu.addAction(hiddenAction)
             #
             menu.exec_(self.tview.mapToGlobal(position))
-
-
+    
+        
+    # launch the application choosen
+    def fprogAction(self, iprog, path):
+        defApp = iprog[0]
+        USE_TERM = DesktopEntry(iprog[2]).getTerminal()
+        # execute the command
+        r_defApp = defApp.split(" ")
+        # self._flaunch_prog(r_defApp, path, USE_TERM)
+        _flaunch_prog(r_defApp, path, USE_TERM)
+    
     def fnewFolderAction(self):
         if os.access(self.lvDir, os.W_OK): 
             ret = self.wrename3("New Folder", self.lvDir)
@@ -6913,54 +6909,7 @@ class cTView(QBoxLayout):
                     MyDialog("Error", str(E), self.window)
             else:
                 MyDialog("Info", "The program\n"+ret+"\ncannot be found", self.window)
-    
-    # launch the application choosen
-    def fprogAction(self, iprog, path):
-        defApp = iprog[0]
-        USE_TERM = DesktopEntry(iprog[2]).getTerminal()
-        try:
-            r_defApp = defApp
-            if "%f" in defApp:
-                r_defApp = defApp.replace("%f", path)
-            elif "%F" in defApp:
-                r_defApp = defApp.replace("%F", path)
-            elif "%u" in defApp:
-                r_defApp = defApp.replace("%u", "file://"+path)
-            elif "%U" in defApp:
-                r_defApp = defApp.replace("%U", "file://"+path)
-            else:
-                r_defApp = r_defApp+" "+path
-            r_comm = r_defApp.split(" ")
-            if USE_TERM:
-                subprocess.Popen([USER_TERMINAL, "-e"]+r_comm)
-            else:
-                subprocess.Popen(r_comm)
-            # # subprocess.Popen([iprog, path])
-            # subprocess.Popen(iprog.split(" ") + [path])
-        except Exception as E:
-            MyDialog("Error", str(E), self.window)
-    
-    # # def fprogAction(self, iprog, path):
-    # def fprogAction2(self, defApp, path):
-        # try:
-            # r_defApp = defApp
-            # if "%f" in defApp:
-                # r_defApp = defApp.replace("%f", path)
-            # elif "%F" in defApp:
-                # r_defApp = defApp.replace("%F", path)
-            # elif "%u" in defApp:
-                # r_defApp = defApp.replace("%u", "file://"+path)
-            # elif "%U" in defApp:
-                # r_defApp = defApp.replace("%U", "file://"+path)
-            # else:
-                # r_defApp = r_defApp+" "+path
-            # r_comm = r_defApp.split(" ")
-            # subprocess.Popen(r_comm)
-            # # # subprocess.Popen([iprog, path])
-            # # subprocess.Popen(iprog.split(" ") + [path])
-        # except Exception as E:
-            # MyDialog("Error", str(E), self.window)
-    
+
     #
     def fcopycutAction(self, action):
         if action == "copy":
