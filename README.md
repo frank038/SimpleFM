@@ -16,7 +16,7 @@ Optionals:
 - pkexec (alternatively a su/sudo method can be used)
 - udisk2 and python3-dbus.mainloop.pyqt5 (for mass storage devices)
 - pdftocairo - ffmpegthumbnailer (for thumbnailers)
-- 7z (for custom actions - recommended)
+- 7z (for custom actions)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
 - archivemount (and 7z for mounting archive files - custom action)
 - coreurils at least 8.31 to get the right creation date and time of items.
