@@ -16,7 +16,8 @@ Optionals:
 - 7z (for custom actions - recommended)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
 - archivemount (and 7z for mounting archive files - custom action)
-- coreurils at least 8.31 to get the right creation date and time of items.
+- coreurils at least 8.31 to get the right creation date and time of items
+- xterm, or other terminals that can execute commands in the same way (argument -e).
 
 Features:
 - thumbnailers
