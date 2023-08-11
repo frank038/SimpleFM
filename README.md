@@ -10,7 +10,7 @@ Requirements:
 - python3-psutil
 
 Recommended:
-- xterm, or any other terminals that can execute commands in the same way (xterm -e COMMAND). To be setted in the config file.
+- xterm, or any other terminal that can execute commands in the same way (xterm -e COMMAND). To be setted in the config file.
 
 Optionals:
 - pkexec (alternatively a su/sudo method can be used)
