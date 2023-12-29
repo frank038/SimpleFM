@@ -85,7 +85,7 @@ class ModuleCustom():
                 dest_dir = os.path.join(base_dest_dir, mount_name)
                 os.mkdir(dest_dir)
                 #
-                ret = os.system("archivemount '{}' '{}' -o readonly". format(path, dest_dir))
+                ret = os.system("archivemount '{}' '{}' -o readonly,umask=6". format(path, dest_dir))
                 if ret == 0:
                     # add a button
                     self.win = mainLView.window
