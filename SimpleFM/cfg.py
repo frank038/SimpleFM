@@ -75,7 +75,7 @@ MEDIA_SKIP=[]
 # in the form _yy.mm.dd_hh.mm.ss
 USE_DATE = 1
 # use background colour in the listview widgets: 0 no - 1 yes
-USE_BACKGROUND_COLOUR = 1
+USE_BACKGROUND_COLOUR = 0
 # list of opened folders - widget type: 0 flow widget - 1 scroll widget
 FLOW_WIDGET = 0
 # listview background color: red, green, blue
@@ -92,8 +92,6 @@ TCOLOR = 0
 TRED = 0
 TGREEN = 0
 TBLUE = 0
-# icon theme name - if the qt5ct program overrides this use ""
-ICON_THEME = ""
 # creation data and time of the item in the property dialog: 0 use os.stat - 1 use functions from bash (should be precise)
 DATE_TIME = 1
 # use additional data in each item: 0 no - 1 yes 
@@ -121,5 +119,7 @@ BORDER_COLOR_B = 0
 XDG_CACHE_LARGE = "sh_thumbnails/large/"
 # theme style: "" to use the default theme
 theme_style=""
+# icon theme: "" to use the default theme - the qt5ct program can override this
+icon_theme=""
 # how to find the icon type: 1 by extention - 0 by content
 search_for_file_type = 1

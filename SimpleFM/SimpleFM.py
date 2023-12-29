@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.117
+# version 0.9.118
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -5369,18 +5369,15 @@ class getAppsByMime():
                     # skip the existent applications
                     if retw in listPrograms:
                         continue
-                    # listPrograms.append(retw)
-                    temp_list.append(retw)
+                    #
+                    temp_list.append(mimeProg2)
                     try:
                         progName = DesktopEntry(desktopPath).getName()
                         if progName != "":
-                            # listPrograms.append(progName)
                             temp_list.append(progName)
                         else:
-                            # listPrograms.append("None")
                             temp_list.append("None")
                     except:
-                         # listPrograms.append("None")
                          temp_list.append("None")
                     #
                     temp_list.append(desktopPath)
@@ -7133,8 +7130,8 @@ if __name__ == '__main__':
         appStyle = QStyleFactory.create(theme_style)
         app.setStyle(appStyle)
     # set the icon style globally
-    if ICON_THEME:
-        QIcon.setThemeName(ICON_THEME)
+    if icon_theme:
+        QIcon.setThemeName(icon_theme)
     #
     # if HIRED != "" and HIGREEN != "" and HIBLUE != "":
         # palette = QPalette()
