@@ -19,7 +19,7 @@ def mmodule_name():
 # action type
 def mmodule_type(mainLView):
     if mainLView.selection:
-        if len(mainLView.selection) > 1:
+        if len(mainLView.selection) > 1 and shutil.which("bulky"):
             return 2
         else:
             return 0
@@ -39,8 +39,8 @@ class ModuleCustom():
             path_list += pathlib.Path(path).as_uri()
         #
         try:
-            subprocess.check_output("bulky {}".format(path_list), shell=True)
-            #os.system("bulky {}".format(path_list))
+            #subprocess.check_output("bulky {}".format(path_list), shell=True)
+            os.system("bulky {}".format(path_list))
         except Exception as E:
             MyDialog("ERROR", str(E))
 
