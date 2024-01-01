@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.118
+# version 0.9.119
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1590,7 +1590,7 @@ class copyThread2(QThread):
             if self.isInterruptionRequested():
                 self.sig.emit(["Cancelled", 1, 1, items_skipped])
                 return
-            time.sleep(0.1)
+            time.sleep(0.01)
             #
             # one signal for each element in the list
             self.sig.emit(["mSending", os.path.basename(dfile)])
@@ -2321,7 +2321,16 @@ class MyQlist(QListView):
 
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
-            event.accept()
+            pointedItem = self.indexAt(event.pos())
+            if not pointedItem.isValid():
+                event.ignore()
+                return
+            ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+            ifp_url = QUrl.fromLocalFile(ifp)
+            if ifp_url in event.mimeData().urls():
+                event.accept()
+            else:
+                event.ignore()
         else:
             event.ignore()
 
@@ -2359,6 +2368,7 @@ class MyQlist(QListView):
                 ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
                 #
                 if pointedItem.isValid():
+                    #
                     if os.path.isdir(ifp):
                         for uurl in event.mimeData().urls():
                             if uurl.toLocalFile() == ifp:
@@ -2471,6 +2481,7 @@ class MyQlist(QListView):
                     # MyDialog("Error", str(E), None)
             # return
         ######################
+        self.user_action = 0
         dest_path = self.model().rootPath()
         curr_dir = QFileInfo(dest_path)
         if not curr_dir.isWritable():
