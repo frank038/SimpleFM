@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.119
+# version 0.9.120
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2145,6 +2145,7 @@ class MyQlist(QListView):
         self.verticalScrollBar().setSingleStep(25)
         self.customMimeType = "application/x-customqt5archiver"
         self.user_action = 0
+        self.selected_item = None
         #
         #
         # ###########
@@ -2180,6 +2181,7 @@ class MyQlist(QListView):
             # # print("k")
         # if (e.modifiers() & Qt.ShiftModifier):
             # print("shift")
+    
     
     def startDrag(self, supportedActions):
         item_list = []
@@ -2317,22 +2319,40 @@ class MyQlist(QListView):
         data.setUrls(item_list)
         drag.setMimeData(data)
         drag.setHotSpot(pixmap.rect().topLeft())
-        drag.exec_(Qt.CopyAction|Qt.MoveAction|Qt.LinkAction, Qt.CopyAction)
+        if self.selected_item in item_list:
+            drag.exec_(Qt.CopyAction|Qt.MoveAction|Qt.LinkAction, Qt.CopyAction)
 
+    
+    def mousePressEvent(self, event):
+        self.selected_item = None
+        if event.button() == Qt.LeftButton or event.button() == Qt.RightButton:
+            pointedItem = self.indexAt(event.pos())
+            if pointedItem.isValid():
+                ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+                ifp_url = QUrl.fromLocalFile(ifp)
+                self.selected_item = ifp_url
+            #
+            super(QListView,self).mousePressEvent(event)
+        elif event.button() == Qt.RightButton:
+            super(QListView,self).mousePressEvent(event)
+    
+    
     def dragEnterEvent(self, event):
         if event.mimeData().hasUrls:
-            pointedItem = self.indexAt(event.pos())
-            if not pointedItem.isValid():
-                event.ignore()
-                return
-            ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-            ifp_url = QUrl.fromLocalFile(ifp)
-            if ifp_url in event.mimeData().urls():
-                event.accept()
-            else:
-                event.ignore()
+            event.accept()
+            # pointedItem = self.indexAt(event.pos())
+            # if not pointedItem.isValid():
+                # event.ignore()
+                # return
+            # ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
+            # ifp_url = QUrl.fromLocalFile(ifp)
+            # if ifp_url in event.mimeData().urls():
+                # event.accept()
+            # else:
+                # event.ignore()
         else:
             event.ignore()
+
 
     def dragMoveEvent(self, event):
         if event.mimeData().hasFormat(self.customMimeType):
