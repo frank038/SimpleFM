@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.120
+# version 0.9.121
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1567,6 +1567,10 @@ class copyThread2(QThread):
     # self.atype: 1 skip - 2 overwrite - 4 automatic suffix - 5 backup the existent items
     def item_op(self):
         items_skipped = ""
+        # limit the number of items to be reported if something goes wrong - 30
+        not_to_skip = 0
+        num_not_to_skip = 30
+        not_to_skip_msg = "(+ others)"
         # action: copy 1 - cut 2
         action = self.action
         newList = self.newList
@@ -1588,6 +1592,8 @@ class copyThread2(QThread):
         for dfile in newList:
             # the user can interrupt the operation for the next items
             if self.isInterruptionRequested():
+                if not_to_skip > 30:
+                    items_skipped += "\n{}".format(not_to_skip_msg)
                 self.sig.emit(["Cancelled", 1, 1, items_skipped])
                 return
             time.sleep(0.01)
@@ -1629,7 +1635,9 @@ class copyThread2(QThread):
                             elif action == 2:
                                 shutil.move(dfile, tdest)
                         except Exception as E:
-                            items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
+                            not_to_skip += 1
+                            if not_to_skip < num_not_to_skip:
+                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                             # reset
                             self.reqNewNm = ""
                     #
@@ -1668,7 +1676,9 @@ class copyThread2(QThread):
                             try:
                                 os.makedirs(newDestDir)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
                                 continue
                             # copy or move
                             try:
@@ -1684,12 +1694,16 @@ class copyThread2(QThread):
                                         for ff in ffile:
                                             shutil.move(os.path.join(sdir, ff), newDestDir)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
                                 continue
                             try:
                                 shutil.rmtree(dfile)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(newDestDir, str(E))
                                 continue
                         # 5 backup - rename the item at destination and copy
                         elif self.atypeDir == 5:
@@ -1702,7 +1716,9 @@ class copyThread2(QThread):
                                     ret = self.faddSuffix(tdest)
                                 os.rename(tdest, os.path.join(os.path.dirname(tdest),ret))
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
                             # copy or move
                             try:
@@ -1711,7 +1727,9 @@ class copyThread2(QThread):
                                 elif action == 2:
                                     shutil.move(dfile, tdest)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                                 continue
                         #
                         # 2 merge - broken link or not folder
@@ -1722,7 +1740,9 @@ class copyThread2(QThread):
                                 elif not os.path.isdir(tdest):
                                     os.remove(tdest)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                                 continue
                             #
                             todest = tdest
@@ -1784,7 +1804,9 @@ class copyThread2(QThread):
                                                 elif action == 2:
                                                     shutil.move(source_item, dest_item)
                                             except Exception as E:
-                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                                not_to_skip += 1
+                                                if not_to_skip < num_not_to_skip:
+                                                    items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
                                         # 4 automatic
                                         elif dirfile_dcode == 4:
                                             try:
@@ -1799,7 +1821,9 @@ class copyThread2(QThread):
                                                 elif action == 2:
                                                     shutil.move(source_item, iNewName)
                                             except Exception as E:
-                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                                not_to_skip += 1
+                                                if not_to_skip < num_not_to_skip:
+                                                    items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
                                         # 5 backup the existent file
                                         elif dirfile_dcode == 5:
                                             try:
@@ -1814,7 +1838,9 @@ class copyThread2(QThread):
                                                 elif action == 2:
                                                     shutil.move(source_item, dest_item)
                                             except Exception as E:
-                                                items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
+                                                not_to_skip += 1
+                                                if not_to_skip < num_not_to_skip:
+                                                    items_skipped += "{}:\n{}\n------------\n".format(source_item_skipped, str(E))
                                     # doesnt exist at destination
                                     else:
                                         try:
@@ -1823,7 +1849,9 @@ class copyThread2(QThread):
                                             elif action == 2:
                                                 shutil.move(os.path.join(sdir,item_file), dest_item)
                                         except Exception as E:
-                                            items_skipped += "{}:\n{}\n------------\n".format(os.path.join(sdir,item_file), str(E))
+                                            not_to_skip += 1
+                                            if not_to_skip < num_not_to_skip:
+                                                items_skipped += "{}:\n{}\n------------\n".format(os.path.join(sdir,item_file), str(E))
                         #
                         #############
                 # origin and destination are the exactly same directory
@@ -1838,7 +1866,9 @@ class copyThread2(QThread):
                             shutil.copytree(dfile, ret, symlinks=True, ignore=None, copy_function=shutil.copy2, ignore_dangling_symlinks=False)
                             # items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(os.path.basename(tdest), os.path.basename(ret))
                         except Exception as E:
-                            items_skipped += "{}:\n{}\n------------\n".format(os.path.basename(dfile), str(E))
+                            not_to_skip += 1
+                            if not_to_skip < num_not_to_skip:
+                                items_skipped += "{}:\n{}\n------------\n".format(os.path.basename(dfile), str(E))
                     # elif action == 2:
                         # pass
             # item is file or link/broken link or else
@@ -1875,7 +1905,9 @@ class copyThread2(QThread):
                                 elif action == 2:
                                     shutil.move(dfile, tdest)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                         # 4 automatic
                         elif self.atype == 4:
                             try:
@@ -1890,7 +1922,9 @@ class copyThread2(QThread):
                                 elif action == 2:
                                     shutil.move(dfile, ret)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                         # 5 backup the existent files
                         elif self.atype == 5:
                             try:
@@ -1905,7 +1939,9 @@ class copyThread2(QThread):
                                 elif action == 2:
                                     shutil.move(dfile, tdest)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                     # it doesnt exist at destination
                     else:
                         # if broken link rename
@@ -1919,7 +1955,9 @@ class copyThread2(QThread):
                                 shutil.move(tdest, ret)
                                 items_skipped += "{}:\nRenamed (broken link)\n------------\n".format(tdest)
                             except Exception as E:
-                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                                not_to_skip += 1
+                                if not_to_skip < num_not_to_skip:
+                                    items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                         #
                         try:
                             if action == 1:
@@ -1927,7 +1965,9 @@ class copyThread2(QThread):
                             elif action == 2:
                                 shutil.move(dfile, tdest)
                         except Exception as E:
-                            items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
+                            not_to_skip += 1
+                            if not_to_skip < num_not_to_skip:
+                                items_skipped += "{}:\n{}\n------------\n".format(dfile, str(E))
                 # if it is the exactly same item
                 else:
                     if action == 1:
@@ -1940,11 +1980,15 @@ class copyThread2(QThread):
                             shutil.copy2(dfile, ret, follow_symlinks=False)
                             # items_skipped += "{}:\nCopied and Renamed:\n{}\n------------\n".format(tdest, ret)
                         except Exception as E:
-                            items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
+                            not_to_skip += 1
+                            if not_to_skip < num_not_to_skip:
+                                items_skipped += "{}:\n{}\n------------\n".format(tdest, str(E))
                     elif action == 2:
                         items_skipped += "{}:\n{}\n------------\n".format(dfile, "Exactly the same item.")
         #
         # DONE
+        if not_to_skip > 30:
+            items_skipped += "\n{}".format(not_to_skip_msg)
         self.sig.emit(["mDone", 1, 1, items_skipped])
 
 
