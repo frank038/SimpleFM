@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.121
+# version 0.9.123
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1310,7 +1310,7 @@ class propertyDialog(QDialog):
 
 # property dialog for more than one item
 class propertyDialogMulti(QDialog):
-    def __init__(self, itemSize, itemNum, parent):
+    def __init__(self, item_list, total_size, parent):
         super(propertyDialogMulti, self).__init__(parent)
         #
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
@@ -1318,19 +1318,318 @@ class propertyDialogMulti(QDialog):
         self.setWindowModality(Qt.ApplicationModal)
         self.resize(dialWidth, 100)
         #
+        self.item_list = item_list
+        self.window = parent
+        #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         self.setLayout(vbox)
         #
-        label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i> {}".format(itemNum))
-        vbox.addWidget(label1)
-        label2 = QLabel("<i>Total size of the items&nbsp;&nbsp;&nbsp;</i> {}".format(itemSize))
-        vbox.addWidget(label2)
+        self.gtab = QTabWidget()
+        self.gtab.setContentsMargins(5,5,5,5)
+        self.gtab.setMovable(False)
+        self.gtab.setElideMode(Qt.ElideRight)
+        self.gtab.setTabsClosable(False)
+        vbox.addWidget(self.gtab)
         #
-        button1 = QPushButton("Close")
-        vbox.addWidget(button1)
-        button1.clicked.connect(self.close)
+        page1 = QWidget()
+        self.gtab.addTab(page1, "General")
+        self.grid1 = QGridLayout()
+        page1.setLayout(self.grid1)
+        #
+        ####### tab 1
+        # label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i> {}".format(itemNum))
+        # vbox.addWidget(label1)
+        label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i>")
+        self.grid1.addWidget(label1, 0, 0, 1, 1, Qt.AlignRight)
+        label1a = QLabel(str(len(self.item_list)))
+        self.grid1.addWidget(label1a, 0, 1, 1, 4, Qt.AlignLeft)
+        #
+        # label2 = QLabel("<i>Total size of the items&nbsp;&nbsp;&nbsp;</i> {}".format(itemSize))
+        # vbox.addWidget(label2)
+        label2 = QLabel("<i>Total size&nbsp;&nbsp;&nbsp;</i>")
+        self.grid1.addWidget(label2, 1, 0, 1, 1, Qt.AlignRight)
+        label2a = QLabel(str(total_size))
+        self.grid1.addWidget(label2a, 1, 1, 1, 4, Qt.AlignLeft)
+        #
+        ##### tab 2
+        page2 = QWidget()
+        self.gtab.addTab(page2, "Permissions")
+        vboxp2 = QBoxLayout(QBoxLayout.TopToBottom)
+        page2.setLayout(vboxp2)
+        ##
+        gBox1 = QGroupBox("Ownership")
+        vboxp2.addWidget(gBox1)
+        self.grid2 = QGridLayout()
+        gBox1.setLayout(self.grid2)
+        ##
+        labelgb11 = QLabel("<i>Owner</i>")
+        self.grid2.addWidget(labelgb11, 0, 0, 1, 1, Qt.AlignRight)
+        self.labelgb12 = QLabel("Change to: "+os.path.basename(os.getenv("HOME")))
+        self.grid2.addWidget(self.labelgb12, 0, 1, 1, 5, Qt.AlignLeft)
+        ##
+        labelgb21 = QLabel("<i>Group</i>")
+        self.grid2.addWidget(labelgb21, 1, 0, 1, 1, Qt.AlignRight)
+        self.labelgb22 = QLabel("Change to: "+os.path.basename(os.getenv("HOME")))
+        self.grid2.addWidget(self.labelgb22, 1, 1, 1, 5, Qt.AlignLeft)
+        ## change owner button
+        self.own_btn = QPushButton("Change")
+        self.own_btn.setCheckable(True)
+        # if self.CAN_CHANGE_OWNER:
+            # self.own_btn.clicked.connect(lambda:self.on_change_owner(me = os.path.basename(os.getenv("HOME"))))
+        self.grid2.addWidget(self.own_btn, 0, 6, 1, 1, Qt.AlignLeft)
+        ## change group button
+        self.grp_btn = QPushButton("Change")
+        self.grp_btn.setCheckable(True)
+        # if self.CAN_CHANGE_OWNER:
+            # self.grp_btn.clicked.connect(lambda:self.on_change_grp(me = os.path.basename(os.getenv("HOME"))))
+        self.grid2.addWidget(self.grp_btn, 1, 6, 1, 1, Qt.AlignLeft)
+        #
+        ## apply the modifications 1
+        button1 = QPushButton("Apply")
+        # vbox.addWidget(button1)
+        self.grid2.addWidget(button1, 2, 0, 1, 8, Qt.AlignCenter)
+        button1.clicked.connect(self._apply1)
+        ##
+        gBox2 = QGroupBox("Permissions")
+        vboxp2.addWidget(gBox2)
+        self.grid3 = QGridLayout()
+        gBox2.setLayout(self.grid3)
+        # if storageInfoIsReadOnly:
+            # gBox2.setEnabled(False)
+        ##
+        labelOwnerPerm = QLabel("<i>Owner</i>")
+        self.grid3.addWidget(labelOwnerPerm, 0, 0, 1, 1, Qt.AlignRight)
+        self.combo1 = QComboBox()
+        # self.combo1.addItems(["Read and Write", "Read", "Forbidden"])
+        self.combo1.addItems(["Read and Write", "Read"])
+        self.combo1.setCurrentIndex(0)
+        self.grid3.addWidget(self.combo1, 0, 1, 1, 5, Qt.AlignLeft)
+        self.btna1 = QPushButton("Apply")
+        self.btna1.clicked.connect(lambda:self._apply2(1))
+        self.grid3.addWidget(self.btna1, 0, 1, 1, 6, Qt.AlignRight)
+        ##
+        labelGroupPerm = QLabel("<i>Group</i>")
+        self.grid3.addWidget(labelGroupPerm, 1, 0, 1, 1, Qt.AlignRight)
+        self.combo2 = QComboBox()
+        self.combo2.addItems(["Read and Write", "Read", "Forbidden"])
+        self.combo2.setCurrentIndex(0)
+        self.grid3.addWidget(self.combo2, 1, 1, 1, 5, Qt.AlignLeft)
+        # self.btna2 = QPushButton("Apply")
+        # self.btna2.clicked.connect(lambda:self._apply2(2))
+        # self.grid3.addWidget(self.btna2, 1, 1, 1, 6, Qt.AlignRight)
+        ##
+        labelOtherPerm = QLabel("<i>Others</i>")
+        self.grid3.addWidget(labelOtherPerm, 2, 0, 1, 1, Qt.AlignRight)
+        self.combo3 = QComboBox()
+        self.combo3.addItems(["Read and Write", "Read", "Forbidden"])
+        self.combo3.setCurrentIndex(0)
+        self.grid3.addWidget(self.combo3, 2, 1, 1, 5, Qt.AlignLeft)
+        # self.btna3 = QPushButton("Apply")
+        # self.btna3.clicked.connect(lambda:self._apply2(3))
+        # self.grid3.addWidget(self.btna3, 2, 1, 1, 6, Qt.AlignRight)
+        #
+        # self.combo1.activated.connect(self.fcombo1)
+        # self.combo2.activated.connect(self.fcombo2)
+        # self.combo3.activated.connect(self.fcombo3)
+        #
+        #
+        ## folder access - file executable
+        self.cb1 = QCheckBox()
+        self.cb1.setText("Toggle executable")
+        ## set the initial state
+        # fileInfo = QFileInfo(self.itemPath)
+        # perms = fileInfo.permissions()
+        # folder access - file execution
+        # if perms & QFile.ExeOwner:
+            # self.cb1.setChecked(True)
+        #
+        # self.cb1.stateChanged.connect(self.fcb1)
+        self.grid3.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
+        ## immutable file button
+        self.ibtn = QPushButton("Toggle immutable")
+        self.ibtn.setCheckable(True)
+        # self.ibtn.clicked.connect(self.ibtn_pkexec)
+        self.grid3.addWidget(self.ibtn, 4, 6, 1, 1, Qt.AlignLeft)
+        # if not self.CAN_CHANGE_OWNER:
+            # self.ibtn.setEnabled(False)
+        ## apply the modifications 2
+        button2 = QPushButton("Apply")
+        # vbox.addWidget(button1)
+        self.grid3.addWidget(button2, 5, 0, 1, 1, Qt.AlignCenter)
+        button2.clicked.connect(lambda:self._apply2(4))
+        ##
+        button3 = QPushButton("Apply")
+        # vbox.addWidget(button1)
+        self.grid3.addWidget(button3, 5, 6, 1, 1, Qt.AlignCenter)
+        button3.clicked.connect(lambda:self._apply2(5))
+        ###
+        button1 = QPushButton("OK")
+        button1.clicked.connect(self.faccept)
+        #
+        hbox = QBoxLayout(QBoxLayout.LeftToRight)
+        vbox.addLayout(hbox)
+        hbox.addWidget(button1)
         #
         self.exec_()
+    
+    # implementare dialogo di conferma: per tutti gli elementi selezionati
+    def _apply1(self):
+        _set_own = 0
+        _set_grp = 0
+        if self.own_btn.isChecked():
+            _set_own = 1
+        if self.grp_btn.isChecked():
+            _set_grp = 1
+        #
+        ret = 0
+        if _set_own == 1 or _set_grp == 1:
+            _ret = retDialogBox2("Apply the changes?\n", self)
+            ret = _ret.getValue()
+        #
+        if ret:
+            _list = ""
+            for item in self.item_list:
+                if _list:
+                    _list += " "
+                _list += item
+            try:
+                if PKEXEC_PROG == 1:
+                    if not shutil.which("pkexec"):
+                        MyDialog("Error", "pkexec not found",None)
+                        return
+                    comm = 'pkexec sh -c "chown linux {}"'.format(_list)
+                    os.system(comm)
+                # elif PKEXEC_PROG == 2:
+                    # # subprocess.run([PKEXEC, "3", self.itemPath])
+                    # passWord(self.itemPath, 3, None)
+            except Exception as E:
+                MyDialog("Error", str(E), None)
+        
+    
+    def _apply2(self, _t):
+        _ret = retDialogBox2("Apply the changes?\n", self)
+        ret = _ret.getValue()
+        if ret != 1:
+            return
+        #
+        _btn = 0
+        # permissions
+        if _t == 1:
+            _idx1 = self.combo1.currentIndex()
+            _idx2 = self.combo2.currentIndex()
+            _idx3 = self.combo3.currentIndex()
+            #
+            if _idx1 == 0:
+                _btn = 600
+            elif _idx1 == 1:
+                _btn = 400
+            #
+            if _idx2 == 0:
+                _btn += 60
+            elif _idx2 == 1:
+                _btn += 40
+            #
+            if _idx3 == 0:
+                _btn += 6
+            elif _idx3 == 1:
+                _btn += 4
+        #
+        elif _t == 4:
+            # executable
+            if self.cb1.isChecked():
+                _btn = 4
+            elif not self.cb1.isChecked():
+                _btn = 41
+        elif _t == 5:
+            # immutable
+            if self.ibtn.isChecked():
+                _btn = 5
+            elif not self.ibtn.isChecked():
+                _btn = 6
+        #
+        try:
+            # executable
+            if _btn == 4:
+                for item in self.item_list:
+                    if os.path.islink(item) or os.path.isdir(item):
+                        continue
+                    comm = "chmod u+x {}".format(item)
+                    os.system(comm)
+            elif _btn == 41:
+                for item in self.item_list:
+                    if os.path.islink(item) or os.path.isdir(item):
+                        continue
+                    comm = "chmod u-x {}".format(item)
+                    os.system(comm)
+            # immutable
+            elif _btn == 5:
+                _list = ""
+                for item in self.item_list:
+                    if _list:
+                        _list += " "
+                    _list += item
+                comm = 'pkexec sh -c "chattr +i {}"'.format(_list)
+                os.system(comm)
+            elif  _btn == 6:
+                _list = ""
+                for item in self.item_list:
+                    if _list:
+                        _list += " "
+                    _list += item
+                comm = 'pkexec sh -c "chattr -i {}"'.format(_list)
+                os.system(comm)
+            # permissions
+            elif _btn > 100:
+                for item in self.item_list:
+                    if os.path.islink(item):
+                        continue
+                    if os.path.isdir(item) and not os.path.islink(item):
+                        comm = "chmod {} {}".format(_btn+100, item)
+                        os.system(comm)
+                    else:
+                        comm = "chmod {} {}".format(_btn, item)
+                        os.system(comm)
+        except Exception as E:
+            MyDialog("Error", str(E), None)
+            
+    
+    def faccept(self):
+        self.close()
+    
+    
+#  dialog: yes no question
+class retDialogBox2(QMessageBox):
+    def __init__(self, *args):
+        super(retDialogBox2, self).__init__(args[-1])
+        self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
+        self.setWindowTitle("Question")
+        self.setIcon(QMessageBox.Question)
+        self.resize(dialWidth, 100)
+        self.setText(args[0])
+        self.setStandardButtons(QMessageBox.Yes | QMessageBox.Cancel)
+        #
+        self.Value = None
+        retval = self.exec_()
+        #
+        if retval == QMessageBox.Yes:
+            self.Value = 1
+        elif retval == QMessageBox.Cancel:
+            self.Value = 0
+    
+    def getValue(self):
+        return self.Value
+    
+    def event(self, e):
+        result = QMessageBox.event(self, e)
+        #
+        self.setMinimumHeight(0)
+        self.setMaximumHeight(16777215)
+        self.setMinimumWidth(0)
+        self.setMaximumWidth(16777215)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        #
+        return result  
+
 
 
 # dialog - for file with the execution bit
@@ -4190,6 +4489,9 @@ class LView(QBoxLayout):
         # 
         # select items continuosly without deselecting the others
         if event.type() == QEvent.MouseButtonPress:
+            if not hasattr(event, "button"):
+                return False
+            #
             if event.button() == Qt.LeftButton:
                 itemIdx = self.listview.indexAt(event.pos())
                 item_rect = self.listview.visualRect(itemIdx)
@@ -5121,24 +5423,30 @@ class LView(QBoxLayout):
     def fpropertyActionMulti(self):
         # size of all the selected items
         iSize = 0
-        # number of the selected items
-        iNum = len(self.selection)
+        # # number of the selected items
+        # iNum = len(self.selection)
+        #
+        item_list = []
         for iitem in self.selection:
             try:
                 item = self.fileModel.fileInfo(iitem).absoluteFilePath()
                 #
                 if os.path.islink(item):
                     iSize += 512
+                    continue
                 elif os.path.isfile(item):
                     iSize += QFileInfo(item).size()
+                    item_list.append(item)
                 elif os.path.isdir(item):
                     iSize += folder_size(item)
-                else:
-                    QFileInfo(item).size()
+                    item_list.append(item)
+                # else:
+                    # QFileInfo(item).size()
             except:
                 iSize += 0
         #
-        propertyDialogMulti(convert_size(iSize), iNum, self.window)
+        # propertyDialogMulti(convert_size(iSize), iNum, self.window)
+        propertyDialogMulti(item_list, convert_size(iSize), self.window)
     
     # 
     def ficustomAction(self, el, menuType):
