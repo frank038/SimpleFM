@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.123
+# version 0.9.124
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -1337,20 +1337,22 @@ class propertyDialogMulti(QDialog):
         page1.setLayout(self.grid1)
         #
         ####### tab 1
+        self.grid1.setRowStretch(0, 1)
         # label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i> {}".format(itemNum))
         # vbox.addWidget(label1)
         label1 = QLabel("<i>Number of items&nbsp;&nbsp;&nbsp;</i>")
-        self.grid1.addWidget(label1, 0, 0, 1, 1, Qt.AlignRight)
+        self.grid1.addWidget(label1, 1, 0, 1, 1, Qt.AlignRight)
         label1a = QLabel(str(len(self.item_list)))
-        self.grid1.addWidget(label1a, 0, 1, 1, 4, Qt.AlignLeft)
+        self.grid1.addWidget(label1a, 1, 1, 1, 4, Qt.AlignLeft)
         #
         # label2 = QLabel("<i>Total size of the items&nbsp;&nbsp;&nbsp;</i> {}".format(itemSize))
         # vbox.addWidget(label2)
         label2 = QLabel("<i>Total size&nbsp;&nbsp;&nbsp;</i>")
-        self.grid1.addWidget(label2, 1, 0, 1, 1, Qt.AlignRight)
+        self.grid1.addWidget(label2, 2, 0, 1, 1, Qt.AlignRight)
         label2a = QLabel(str(total_size))
-        self.grid1.addWidget(label2a, 1, 1, 1, 4, Qt.AlignLeft)
+        self.grid1.addWidget(label2a, 2, 1, 1, 4, Qt.AlignLeft)
         #
+        self.grid1.setRowStretch(3, 1)
         ##### tab 2
         page2 = QWidget()
         self.gtab.addTab(page2, "Permissions")
@@ -1433,6 +1435,10 @@ class propertyDialogMulti(QDialog):
         # self.combo3.activated.connect(self.fcombo3)
         #
         #
+        gBox3 = QGroupBox("Other permissions")
+        vboxp2.addWidget(gBox3)
+        self.grid4 = QGridLayout()
+        gBox3.setLayout(self.grid4)
         ## folder access - file executable
         self.cb1 = QCheckBox()
         self.cb1.setText("Toggle executable")
@@ -1444,23 +1450,23 @@ class propertyDialogMulti(QDialog):
             # self.cb1.setChecked(True)
         #
         # self.cb1.stateChanged.connect(self.fcb1)
-        self.grid3.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
+        self.grid4.addWidget(self.cb1, 4, 0, 1, 5, Qt.AlignLeft)
         ## immutable file button
         self.ibtn = QPushButton("Toggle immutable")
         self.ibtn.setCheckable(True)
         # self.ibtn.clicked.connect(self.ibtn_pkexec)
-        self.grid3.addWidget(self.ibtn, 4, 6, 1, 1, Qt.AlignLeft)
+        self.grid4.addWidget(self.ibtn, 4, 6, 1, 1, Qt.AlignLeft)
         # if not self.CAN_CHANGE_OWNER:
             # self.ibtn.setEnabled(False)
         ## apply the modifications 2
         button2 = QPushButton("Apply")
         # vbox.addWidget(button1)
-        self.grid3.addWidget(button2, 5, 0, 1, 1, Qt.AlignCenter)
+        self.grid4.addWidget(button2, 5, 0, 1, 1, Qt.AlignCenter)
         button2.clicked.connect(lambda:self._apply2(4))
         ##
         button3 = QPushButton("Apply")
         # vbox.addWidget(button1)
-        self.grid3.addWidget(button3, 5, 6, 1, 1, Qt.AlignCenter)
+        self.grid4.addWidget(button3, 5, 6, 1, 1, Qt.AlignCenter)
         button3.clicked.connect(lambda:self._apply2(5))
         ###
         button1 = QPushButton("OK")
@@ -1472,7 +1478,7 @@ class propertyDialogMulti(QDialog):
         #
         self.exec_()
     
-    # implementare dialogo di conferma: per tutti gli elementi selezionati
+    #
     def _apply1(self):
         _set_own = 0
         _set_grp = 0
@@ -1491,14 +1497,16 @@ class propertyDialogMulti(QDialog):
             for item in self.item_list:
                 if _list:
                     _list += " "
-                _list += item
+                _list += "'"+item+"'"
             try:
                 if PKEXEC_PROG == 1:
                     if not shutil.which("pkexec"):
                         MyDialog("Error", "pkexec not found",None)
                         return
                     comm = 'pkexec sh -c "chown linux {}"'.format(_list)
-                    os.system(comm)
+                    ret = os.system(comm)
+                    if ret != 0:
+                        MyDialog("Error", "Error with some items.", None)
                 # elif PKEXEC_PROG == 2:
                     # # subprocess.run([PKEXEC, "3", self.itemPath])
                     # passWord(self.itemPath, 3, None)
@@ -1547,50 +1555,112 @@ class propertyDialogMulti(QDialog):
             elif not self.ibtn.isChecked():
                 _btn = 6
         #
-        try:
-            # executable
-            if _btn == 4:
-                for item in self.item_list:
+        _items_failure = []
+        _num_items_failure = 0
+        # limit the number of items to report
+        _num_i_f = 20
+        # executable
+        if _btn == 4:
+            for item in self.item_list:
+                try:
                     if os.path.islink(item) or os.path.isdir(item):
                         continue
-                    comm = "chmod u+x {}".format(item)
-                    os.system(comm)
-            elif _btn == 41:
-                for item in self.item_list:
+                    comm = "chmod u+x '{}'".format(item)
+                    ret = os.system(comm)
+                    if ret != 0:
+                        if _num_items_failure < _num_i_f:
+                            _items_failure.append([str(item)])
+                        _num_items_failure += 1
+                except Exception as E:
+                    if _num_items_failure < _num_i_f:
+                        _items_failure.append([str(item)+" : "+str(E)])
+                    _num_items_failure += 1
+        elif _btn == 41:
+            for item in self.item_list:
+                try:
                     if os.path.islink(item) or os.path.isdir(item):
                         continue
-                    comm = "chmod u-x {}".format(item)
-                    os.system(comm)
-            # immutable
-            elif _btn == 5:
-                _list = ""
-                for item in self.item_list:
-                    if _list:
-                        _list += " "
-                    _list += item
+                    comm = "chmod u-x '{}'".format(item)
+                    ret = os.system(comm)
+                    if ret != 0:
+                        if _num_items_failure < _num_i_f:
+                            _items_failure.append([str(item)])
+                        _num_items_failure += 1
+                except Exception as E:
+                    if _num_items_failure < _num_i_f:
+                        _items_failure.append([str(item)+" : "+str(E)])
+                    _num_items_failure += 1
+        # immutable
+        elif _btn == 5:
+            _list = ""
+            for item in self.item_list:
+                if _list:
+                    _list += " "
+                _list += "'"+item+"'"
+            try:
                 comm = 'pkexec sh -c "chattr +i {}"'.format(_list)
-                os.system(comm)
-            elif  _btn == 6:
-                _list = ""
-                for item in self.item_list:
-                    if _list:
-                        _list += " "
-                    _list += item
+                ret = os.system(comm)
+                if ret != 0:
+                    if _num_items_failure < _num_i_f:
+                        _items_failure.append([str(item)])
+                    _num_items_failure += 1
+            except Exception as E:
+                if _num_items_failure < _num_i_f < 20:
+                    _items_failure.append(["Toggle immutable: "+str(E)])
+                _num_items_failure += 1
+        elif  _btn == 6:
+            _list = ""
+            for item in self.item_list:
+                if _list:
+                    _list += " "
+                _list += "'"+item+"'"
+            try:
                 comm = 'pkexec sh -c "chattr -i {}"'.format(_list)
-                os.system(comm)
-            # permissions
-            elif _btn > 100:
-                for item in self.item_list:
+                ret = os.system(comm)
+                if ret != 0:
+                    if _num_items_failure < _num_i_f:
+                        _items_failure.append([str(item)])
+                    _num_items_failure += 1
+            except Exception as E:
+                if _num_items_failure < _num_i_f:
+                    _items_failure.append(["Toggle immutable: "+str(E)])
+                _num_items_failure += 1
+        # permissions
+        elif _btn > 100:
+            for item in self.item_list:
+                try:
                     if os.path.islink(item):
                         continue
                     if os.path.isdir(item) and not os.path.islink(item):
-                        comm = "chmod {} {}".format(_btn+100, item)
-                        os.system(comm)
+                        comm = "chmod {} '{}'".format(_btn+100, item)
+                        ret = os.system(comm)
+                        if ret != 0:
+                            if _num_items_failure < _num_i_f:
+                                _items_failure.append([str(item)])
+                            _num_items_failure += 1
                     else:
-                        comm = "chmod {} {}".format(_btn, item)
-                        os.system(comm)
-        except Exception as E:
-            MyDialog("Error", str(E), None)
+                        comm = "chmod {} '{}'".format(_btn, item)
+                        ret = os.system(comm)
+                        if ret != 0:
+                            if _num_items_failure < _num_i_f:
+                                _items_failure.append([str(item)+" : "+str(E)])
+                            _num_items_failure += 1
+                except Exception as E:
+                    if _num_items_failure < _num_i_f:
+                        _items_failure.append([str(item)+" : "+str(E)])
+                    _num_items_failure += 1
+        #
+        if _items_failure:
+            dialogList = ""
+            for el in _items_failure:
+                dialogList += el[0]+"\n"
+            #
+            if _num_items_failure > len(_items_failure):
+                dialogList += "(and others...)\n"
+            #
+            ret = retDialogBox("Info", "Error with these items.", "", dialogList, self.window)
+            #
+            # if ret.getValue():
             
     
     def faccept(self):
