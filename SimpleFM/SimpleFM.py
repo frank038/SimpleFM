@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.124
+# version 0.9.125
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -425,6 +425,10 @@ class MyDialogRename2(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+            
+    def closeEvent(self, event):
+        self.deleteLater()
 
 
 # renaming dialog - when a new file is been created
@@ -480,6 +484,9 @@ class MyDialogRename3(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 # dialog - open a file with another program
 class otherApp(QDialog):
@@ -527,6 +534,9 @@ class otherApp(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 ############ create a menu of installed applications
 class PlistMenu(QDialog):
@@ -644,6 +654,9 @@ class PlistMenu(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 
 # calculate the folder size 
@@ -1666,6 +1679,9 @@ class propertyDialogMulti(QDialog):
     def faccept(self):
         self.close()
     
+    def closeEvent(self, event):
+        self.deleteLater()
+    
     
 #  dialog: yes no question
 class retDialogBox2(QMessageBox):
@@ -1751,6 +1767,9 @@ class execfileDialog(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 
 # dialog - whit item list and return of the choise
@@ -1873,6 +1892,9 @@ class pasteNmergeDialog(QDialog):
     def fcancel(self):
         self.Value = -1
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
     
 
 ################################
@@ -2549,6 +2571,9 @@ class passWord(QDialog):
                 except:
                     pass
         self.close()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 # 
 # ARCHIVE_PASSWORD=""
@@ -4176,6 +4201,9 @@ class devicePropertyDialog(QDialog):
         self.setLayout(grid)
         button_ok.clicked.connect(self.close)
         self.exec_()
+    
+    def closeEvent(self, event):
+        self.deleteLater()
 
 
 # for LView
