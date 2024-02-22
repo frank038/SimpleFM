@@ -136,6 +136,7 @@ class passWord(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("7z extractor")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(600,100)
         #
         self.path = path

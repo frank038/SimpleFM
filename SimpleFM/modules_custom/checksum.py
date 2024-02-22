@@ -32,6 +32,7 @@ class checkSum(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Checksum"+" - "+os.path.basename(path))
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(600,300)
         self.path = path
         #

@@ -57,6 +57,7 @@ class compressData(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Compress data")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(600,250)
         #
         self.path_list = path_list

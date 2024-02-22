@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.125
+# version 0.9.126
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -372,6 +372,7 @@ class MyDialogRename2(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Rename")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth,100)
         #
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -427,8 +428,8 @@ class MyDialogRename2(QDialog):
         self.close()
     
             
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 
 # renaming dialog - when a new file is been created
@@ -439,6 +440,7 @@ class MyDialogRename3(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Set a new name")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth,100)
         #
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -485,8 +487,8 @@ class MyDialogRename3(QDialog):
         self.Value = -1
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 # dialog - open a file with another program
 class otherApp(QDialog):
@@ -497,6 +499,7 @@ class otherApp(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Other application")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth,100)
         #
         grid = QGridLayout()
@@ -535,8 +538,8 @@ class otherApp(QDialog):
         self.Value = -1
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 ############ create a menu of installed applications
 class PlistMenu(QDialog):
@@ -545,6 +548,7 @@ class PlistMenu(QDialog):
         #
         self.setWindowTitle("Open with...")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.resize(dialWidth, 100)
         #
@@ -655,8 +659,8 @@ class PlistMenu(QDialog):
         self.Value = -1
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 
 # calculate the folder size 
@@ -722,6 +726,7 @@ class propertyDialog(QDialog):
         super(propertyDialog, self).__init__(parent)
         self.itemPath = itemPath
         self.window = parent
+        self.setAttribute(Qt.WA_DeleteOnClose)
         #
         self.imime = ""
         self.imime = QMimeDatabase().mimeTypeForFile(self.itemPath, QMimeDatabase.MatchDefault)
@@ -1319,6 +1324,9 @@ class propertyDialog(QDialog):
     
     def faccept(self):
         self.close()
+    
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 
 # property dialog for more than one item
@@ -1329,6 +1337,7 @@ class propertyDialogMulti(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Property")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth, 100)
         #
         self.item_list = item_list
@@ -1679,8 +1688,8 @@ class propertyDialogMulti(QDialog):
     def faccept(self):
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
     
     
 #  dialog: yes no question
@@ -1728,6 +1737,7 @@ class execfileDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -1768,8 +1778,8 @@ class execfileDialog(QDialog):
         self.Value = -1
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 
 # dialog - whit item list and return of the choise
@@ -1835,6 +1845,7 @@ class pasteNmergeDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Paste and Merge")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
@@ -1893,8 +1904,8 @@ class pasteNmergeDialog(QDialog):
         self.Value = -1
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
     
 
 ################################
@@ -2407,6 +2418,7 @@ class copyItems2():
         self.mydialog.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.mydialog.setWindowTitle("Copying...")
         self.mydialog.setWindowModality(Qt.ApplicationModal)
+        self.mydialog.setAttribute(Qt.WA_DeleteOnClose)
         self.mydialog.resize(dialWidth,100)
         # 
         grid = QGridLayout()
@@ -2505,6 +2517,7 @@ class passWord(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Password")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth,100)
         #
         self.ppath = ppath
@@ -2572,8 +2585,8 @@ class passWord(QDialog):
                     pass
         self.close()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 # 
 # ARCHIVE_PASSWORD=""
@@ -4144,6 +4157,7 @@ class devicePropertyDialog(QDialog):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Device Properties")
         self.setWindowModality(Qt.ApplicationModal)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.resize(dialWidth,100)
         # data = [label, vendor, model, size, file_system, read_only, mountpoint, ddevice, media_type]
         self.data = data
@@ -4202,8 +4216,8 @@ class devicePropertyDialog(QDialog):
         button_ok.clicked.connect(self.close)
         self.exec_()
     
-    def closeEvent(self, event):
-        self.deleteLater()
+    # def closeEvent(self, event):
+        # self.deleteLater()
 
 
 # for LView
