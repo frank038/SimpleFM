@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 0.9.127
+# version 1.0
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4320,31 +4320,45 @@ class FlowLayout(QLayout):
 
 # function for executing the command
 def _flaunch_prog(r_defApp, path, USE_TERM):
+    _has_arg = 0
     try:
-        for eel in r_defApp[:]:
-            if eel == "%f":
-                ridx = r_defApp.index(eel)
-                r_defApp[ridx] = path
-                break
-            elif eel == "%F":
-                ridx = r_defApp.index(eel)
-                r_defApp[ridx] = path
-                break
-            elif eel == "%u":
-                ridx = r_defApp.index(eel)
-                r_defApp[ridx] = "file://"+path
-                break
-            elif eel == "%U":
-                ridx = r_defApp.index(eel)
-                r_defApp[ridx] = "file://"+path
-                break
+        if len(r_defApp) > 1:
+            _has_arg = 2
+            for eel in r_defApp[:]:
+                if eel == "%f":
+                    ridx = r_defApp.index(eel)
+                    r_defApp[ridx] = path
+                    _has_arg = 1
+                    break
+                elif eel == "%F":
+                    ridx = r_defApp.index(eel)
+                    r_defApp[ridx] = path
+                    _has_arg = 1
+                    break
+                elif eel == "%u":
+                    ridx = r_defApp.index(eel)
+                    r_defApp[ridx] = "file://"+path
+                    _has_arg = 1
+                    break
+                elif eel == "%U":
+                    ridx = r_defApp.index(eel)
+                    r_defApp[ridx] = "file://"+path
+                    _has_arg = 1
+                    break
+        # 
+        if _has_arg == 2:
+            MyDialog("Info", "Cannot open the file this way:\n{}.".format(r_defApp), None) 
+            return
+        elif _has_arg == 0:
+            r_defApp.append(path)
         #
         if USE_TERM:
             subprocess.Popen([USER_TERMINAL, "-e"]+r_defApp)
         else:
             subprocess.Popen(r_defApp)
     except Exception as E:
-        MyDialog("Error", str(E), self.window)        
+        MyDialog("Error", str(E), None)        
+
 
 class LView(QBoxLayout):
     # dir/file to open - MainWin - flag: 1 new tab - 0 same tab
