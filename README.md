@@ -18,7 +18,7 @@ Optionals:
 - 7z (for custom actions)
 - md5sum - sha256sum - sha1sum - tar - xterm (for custom actions)
 - archivemount (and 7z for mounting archive files - custom action)
-- coreurils at least 8.31 to get the right creation date and time of items.
+- coreurils at least 8.31.
 
 Features:
 - thumbnailers
@@ -31,6 +31,7 @@ Features:
 - custom folder icon
 - sticky selection by pressing in the circle
 - sends items to the desktop as special desktop files (feature of my SimpleDesktop program)
+- manages the permissions of multiple files at once (without checking the previous state of each of them, obviously)
 - and more...
 
 Support for drag and drop from my archive manager. For this operation it is used a custom solution, so no need of changing any window property.
