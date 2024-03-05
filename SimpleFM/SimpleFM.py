@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-# version 1.0
+# version 1.0.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont,QPen)
 import dbus
-# from pydbus import SessionBus
 import psutil
 import sys
 from pathlib import PosixPath
@@ -23,7 +22,8 @@ import threading
 from xdg.BaseDirectory import *
 from xdg.DesktopEntry import *
 from cfg import *
-
+# if enable_dbus_open == 1:
+    # from pydbus import SessionBus
 
 ############## user directory names
 USER_DIRS = os.path.join(os.path.expanduser("~"), ".config", "user-dirs.dirs")
@@ -3387,41 +3387,41 @@ class IconProvider(QFileIconProvider):
 # # from ranger
 # terminal_cmd = [""]
 # class SimplefmService(object):
-#     """
-#         <node>
-#             <interface name='org.freedesktop.FileManager1'>
-#                 <method name='ShowFolders'>
-#                     <arg type='as' name='URIs' direction='in'/>
-#                     <arg type='s' name='StartupId' direction='in'/>
-#                 </method>
-#                 <method name='ShowItems'>
-#                     <arg type='as' name='URIs' direction='in'/>
-#                     <arg type='s' name='StartupId' direction='in'/>
-#                 </method>
-#                 <method name='ShowItemProperties'>
-#                     <arg type='as' name='URIs' direction='in'/>
-#                     <arg type='s' name='StartupId' direction='in'/>
-#                 </method>
-#             </interface>
-#         </node>
-#     """
-# 
-#     def ShowFolders(self, uris, startup_id):
-#         uri = self.format_uri(uris[0])
-#         #subprocess.Popen([*terminal_cmd, 'ranger', uri])
-#         subprocess.Popen([*terminal_cmd, uri])
-# 
-#     def ShowItems(self, uris, startup_id):
-#         uri = self.format_uri(uris[0])
-#         #subprocess.Popen([*terminal_cmd, 'ranger', '--select', uri])
-#         subprocess.Popen([*terminal_cmd, uri])
-# 
-#     def ShowItemProperties(self, uris, startup_id):
-#         self.ShowItems(uris, startup_id)
-# 
-#     # def format_uri(uri: str):
-#     def format_uri(self, uri):
-#         return urllib.parse.unquote(uri).replace('file://', '')
+    # """
+        # <node>
+            # <interface name='org.freedesktop.FileManager1'>
+                # <method name='ShowFolders'>
+                    # <arg type='as' name='URIs' direction='in'/>
+                    # <arg type='s' name='StartupId' direction='in'/>
+                # </method>
+                # <method name='ShowItems'>
+                    # <arg type='as' name='URIs' direction='in'/>
+                    # <arg type='s' name='StartupId' direction='in'/>
+                # </method>
+                # <method name='ShowItemProperties'>
+                    # <arg type='as' name='URIs' direction='in'/>
+                    # <arg type='s' name='StartupId' direction='in'/>
+                # </method>
+            # </interface>
+        # </node>
+    # """
+
+    # def ShowFolders(self, uris, startup_id):
+        # uri = self.format_uri(uris[0])
+        # #subprocess.Popen([*terminal_cmd, 'ranger', uri])
+        # subprocess.Popen([*terminal_cmd, uri])
+
+    # def ShowItems(self, uris, startup_id):
+        # uri = self.format_uri(uris[0])
+        # #subprocess.Popen([*terminal_cmd, 'ranger', '--select', uri])
+        # subprocess.Popen([*terminal_cmd, uri])
+
+    # def ShowItemProperties(self, uris, startup_id):
+        # self.ShowItems(uris, startup_id)
+
+    # # def format_uri(uri: str):
+    # def format_uri(self, uri):
+        # return urllib.parse.unquote(uri).replace('file://', '')
 
 # 1
 class MainWin(QWidget):
@@ -3544,11 +3544,12 @@ class MainWin(QWidget):
             #
             self.on_pop_devices()
             #
-            # session_bus = SessionBus()
-            # try:
-                # session_bus.publish('org.freedesktop.FileManager1', SimplefmService())
-            # except:
-                # pass
+            # if enable_dbus_open == 1:
+                # session_bus = SessionBus()
+                # try:
+                    # session_bus.publish('org.freedesktop.FileManager1', SimplefmService())
+                # except:
+                    # pass
             #
         # close buttons
         qbtn = QPushButton(QIcon.fromTheme("window-close"), "")
@@ -3645,17 +3646,18 @@ class MainWin(QWidget):
                 for i in range(self.disk_box.count()):
                     item = self.disk_box.itemAt(i).widget()
                     if isinstance(item, QPushButton):
-                        if item.menu().block_device == args[0]:
-                            item.deleteLater()
-                            # close the tabs
-                            for el in self.device_mountPoint[:]:
-                                if el[0] == item.menu().device:
-                                    self.close_open_tab(el[1])
-                                    self.device_mountPoint.remove(el)
-                            break
+                        if item.menu():
+                            if item.menu().block_device == args[0]:
+                                item.deleteLater()
+                                # close the tabs
+                                for el in self.device_mountPoint[:]:
+                                    if el[0] == item.menu().device:
+                                        self.close_open_tab(el[1])
+                                        self.device_mountPoint.remove(el)
+                                break
                 
     
-    # get all the partitions
+    # get all the partitions at start
     def on_pop_devices(self):
         mobject = self.iface.GetManagedObjects()
         for k in mobject:
@@ -3665,7 +3667,14 @@ class MainWin(QWidget):
             if 'ram' in k:
                 continue
             #
-            self.on_add_partition(k, mobject[k])
+            for ky in  mobject[k]:
+                kk = "org.freedesktop.UDisks2.Block"
+                if  str(ky) == kk:
+                    bd = self.bus.get_object('org.freedesktop.UDisks2', k)
+                    file_system =  bd.Get('org.freedesktop.UDisks2.Block', 'IdType', dbus_interface='org.freedesktop.DBus.Properties')
+                    if file_system:
+                        self.on_add_partition(k, mobject[k])
+                        break
     
     # the device is added to the view
     # def on_add_partition(self, k, bus, kmobject):
@@ -3750,7 +3759,7 @@ class MainWin(QWidget):
                 media_btn_menu.aboutToShow.connect(self.btn_menu_open)
 
     
-    # before the menu open
+    # before the menu opens
     def btn_menu_open(self):
         self.on_populate_mediaBtn()
 
@@ -3906,7 +3915,11 @@ class MainWin(QWidget):
     # the device is ejectable
     def get_device_can_eject(self, drive):
         bd2 = self.bus.get_object('org.freedesktop.UDisks2', drive)
+        # try:
         can_eject = bd2.Get('org.freedesktop.UDisks2.Drive', 'Ejectable', dbus_interface='org.freedesktop.DBus.Properties')
+        # except Exception as E:
+            # # return False
+            # return 1
         return can_eject
     
     # get the mount point or return N
