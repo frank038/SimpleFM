@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.1
+# version 1.0.2
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4966,7 +4966,7 @@ class LView(QBoxLayout):
                 #
                 if ret == 2:
                     try:
-                        subprocess.Popen(path, shell=True)
+                        subprocess.Popen(path, shell=True, cwd=os.path.dirname(path))
                     except Exception as E:
                         MyDialog("Error", str(E), self.window)
                     finally:
@@ -6957,7 +6957,7 @@ class cTView(QBoxLayout):
                 #
                 if ret == 2:
                     try:
-                        subprocess.Popen(path, shell=True)
+                        subprocess.Popen(path, shell=True, cwd=os.path.dirname(path))
                     except Exception as E:
                         MyDialog("Error", str(E), self.window)
                     finally:
