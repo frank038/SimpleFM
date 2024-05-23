@@ -34,6 +34,8 @@ Features:
 - manages the permissions of multiple files at once (without checking the previous state of each of them, obviously)
 - and more...
 
+The file simplefmdaemon.py is a dbus implementation of the freedesktop.org's file manager interface (let user launcher SimpleFM from a browser after a file has been downloaded).
+
 Support for drag and drop from my archive manager. For this operation it is used a custom solution, so no need of changing any window property.
 
 The 'Shift key' behaviour: to select a certain amount of contiguous items, select the first, press the shift key and select the last; to move the selected items by using the shift key, press the shift key and start dragging the last selected item.
