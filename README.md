@@ -34,7 +34,7 @@ Features:
 - manages the permissions of multiple files at once (without checking the previous state of each of them, obviously)
 - and more...
 
-The file simplefmdaemon.py is a dbus implementation of the freedesktop.org's file manager interface (let user launcher SimpleFM from a browser after a file has been downloaded). The full path of the file SimpleFM.sh has to be setted in the file simplefmdaemon.py at line 23.
+The file simplefmdaemon.py is a dbus implementation of the freedesktop.org's file manager interface (let user launch SimpleFM from a browser after a file has been downloaded). The full path of the file SimpleFM.sh has to be setted in the file simplefmdaemon.py at line 23.
 
 Support for drag and drop from my archive manager. For this operation it is used a custom solution, so no need of changing any window property.
 
