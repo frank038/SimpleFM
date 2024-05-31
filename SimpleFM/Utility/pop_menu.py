@@ -139,8 +139,10 @@ class getMenu():
                         # fcomment = entry.getComment()
                         #
                         fmimetypes = entry.getMimeTypes()
+                        #
+                        ftryexec = entry.getTryExec()
                         ###
-                        self.lists.append([fname, fcategory or "Other", fexec, fpath, fmimetypes])
+                        self.lists.append([fname, fcategory or "Other", fexec, fpath, fmimetypes, ftryexec or ""])
                     except:
                         pass
 

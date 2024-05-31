@@ -26,37 +26,32 @@ class listMenu(QWidget):
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
         self.setLayout(vbox)
-        
         # treewidget
         self.TWD = QTreeWidget()
         self.TWD.setHeaderLabels(["Applications"])
         self.TWD.setAlternatingRowColors(False)
         self.TWD.itemClicked.connect(self.fitem)
         vbox.addWidget(self.TWD)
-
         # entry
         hbox2 = QBoxLayout(QBoxLayout.LeftToRight)
         vbox.addLayout(hbox2)
         self.LE = QLineEdit()
         #self.LE.setReadOnly(True)
         hbox2.addWidget(self.LE)
-        
         # select program
         self.buttonOF = QPushButton("Select...")
         self.buttonOF.clicked.connect(self.fOpenWith)
         hbox2.addWidget(self.buttonOF)
-        
         ### buttons
         hbox = QBoxLayout(QBoxLayout.LeftToRight)
         vbox.addLayout(hbox)
         button1 = QPushButton("Ok")
         hbox.addWidget(button1)
         button1.clicked.connect(self.fexecute)
-        
+        #
         button2 = QPushButton("Cancel")
         hbox.addWidget(button2)
         button2.clicked.connect(self.fcancel)
-        
         #### the menu
         # get the menu
         amenu = pop_menu.getMenu()
@@ -79,7 +74,7 @@ class listMenu(QWidget):
     # create a menu of installed applications
     def fpopMenu(self):
         categories_found = []
-        #
+        # [fname, fcategory or "Other", fexec, fpath, fmimetypes, ftryexec]
         for el in self.menu:
             categ = el[1]
             if not categ in categories_found:
@@ -93,7 +88,7 @@ class listMenu(QWidget):
             witem = self.TWD.findItems(categ, Qt.MatchExactly, 0)[0]
             idx = self.TWD.indexOfTopLevelItem(witem)
             # add the item
-            tw_child = QTreeWidgetItem([el[0], el[2]])
+            tw_child = QTreeWidgetItem([el[0], el[2], el[5]])
             witem.addChild(tw_child)
         #
         del self.menu
@@ -102,18 +97,28 @@ class listMenu(QWidget):
 
     # an item in the treewidget is clicked
     def fitem(self, item, col):
+        # skip categories
+        if item.childCount() > 0:
+            return
         # get the executable
         appExec = item.text(1)
+        tryExec = item.text(2)
+        _prog = appExec
+        if tryExec:
+            _prog = tryExec
         # if the executable exists
-        if shutil.which(appExec):
+        # if shutil.which(appExec):
+        if shutil.which(_prog):
             # set the name of the program in the line edit widget
             self.LE.setText(item.text(0))
+            # self.LE.setEnabled(False)
             # set the variable
             self.Value = appExec
         #
         else:
             # the program exists but cannot be executed
-            if os.path.exists(appExec):
+            # if os.path.exists(appExec):
+            if os.path.exists(_prog):
                 self.fdialog("The program\n"+appExec+"\ncannot be executed.")
             # the program doesn't exist
             else:
@@ -123,13 +128,15 @@ class listMenu(QWidget):
     def fexecute(self):
         # program choosen from list or from dialog
         if self.Value:
-            if shutil.which(self.Value):
-                try:
-                    subprocess.Popen([self.Value, self.infile])
-                except Exception as E:
-                    self.fdialog(str(E))
-            else:
-                self.fdialog("The program\n"+self.Value+"\ncannot be found.")
+            #if shutil.which(self.Value):
+            try:
+                # subprocess.Popen([self.Value, self.infile])
+                _cmd = "{0} '{1}'".format(self.Value,self.infile)
+                subprocess.run(_cmd, shell=True)
+            except Exception as E:
+                self.fdialog(str(E))
+            # else:
+                # self.fdialog("The program\n"+self.Value+"\ncannot be found.")
             self.close()
         # program written in the line edit widget directly
         else:
