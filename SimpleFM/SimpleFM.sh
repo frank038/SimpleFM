@@ -2,7 +2,7 @@
 thisdir=$(dirname "$0")
 cd $thisdir
 # chromium hack
-DOWNLOAD="$HOME/Scaricati/"
+DOWNLOAD="$HOME/Downloads/"
 if [[ "$@" = "." && -d "$DOWNLOAD" ]]; then
   NEWFILE=`ls -Art $DOWNLOAD | tail -n 1`
   python3 SimpleFM.py "$DOWNLOAD/$NEWFILE" &
