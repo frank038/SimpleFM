@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.3.1
+# version 1.0.4
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2590,7 +2590,6 @@ class passWord(QDialog):
         # self.deleteLater()
 
 # 
-# ARCHIVE_PASSWORD=""
 class MyQlist(QListView):
     def __init__(self):
         super(MyQlist, self).__init__()
@@ -2890,68 +2889,6 @@ class MyQlist(QListView):
                 #
                 event.ignore()
             return
-            # archive_name = ddata[0]
-            # # extraction mode (e or x) - item type (file or folder) - item name (with path)
-            # items = ddata[1:]
-            # #
-            # dest_path = self.model().rootPath()
-            # #
-            # if not os.access(dest_path, os.W_OK):
-                # MyDialog("Info", "Not writable:\n{}".format(os.path.basename(dest_path)), None)
-                # return
-            # curr_dir = QFileInfo(dest_path)
-            # pointedItem = self.indexAt(event.pos())
-            # if pointedItem.isValid():
-                # ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-                # if os.path.isdir(ifp):
-                    # if os.access(ifp, os.W_OK):
-                        # dest_path = ifp
-                    # else:
-                        # MyDialog("Info", "Not writable:\n{}".format(os.path.basename(ifp)), None)
-            # #
-            # if shutil.which(COMMAND_EXTRACTOR):
-                # try:
-                    # global ARCHIVE_PASSWORD
-                    # hasPassWord = self.test_archive(archive_name)
-                    # if hasPassWord == 2:
-                        # if not ARCHIVE_PASSWORD:
-                            # ARCHIVE_PASSWORD = passWord(archive_name, None).arpass
-                            # if not ARCHIVE_PASSWORD:
-                                # MyDialog("Info", "Cancelled.", None)
-                                # return
-                    # # 
-                    # ret = -5
-                    # for i in range(0, len(items), 3):
-                        # ttype = items[i]
-                        # item_type = items[i+1]
-                        # item_to_extract = items[i+2]
-                        # #
-                        # if item_to_extract == "":
-                            # continue
-                        # #
-                        # if item_type == "file":
-                            # # -aou rename the file to be copied -aot rename the file at destination - both if an item with the same name already exists
-                            # ret = os.system("{0} {1} '-i!{2}' '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, item_to_extract, archive_name, ARCHIVE_PASSWORD, dest_path))
-                        # elif item_type == "folder":
-                            # ttype = "x"
-                            # if ARCHIVE_PASSWORD:
-                                # ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -p'{4}' -o'{5}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, ARCHIVE_PASSWORD, dest_path))
-                            # else:
-                                # ret = os.system("{0} {1} '{2}' *.* -r '{3}' -y -aou -o'{4}' 1>/dev/null".format(COMMAND_EXTRACTOR, ttype, archive_name, item_to_extract, dest_path))
-                    # ### exit codes
-                    # # 0 No error
-                    # # 1 Warning (Non fatal error(s)). For example, one or more files were locked by some other application, so they were not compressed.
-                    # # 2 Fatal error
-                    # # 7 Command line error
-                    # # 8 Not enough memory for operation
-                    # # 255 User stopped the process
-                    # if ret == 0:
-                        # MyDialog("Info", "Extracted.", None)
-                    # elif ret != -5:
-                        # MyDialog("Error", "{}".format(ret), None)
-                # except Exception as E:
-                    # MyDialog("Error", str(E), None)
-            # return
         ######################
         self.user_action = 0
         dest_path = self.model().rootPath()
@@ -3076,22 +3013,6 @@ class MyQlist(QListView):
         elif self.sender().uaction == "move":
             self.user_action = 2
     
-    # # check it the archive is password protected
-    # def test_archive(self, path):
-        # szdata = None
-        # try:
-            # szdata = subprocess.check_output('{} l -slt -bso0 -- "{}"'.format(COMMAND_EXTRACTOR, path), shell=True)
-        # except:
-            # return 0
-        # #
-        # if szdata != None:
-            # szdata_decoded = szdata.decode()
-            # ddata = szdata_decoded.splitlines()
-            # if "Encrypted = +" in ddata:
-                # return 2
-            # else:
-                # return 1
-
 
 class itemDelegate(QItemDelegate):
 
@@ -5746,27 +5667,28 @@ class clabel(QLabel):
         super(clabel, self).setText(ntext)
 
 
-class thumbThread(threading.Thread):
+# OPTIONALLY DISABLED
+# class thumbThread(threading.Thread):
     
-    def __init__(self, fpath, listview):
-        threading.Thread.__init__(self)
-        self.event = threading.Event()
-        self.fpath = fpath
-        self.listview = listview
+    # def __init__(self, fpath, listview):
+        # threading.Thread.__init__(self)
+        # self.event = threading.Event()
+        # self.fpath = fpath
+        # self.listview = listview
     
-    def run(self):
-        list_dir = os.listdir(self.fpath)
-        while not self.event.is_set():
-            for iitem in list_dir:
-                item_fpath = os.path.join(self.fpath, iitem)
-                if os.path.exists(item_fpath):
-                    if stat.S_ISREG(os.stat(item_fpath).st_mode):
-                        hmd5 = "Null"
-                        imime = QMimeDatabase().mimeTypeForFile(iitem, QMimeDatabase.MatchDefault)
-                        hmd5 = create_thumbnail(item_fpath, imime.name())
-                        self.event.wait(0.05)
-            self.event.set()
-        #self.listview.viewport().update()
+    # def run(self):
+        # list_dir = os.listdir(self.fpath)
+        # while not self.event.is_set():
+            # for iitem in list_dir:
+                # item_fpath = os.path.join(self.fpath, iitem)
+                # if os.path.exists(item_fpath):
+                    # if stat.S_ISREG(os.stat(item_fpath).st_mode):
+                        # hmd5 = "Null"
+                        # imime = QMimeDatabase().mimeTypeForFile(iitem, QMimeDatabase.MatchDefault)
+                        # hmd5 = create_thumbnail(item_fpath, imime.name())
+                        # self.event.wait(0.05)
+            # self.event.set()
+        # #self.listview.viewport().update()
 
 
 # find the applications installed for a given mimetype
@@ -6312,10 +6234,9 @@ class openTrash(QBoxLayout):
         if imime:
             try:
                 file_icon = QIcon.fromTheme(imime.iconName())
-                if file_icon:
-                    return file_icon
-                else:
-                    return QIcon("icons/empty.svg")
+                if file_icon.isNull():
+                    file_icon = QIcon.fromTheme(imime.genericIconName(), QIcon("icons/empty.svg"))
+                return file_icon
             except:
                 return QIcon("icons/empty.svg")
         else:
