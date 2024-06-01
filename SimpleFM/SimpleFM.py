@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.3
+# version 1.0.3.1
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4485,10 +4485,10 @@ class LView(QBoxLayout):
             self.clickable2(self.listview).connect(self.itemsToTrash)
         elif USE_DELETE:
             self.clickable2(self.listview).connect(self.fdeleteAction)
-        #
-        if USE_THUMB == 1:
-            thread = thumbThread(self.lvDir, self.listview)
-            thread.start()
+        # # OPTIONALLY DISABLED
+        # if USE_THUMB == 1:
+            # thread = thumbThread(self.lvDir, self.listview)
+            # thread.start()
         #
         # highlight the file passed as argument
         if self.lvFile:
