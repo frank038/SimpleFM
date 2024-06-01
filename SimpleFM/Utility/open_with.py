@@ -132,7 +132,7 @@ class listMenu(QWidget):
             try:
                 # subprocess.Popen([self.Value, self.infile])
                 _cmd = "{0} '{1}'".format(self.Value,self.infile)
-                subprocess.run(_cmd, shell=True)
+                subprocess.Popen(_cmd, shell=True)
             except Exception as E:
                 self.fdialog(str(E))
             # else:
