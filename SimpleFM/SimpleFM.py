@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.4
+# version 1.0.5
 
 from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -6113,7 +6113,8 @@ class openTrash(QBoxLayout):
         self.label6 = clabel()
         self.label7 = clabel()
         self.label8 = QLabel("")
-        self.label9 = QLabel("")
+        # self.label9 = QLabel("")
+        self.label9 = clabel()
         self.label10 = QLabel("")
         layout.addRow(self.label1, self.label6)
         layout.addRow(self.label2, self.label7)
@@ -6270,7 +6271,8 @@ class openTrash(QBoxLayout):
                 self.label6.setText("", self.window.size().width())
                 self.label7.setText("", self.window.size().width())
                 self.label8.setText("")
-                self.label9.setText("")
+                # self.label9.setText("")
+                self.label9.setText("", self.window.size().width())
                 self.label10.setText("")
                 #
                 self.list_trashed_items.remove(RestoreTrashedItems.fakename+".trashinfo")
@@ -6304,7 +6306,8 @@ class openTrash(QBoxLayout):
                 self.label6.setText("", self.window.size().width())
                 self.label7.setText("", self.window.size().width())
                 self.label8.setText("")
-                self.label9.setText("")
+                # self.label9.setText("")
+                self.label9.setText("", self.window.size().width())
                 self.label10.setText("")
     
     # empty the recycle bin
@@ -6317,7 +6320,8 @@ class openTrash(QBoxLayout):
         self.label6.setText("", self.window.size().width())
         self.label7.setText("", self.window.size().width())
         self.label8.setText("")
-        self.label9.setText("")
+        # self.label9.setText("")
+        self.label9.setText("", self.window.size().width())
         self.label10.setText("")
         if ret == -1:
             MyDialog("Info", "Error with some files in the Recycle Bin.\nTry to remove them manually.", self.window)
@@ -6339,7 +6343,8 @@ class openTrash(QBoxLayout):
         Tpath = trash_module.mountPoint(self.tdir).find_trash_path()
         fpath = os.path.join(Tpath, "files", fake_name)
         imime = QMimeDatabase().mimeTypeForFile(fpath, QMimeDatabase.MatchDefault)
-        self.label9.setText(imime.name())
+        # self.label9.setText(imime.name())
+        self.label9.setText(imime.name(), self.window.size().width())
         #
         if not os.path.exists(fpath):
             self.label10.setText("(Broken Link)")

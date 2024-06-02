@@ -59,9 +59,9 @@ def createimagethumb(fpath, el):
     md5=eencode(fpath)
     infile = os.path.basename(fpath)
     uuri = "file://"+urllib.parse.quote(fpath, safe='/', encoding=None, errors=None)
-    fmtime = int(os.path.getmtime(fpath))
     try:
-
+        
+        fmtime = int(os.path.getmtime(fpath))
         image = el.picture_to_img(fpath)
         if image == "Null":
             return "Null"
@@ -94,8 +94,17 @@ def create_thumbnail(fpath, imime):
         home = os.path.expanduser("~")
         if fpath[0:len(home)] != home:
             return "Null"
-
-    fmtime, omtime = check_mtime(fpath)
+    
+    fmtime = 0
+    omtime = 0
+    if not os.path.exists(fpath):
+        return "Null"
+    
+    try:
+        fmtime, omtime = check_mtime(fpath)
+    except:
+        return "Null"
+    
     md5 = None
 
     if int(fmtime) != int(omtime):
