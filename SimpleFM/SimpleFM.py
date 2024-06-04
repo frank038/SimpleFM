@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-# version 1.0.5
+# version 1.0.6
 
-from PyQt5.QtCore import (QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
+from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
 from PyQt5.QtGui import (QDrag,QPixmap,QStaticText,QTextOption,QIcon,QStandardItem,QStandardItemModel,QFontMetrics,QColor,QPalette,QClipboard,QPainter,QFont,QPen)
 import dbus
@@ -4384,6 +4384,11 @@ class LView(QBoxLayout):
         self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
         self.listview.clicked.connect(self.singleClick)
         self.listview.doubleClicked.connect(self.doubleClick)
+        # clear the selection after loading a new directory
+        self.fileModel.rootPathChanged.connect(self.on_dir_changed)
+        self.fileModel.directoryLoaded.connect(self.on_dir_loaded)
+        # double click check
+        self._pp = 0
         #
         self.label2 = QLabel()
         self.label3 = QLabel()
@@ -4426,6 +4431,58 @@ class LView(QBoxLayout):
         self.fileModel.rowsInserted.connect(self.rowInserted)
         self.fileModel.rowsRemoved.connect(self.rowRemoved)
         
+    # the root dir is changed
+    def on_dir_changed(self, _path):
+        if _path == self.lvDir:
+            return
+        # disable the selection mode
+        self.listview.setSelectionMode(self.listview.NoSelection)
+        
+    def _f_on_dir_loaded(self):
+        # enable again the selection mode
+        self.listview.setSelectionMode(self.listview.ExtendedSelection)
+        
+    # the dir finished to be loaded
+    def on_dir_loaded(self, _path):
+        if _path == self.lvDir:
+            return
+        # the previous folder
+        upperdir = self.lvDir
+        # the new root dir
+        self.lvDir = _path
+        # scroll to top
+        self.listview.verticalScrollBar().setValue(0)
+        # tab name and tooltip
+        self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
+        self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+        # add the path into the history
+        self.hicombo.insertItem(0, self.lvDir)
+        self.hicombo.setCurrentIndex(0)
+        #
+        self.tabLabels()
+        # path button box
+        if self._pp == 1:
+            self.on_box_pb(self.lvDir)
+            self._pp = 0
+            #
+            _timer = QTimer()
+            # deselect eventually selection after a dir change - empiric method
+            _timer.singleShot(500, self._f_on_dir_loaded)
+        #
+        # highlight the previous folder
+        _ln_lvdir = len(self.lvDir)
+        _other = upperdir[_ln_lvdir:]
+        if upperdir[0:_ln_lvdir] == self.lvDir:
+            if _other:
+                upperdir = upperdir[0:_ln_lvdir]+"/"+_other.split("/")[1]
+            #
+            if os.path.exists(upperdir):
+                index = self.fileModel.index(upperdir)
+                # skip hidden folders
+                if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
+                    self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+                    self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+    
     #
     def rowInserted(self, idx):
         self.tabLabels()
@@ -4434,23 +4491,23 @@ class LView(QBoxLayout):
     def rowRemoved(self, idx):
         self.tabLabels()
     
-    #
+    # change the dir throu the button in the path bar
     def on_change_dir(self, path):
         if os.path.isdir(path):
             if os.access(path, os.R_OK):
                 try:
                     self.listview.clearSelection()
-                    self.lvDir = path
-                    self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
-                    self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+                    # self.lvDir = path
+                    # self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
+                    # self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
                     self.listview.setRootIndex(self.fileModel.setRootPath(path))
-                    self.tabLabels()
-                    # scroll to top
-                    self.listview.verticalScrollBar().setValue(0)
-                    # add the path into the history
-                    self.hicombo.insertItem(0, self.lvDir)
-                    self.hicombo.setCurrentIndex(0)
-                    return 1
+                    # self.tabLabels()
+                    # # scroll to top
+                    # self.listview.verticalScrollBar().setValue(0)
+                    # # add the path into the history
+                    # self.hicombo.insertItem(0, self.lvDir)
+                    # self.hicombo.setCurrentIndex(0)
+                    # return 1
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
                     return 0
@@ -4485,8 +4542,9 @@ class LView(QBoxLayout):
             # VERIFY
             if ret == 0:
                 self.box_pb_btn.setChecked(True)
-            elif ret == 1:
-                self.box_pb_btn = self.sender()
+                return
+            # elif ret == 1:
+            self.box_pb_btn = self.sender()
     
     # populate the path buttons box
     def on_box_pb(self, ddir):
@@ -4565,27 +4623,27 @@ class LView(QBoxLayout):
                     if self.static_items == True:
                         self.static_items = False
                         self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
-            # 
+            # open the folder with the mouse middle button
             elif event.button() == Qt.MiddleButton:
-                # button box
-                if obj.objectName() == 'pbwidget':
-                    new_path_temp = []
-                    for i in range(self.box_pb.indexOf(obj)+1):
-                        new_path_temp.append(self.box_pb.itemAt(i).widget().text())
-                    new_path = os.path.join(*new_path_temp)
-                    if os.path.exists(new_path):
-                        # # open the folder in the same view
-                        # self.on_btn_change_dir(new_path)
-                        # obj.setChecked(True)
-                        try:
-                            # open the selected folder in a new tab
-                            self.fnewtabAction(new_path, 1)
-                        except Exception as E:
-                            MyDialog("Error", str(E), self.window)
-                    else:
-                        MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
-                    #
-                    return QObject.event(obj, event)
+                # # button box
+                # if obj.objectName() == 'pbwidget':
+                    # new_path_temp = []
+                    # for i in range(self.box_pb.indexOf(obj)+1):
+                        # new_path_temp.append(self.box_pb.itemAt(i).widget().text())
+                    # new_path = os.path.join(*new_path_temp)
+                    # if os.path.exists(new_path):
+                        # # # open the folder in the same view
+                        # # self.on_btn_change_dir(new_path)
+                        # # obj.setChecked(True)
+                        # try:
+                            # # open the selected folder in a new tab
+                            # self.fnewtabAction(new_path, 1)
+                        # except Exception as E:
+                            # MyDialog("Error", str(E), self.window)
+                    # else:
+                        # MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+                    # #
+                    # return QObject.event(obj, event)
                 # folders
                 itemSelected = self.listview.indexAt(event.pos()).data()
                 if itemSelected:
@@ -4602,18 +4660,21 @@ class LView(QBoxLayout):
                                 # open the selected folder in the same tab
                                 try:
                                     self.listview.clearSelection()
-                                    self.lvDir = itemSelectedPath
-                                    self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
-                                    self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
-                                    self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
-                                    self.tabLabels()
-                                    # scroll to top
-                                    self.listview.verticalScrollBar().setValue(0)
-                                    # add the path into the history
-                                    self.hicombo.insertItem(0, self.lvDir)
-                                    self.hicombo.setCurrentIndex(0)
-                                    #
-                                    self.on_box_pb(self.lvDir)
+                                    # self.lvDir = itemSelectedPath
+                                    _lvDir = itemSelectedPath
+                                    # self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
+                                    # self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+                                    # self.listview.setRootIndex(self.fileModel.setRootPath(self.lvDir))
+                                    self.listview.setRootIndex(self.fileModel.setRootPath(_lvDir))
+                                    # self.tabLabels()
+                                    # # scroll to top
+                                    # self.listview.verticalScrollBar().setValue(0)
+                                    # # add the path into the history
+                                    # self.hicombo.insertItem(0, self.lvDir)
+                                    # self.hicombo.setCurrentIndex(0)
+                                    # #
+                                    # self.on_box_pb(self.lvDir)
+                                    self._pp = 1
                                 except Exception as E:
                                     MyDialog("Error", str(E), self.window)
                         else:
@@ -4789,20 +4850,23 @@ class LView(QBoxLayout):
             if os.access(path, os.R_OK):
                 try:
                     self.listview.clearSelection()
-                    self.lvDir = path
-                    self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
-                    self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+                    # self.lvDir = path
+                    # self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir))
+                    # self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
                     self.listview.setRootIndex(self.fileModel.setRootPath(path))
-                    self.tabLabels()
-                    # scroll to top
-                    self.listview.verticalScrollBar().setValue(0)
-                    # add the path into the history
-                    self.hicombo.insertItem(0, self.lvDir)
-                    self.hicombo.setCurrentIndex(0)
+                    # self.tabLabels()
+                    # # scroll to top
+                    # self.listview.verticalScrollBar().setValue(0)
+                    # # add the path into the history
+                    # self.hicombo.insertItem(0, self.lvDir)
+                    # self.hicombo.setCurrentIndex(0)
+                    # #
+                    # self.on_box_pb(self.lvDir)
                     #
-                    self.on_box_pb(self.lvDir)
+                    self._pp = 1
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
+                    self._pp = 0
             else:
                 MyDialog("Info", path+"\n\n   Not readable", self.window)
         #
@@ -5591,25 +5655,29 @@ class LView(QBoxLayout):
                 path = os.path.dirname(path)
             #
             self.listview.clearSelection()
-            # highlight the upper folder
-            upperdir = self.lvDir
-            self.lvDir = path
-            self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir) or "ROOT")
-            self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
+            # # highlight the upper folder
+            # upperdir = self.lvDir
+            # self.lvDir = path
+            # self.window.mtab.setTabText(self.window.mtab.currentIndex(), os.path.basename(self.lvDir) or "ROOT")
+            # self.window.mtab.setTabToolTip(self.window.mtab.currentIndex(), self.lvDir)
             self.listview.setRootIndex(self.fileModel.setRootPath(path))
+            # #
+            # self.tabLabels()
             #
-            self.tabLabels()
-            ## highlight the file passed as argument
-            index = self.fileModel.index(upperdir)
-            # skip hidden folders
-            if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
-                self.listview.selectionModel().select(index, QItemSelectionModel.Select)
-                self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+            # ## highlight the file passed as argument
+            # if os.path.exists(upperdir):
+                # index = self.fileModel.index(upperdir)
+                # # skip hidden folders
+                # if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
+                    # self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+                    # self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+            # #
+            # self.hicombo.insertItem(0, self.lvDir)
+            # self.hicombo.setCurrentIndex(0)
+            # #
+            # self.on_box_pb(self.lvDir)
             #
-            self.hicombo.insertItem(0, self.lvDir)
-            self.hicombo.setCurrentIndex(0)
-            #
-            self.on_box_pb(self.lvDir)
+            self._pp = 1
             
     
     # invert the selection
