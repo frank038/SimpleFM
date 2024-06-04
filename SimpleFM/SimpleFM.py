@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.6
+# version 1.0.6.1
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4468,6 +4468,9 @@ class LView(QBoxLayout):
             _timer = QTimer()
             # deselect eventually selection after a dir change - empiric method
             _timer.singleShot(500, self._f_on_dir_loaded)
+        elif self._pp == 2:
+            self._pp = 0
+            self._f_on_dir_loaded()
         #
         # highlight the previous folder
         _ln_lvdir = len(self.lvDir)
@@ -4508,6 +4511,7 @@ class LView(QBoxLayout):
                     # self.hicombo.insertItem(0, self.lvDir)
                     # self.hicombo.setCurrentIndex(0)
                     # return 1
+                    self._pp = 2
                 except Exception as E:
                     MyDialog("Error", str(E), self.window)
                     return 0
