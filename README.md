@@ -40,7 +40,7 @@ Support for drag and drop from my archive manager. For this operation it is used
 
 The 'Shift key' behaviour: to select a certain amount of contiguous items, select the first, press the shift key and select the last; to move the selected items by using the shift key, press the shift key and start dragging the last selected item.
 
-Mouse middle click to open the pointed folder.
+Mouse middle click to open the pointed folder. Middle click on the button in the bar to open that folder in a new tab.
 
 Pkexec: a different solution has been implemented to avoid it: if chosed in the config file, sudo - with user password - will be used; alternatively, also the su command - with the root password - can be used, just comment out the sudo section and uncomment the su section in the file pkexec.sh. A dialog for asking the password will appear.
 
