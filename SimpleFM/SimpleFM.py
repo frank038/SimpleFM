@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.6.1
+# version 1.0.7
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2809,9 +2809,8 @@ class MyQlist(QListView):
         if event.mimeData().hasFormat(self.customMimeType):
             # a folder in the destination directory
             pointedItem = self.indexAt(event.pos())
-            ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-            #
             if pointedItem.isValid():
+                ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
                 if os.path.isdir(ifp):
                     dest_dir = QFileInfo(ifp)
                     if not dest_dir.isWritable():
@@ -2836,10 +2835,8 @@ class MyQlist(QListView):
         if event.mimeData().hasUrls:
             if isinstance(event.source(), MyQlist):
                 pointedItem = self.indexAt(event.pos())
-                ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
-                #
                 if pointedItem.isValid():
-                    #
+                    ifp = self.model().data(pointedItem, QFileSystemModel.FilePathRole)
                     if os.path.isdir(ifp):
                         for uurl in event.mimeData().urls():
                             if uurl.toLocalFile() == ifp:
@@ -3499,6 +3496,9 @@ class MainWin(QWidget):
                         MyDialog("Error", str(E), self)
         ####
         parg = ""
+        self._lvFile = None
+        # self._scroll_listview = None
+        # self._scroll_idx = None
         if len(sys.argv) > 1:
             parg = sys.argv[1]
             # remove the last slash character if useless
@@ -3526,6 +3526,8 @@ class MainWin(QWidget):
             if os.path.exists(parg) and os.access(parg, os.R_OK):
                 self.openDir(parg, 1)
             else:
+                # get a message if the item is missing
+                self._lvFile = os.path.basename(parg)
                 # cycle throu the path backward to find an existent or accessible directory
                 path = os.path.dirname(parg)
                 while not os.path.exists(path) or not os.access(path, os.R_OK):
@@ -3907,6 +3909,17 @@ class MainWin(QWidget):
         #
         return "icons/drive-harddisk.svg"
     
+    #
+    def showEvent(self, event):
+        if self._lvFile:
+            if not os.path.exists(self._lvFile):
+                MyDialog("Error", "Cannot be found:\n{}".format(self._lvFile), self)
+                self._lvFile = None
+            # else:
+                # self._scroll_listview.selectionModel().select(self._scroll_idx, QItemSelectionModel.Select)
+                # self._scroll_listview.scrollTo(self._scroll_idx, QAbstractItemView.EnsureVisible)
+                # self._scroll_listview = None
+                # self._scroll_idx = None
     
     #
     def closeEvent(self, event):
@@ -4018,7 +4031,6 @@ class MainWin(QWidget):
                     return
             else:
                 return
-    
     
     # open a new folder - used also by computer and home buttons
     def openDir(self, ldir, flag):
@@ -4416,10 +4428,13 @@ class LView(QBoxLayout):
             # thread = thumbThread(self.lvDir, self.listview)
             # thread.start()
         #
-        # highlight the file passed as argument
-        if self.lvFile:
-            index = self.fileModel.index(os.path.join(self.lvDir, self.lvFile))
-            self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+        # # highlight the file passed as argument
+        # if self.lvFile:
+            # index = self.fileModel.index(os.path.join(self.lvDir, self.lvFile))
+            # self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+            # # scroll to it
+            # self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+            # self.lvFile = None
         #
         # catch the middle button click from the mouse
         self.listview.viewport().installEventFilter(self)
@@ -4445,6 +4460,17 @@ class LView(QBoxLayout):
     # the dir finished to be loaded
     def on_dir_loaded(self, _path):
         if _path == self.lvDir:
+            # highlight the file passed as argument
+            if self.lvFile:
+                index = self.fileModel.index(os.path.join(self.lvDir, self.lvFile))
+                self.listview.selectionModel().select(index, QItemSelectionModel.Select)
+                # scroll to it
+                self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
+                #
+                # if not os.path.exists(self.lvFile):
+                    # MyDialog("Error", "Cannot be found:\n{}".format(self.lvFile), self.window)
+                #
+                self.lvFile = None
             return
         # the previous folder
         upperdir = self.lvDir
@@ -4481,11 +4507,12 @@ class LView(QBoxLayout):
             #
             if os.path.exists(upperdir):
                 index = self.fileModel.index(upperdir)
-                # skip hidden folders
+                # select the item - scroll to it - skip hidden folders
                 if not index.data(QFileSystemModel.FileNameRole)[0] == ".":
                     self.listview.selectionModel().select(index, QItemSelectionModel.Select)
                     self.listview.scrollTo(index, QAbstractItemView.EnsureVisible)
-    
+                    # self.window._scroll_listview = self.listview
+                    # self.window._scroll_idx = index
     #
     def rowInserted(self, idx):
         self.tabLabels()
@@ -5064,6 +5091,8 @@ class LView(QBoxLayout):
         #
         pointedItem = self.listview.indexAt(position)
         vr = self.listview.visualRect(pointedItem)
+        if pointedItem.isValid() and not vr:
+            return
         pointedItem2 = self.listview.indexAt(QPoint(int(vr.x()),int(vr.y())))
         # in case of sticky selection
         if self.static_items == True:
@@ -6527,9 +6556,18 @@ class openTrash(QBoxLayout):
     def onRightClick(self, position):
         time.sleep(0.1)
         pointedItem = self.ilist.indexAt(position)
+        if not pointedItem.isValid():
+            return
         vr = self.ilist.visualRect(pointedItem)
+        if pointedItem.isValid() and not vr:
+            return
         pointedItem2 = self.ilist.indexAt(QPoint(int(vr.x()),int(vr.y())))
+        if not pointedItem2.isValid():
+            return
         if vr:
+            # populate the data
+            self.flist(pointedItem)
+            #
             itemName = self.model.data(pointedItem2, Qt.UserRole+1)
             menu = QMenu("Menu", self.ilist)
             if MENU_H_COLOR:
@@ -7043,6 +7081,8 @@ class cTView(QBoxLayout):
         #
         pointedItem = self.tview.indexAt(position)
         vr = self.tview.visualRect(pointedItem)
+        if pointedItem.isValid() and not vr:
+            return
         pointedItem2 = self.tview.indexAt(QPoint(int(vr.x()),int(vr.y())))
         # the items
         if vr:
