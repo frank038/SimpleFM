@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.7
+# version 1.0.8
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4656,25 +4656,25 @@ class LView(QBoxLayout):
                         self.listview.setSelectionMode(QAbstractItemView.ExtendedSelection)
             # open the folder with the mouse middle button
             elif event.button() == Qt.MiddleButton:
-                # # button box
-                # if obj.objectName() == 'pbwidget':
-                    # new_path_temp = []
-                    # for i in range(self.box_pb.indexOf(obj)+1):
-                        # new_path_temp.append(self.box_pb.itemAt(i).widget().text())
-                    # new_path = os.path.join(*new_path_temp)
-                    # if os.path.exists(new_path):
-                        # # # open the folder in the same view
-                        # # self.on_btn_change_dir(new_path)
-                        # # obj.setChecked(True)
-                        # try:
-                            # # open the selected folder in a new tab
-                            # self.fnewtabAction(new_path, 1)
-                        # except Exception as E:
-                            # MyDialog("Error", str(E), self.window)
-                    # else:
-                        # MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
-                    # #
-                    # return QObject.event(obj, event)
+                # button box
+                if obj.objectName() == 'pbwidget':
+                    new_path_temp = []
+                    for i in range(self.box_pb.indexOf(obj)+1):
+                        new_path_temp.append(self.box_pb.itemAt(i).widget().text())
+                    new_path = os.path.join(*new_path_temp)
+                    if os.path.exists(new_path):
+                        # # open the folder in the same view
+                        # self.on_btn_change_dir(new_path)
+                        # obj.setChecked(True)
+                        try:
+                            # open the selected folder in a new tab
+                            self.fnewtabAction(new_path, 1)
+                        except Exception as E:
+                            MyDialog("Error", str(E), self.window)
+                    else:
+                        MyDialog("Info", "The folder \n{}\ndoes not exist.".format(new_path), self.window)
+                    #
+                    return QObject.event(obj, event)
                 # folders
                 itemSelected = self.listview.indexAt(event.pos()).data()
                 if itemSelected:
