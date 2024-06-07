@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.8
+# version 1.0.9
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -7616,24 +7616,29 @@ class cTView(QBoxLayout):
     def fpropertyActionMulti(self):
         # size of all the selected items
         iSize = 0
-        # number of the selected items
-        iNum = len(self.selection)
+        # # number of the selected items
+        # iNum = len(self.selection)
+        item_list = []
         for iitem in self.selection:
             try:
                 item = self.tmodel.fileInfo(iitem).absoluteFilePath()
                 #
                 if os.path.islink(item):
                     iSize += 512
+                    continue
                 elif os.path.isfile(item):
                     iSize += QFileInfo(item).size()
+                    item_list.append(item)
                 elif os.path.isdir(item):
                     iSize += folder_size(item)
-                else:
-                    QFileInfo(item).size()
+                    item_list.append(item)
+                # else:
+                    # QFileInfo(item).size()
             except:
                 iSize += 0
         #
-        propertyDialogMulti(convert_size(iSize), iNum, self.window)
+        # propertyDialogMulti(convert_size(iSize), iNum, self.window)
+        propertyDialogMulti(item_list, convert_size(iSize), self.window)
     
     # item property dialog
     def fpropertyAction(self, ipath):
