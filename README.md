@@ -50,7 +50,7 @@ Some custom modules are disabled: just remove "-t" from its file name to be enab
 
 Wayland support is under testing.
 
-Because the iconview font size are smaller under wayland, there are two more options in the config file:
+Because the iconview font size is smaller under wayland, there are two more options in the config file:
 - is_wayland: needed to apply the attribute AA_EnableHighDpiScaling
 - use_font_size: for setting the whole program font size.
 
