@@ -48,6 +48,14 @@ Customizations throu the cfg.py file.
 
 Some custom modules are disabled: just remove "-t" from its file name to be enabled.
 
+Wayland support is under testing.
+
+Because the iconview font size are smaller under wayland, there are two more options in the config file:
+- is_wayland: needed to apply the attribute AA_EnableHighDpiScaling
+- use_font_size: for setting the whole program font size.
+
+Under wayland, launch SimpleFM.py through the script SimpleFM_wayland.sh, because it contains the environment variable QT_SCALE_FACTOR=1. For a screen scaling higher than 1, play with those settings.
+
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
 
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot2.png)
