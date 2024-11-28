@@ -122,4 +122,8 @@ theme_style=""
 # icon theme: "" to use the default theme - the qt5ct program can override this
 icon_theme=""
 # how to find the icon type: 1 by extention - 0 by content
-search_for_file_type = 1
+search_for_file_type=1
+# font size of the whole application: 0 no font size setted - number is the font size to use
+use_font_size=0
+# wayland workaround for the iconview font size: 1 use this - 0 no
+is_wayland=0
