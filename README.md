@@ -48,15 +48,17 @@ Customizations throu the cfg.py file.
 
 Some custom modules are disabled: just remove "-t" from its file name to be enabled.
 
+---------------
+
 Wayland support is under testing.
 
 Because the iconview font size is smaller under wayland, there are two more options in the config file:
-- is_wayland: needed to apply the attribute AA_EnableHighDpiScaling
+- is_wayland: needed to apply the attribute AA_EnableHighDpiScaling, and for copying/moving operations while dragging;
 - use_font_size: for setting the whole program font size.
 
 Under wayland, launch SimpleFM.py through the script SimpleFM_wayland.sh, because it contains the environment variable QT_SCALE_FACTOR=1. For a screen scaling higher than 1, play with those settings.
 
-The default operation while dragging an item is copy; press shift for move.
+The default operation while dragging one or more items is copy; press shift for the move action.
 
 
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
