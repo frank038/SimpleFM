@@ -56,6 +56,9 @@ Because the iconview font size is smaller under wayland, there are two more opti
 
 Under wayland, launch SimpleFM.py through the script SimpleFM_wayland.sh, because it contains the environment variable QT_SCALE_FACTOR=1. For a screen scaling higher than 1, play with those settings.
 
+The default operation while dragging an item is copy; press shift for move.
+
+
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot1.png)
 
 ![My image](https://github.com/frank038/SimpleFM/blob/main/screenshot2.png)
