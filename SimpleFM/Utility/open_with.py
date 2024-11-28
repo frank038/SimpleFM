@@ -21,7 +21,7 @@ class listMenu(QWidget):
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle("Menu")
         self.setWindowModality(Qt.ApplicationModal)
-        self.resize(600, 600)
+        # self.resize(300, 600)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)

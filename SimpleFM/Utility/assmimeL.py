@@ -43,7 +43,7 @@ class MainWin(QDialog):
         #
         self.setWindowModality(Qt.ApplicationModal)
         self.mimetype = mimetype
-        self.resize(int(WINW), int(WINH))
+        # self.resize(int(WINW), int(WINH))
         self.setWindowTitle("Manage the mimetype")
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         # top container
@@ -204,7 +204,8 @@ class MainWin(QDialog):
         # desktop files found
         desktop_found = []
         # desktop files in HOME
-        apps_home_dir = os.listdir(os.path.expanduser('~')+"/.local/share"+"/applications")
+        desk_home_dir = os.path.expanduser('~')+"/.local/share"+"/applications"
+        apps_home_dir = os.listdir(desk_home_dir)
         # name - category - exec - desktop file with full path - mimetypes
         for el in THE_MENU:
             desk_dir = os.path.dirname(el[3])
@@ -212,7 +213,7 @@ class MainWin(QDialog):
             # search for the mimetype
             if imime in el[4]:
                 # skip desktop files overrided in HOME
-                if desk_dir != os.path.expanduser('~')+"/.local/share"+"/applications":
+                if desk_dir != desk_home_dir:
                     if desk_name in apps_home_dir:
                         continue
                 #
