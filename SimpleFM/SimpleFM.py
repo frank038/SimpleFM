@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.0.9
+# version 1.2
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -2959,34 +2959,35 @@ class MyQlist(QListView):
                     # move the items if the pointer folder is in the HOME directory
                     if filePaths[0][0:len(USER_HOME)] == ifp[0:len(USER_HOME)]:
                         #
-                        # pointedItem = self.tview.indexAt(position)
-                        position = event.pos()
-                        menu = QMenu("Menu", self)
-                        #
-                        copyAction = QAction("Copy", self)
-                        copyAction.uaction = "copy"
-                        copyAction.triggered.connect(self.fdragdrop)
-                        menu.addAction(copyAction)
-                        #
-                        moveAction = QAction("Move", self)
-                        moveAction.uaction = "move"
-                        moveAction.triggered.connect(self.fdragdrop)
-                        menu.addAction(moveAction)
-                        #
-                        menu.addSeparator()
-                        #
-                        cancelAction = QAction("Cancel", self)
-                        cancelAction.uaction = "cancel"
-                        cancelAction.triggered.connect(self.fdragdrop)
-                        menu.addAction(cancelAction)
-                        #
-                        menu.exec_(self.mapToGlobal(position))
-                        #
-                        if self.user_action:
-                            event_action = self.user_action
-                        else:
-                            event.ignore()
-                            return
+                        if not is_wayland:
+                            # pointedItem = self.tview.indexAt(position)
+                            position = event.pos()
+                            menu = QMenu("Menu", self)
+                            #
+                            copyAction = QAction("Copy", self)
+                            copyAction.uaction = "copy"
+                            copyAction.triggered.connect(self.fdragdrop)
+                            menu.addAction(copyAction)
+                            #
+                            moveAction = QAction("Move", self)
+                            moveAction.uaction = "move"
+                            moveAction.triggered.connect(self.fdragdrop)
+                            menu.addAction(moveAction)
+                            #
+                            menu.addSeparator()
+                            #
+                            cancelAction = QAction("Cancel", self)
+                            cancelAction.uaction = "cancel"
+                            cancelAction.triggered.connect(self.fdragdrop)
+                            menu.addAction(cancelAction)
+                            #
+                            menu.exec_(self.mapToGlobal(position))
+                            #
+                            if self.user_action:
+                                event_action = self.user_action
+                            else:
+                                event.ignore()
+                                return
                     if os.path.isdir(ifp):
                         if os.access(ifp, os.W_OK):
                             PastenMerge(ifp, event_action, filePaths, None)
@@ -7689,8 +7690,14 @@ class cTView(QBoxLayout):
 ###################
 
 if __name__ == '__main__':
-
+    
+    if is_wayland:
+        qApp.setAttribute(Qt.AA_EnableHighDpiScaling)
+    
     app = QApplication(sys.argv)
+    
+    # app.setAttribute(Qt.AA_EnableHighDpiScaling)
+    
     # set new style globally
     if theme_style:
         appStyle = QStyleFactory.create(theme_style)
@@ -7698,6 +7705,9 @@ if __name__ == '__main__':
     # set the icon style globally
     if icon_theme:
         QIcon.setThemeName(icon_theme)
+    #
+    if use_font_size:
+        app.setStyleSheet("QWidget{font-size:"+f"{use_font_size}"+"px;}")
     #
     # if HIRED != "" and HIGREEN != "" and HIBLUE != "":
         # palette = QPalette()
