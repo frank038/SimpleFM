@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.2
+# version 1.2.1
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -4503,8 +4503,8 @@ class LView(QBoxLayout):
         _ln_lvdir = len(self.lvDir)
         _other = upperdir[_ln_lvdir:]
         if upperdir[0:_ln_lvdir] == self.lvDir:
-            if _other:
-                upperdir = upperdir[0:_ln_lvdir]+"/"+_other.split("/")[1]
+            # if _other:
+                # upperdir = upperdir[0:_ln_lvdir]+"/"+_other.split("/")[1]
             #
             if os.path.exists(upperdir):
                 index = self.fileModel.index(upperdir)
