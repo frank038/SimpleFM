@@ -24,12 +24,7 @@ def open_file_manager(uri, select=False):
 
     path = str(uri)
     args.append(path)
-
-    # if os.fork() == 0:
-        # Popen(args)
-        # os._exit(0)
-    # else:
-        # os.wait()
+    
     Popen(args)
 
 class FmObject(dbus.service.Object):
