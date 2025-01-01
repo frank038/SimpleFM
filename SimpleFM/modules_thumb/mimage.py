@@ -3,7 +3,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtCore import Qt
 
 list_mime = ['image/x-portable-bitmap', 'image/gif', 'image/jpeg',
-            'image/svg+xml', 'image/png', 'image/tiff']
+            'image/svg+xml', 'image/png', 'image/tiff', 'image/x-tga',
+            'image/avif', 'image/webp']
 
 def picture_to_img(fpath):
     
