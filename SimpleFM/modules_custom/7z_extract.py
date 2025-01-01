@@ -41,7 +41,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(400,300)
+        # self.resize(400,300)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -64,7 +64,7 @@ class MyDialogExtract(QDialog):
         super(MyDialogExtract, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(400,300)
+        # self.resize(400,300)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -127,6 +127,8 @@ class MyDialogExtract(QDialog):
                 except Exception as E:
                     self.label.setText("Issues while extracting the archive:\n{}.".format(E))
             #
+            self.adjustSize()
+            self.updateGeometry()
             self.timer_count = -1
             self.timer.stop()
 
@@ -137,7 +139,7 @@ class passWord(QDialog):
         self.setWindowTitle("7z extractor")
         self.setWindowModality(Qt.ApplicationModal)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.resize(600,100)
+        # self.resize(600,100)
         #
         self.path = path
         # main box

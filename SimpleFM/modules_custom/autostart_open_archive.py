@@ -140,7 +140,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(500,300)
+        # self.resize(500,300)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)

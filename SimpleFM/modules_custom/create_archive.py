@@ -33,7 +33,7 @@ class MyDialog(QDialog):
         super(MyDialog, self).__init__(parent)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
         self.setWindowTitle(args[0])
-        self.resize(400,300)
+        # self.resize(400,300)
         # main box
         mbox = QBoxLayout(QBoxLayout.TopToBottom)
         mbox.setContentsMargins(5,5,5,5)
@@ -58,7 +58,7 @@ class compressData(QDialog):
         self.setWindowTitle("Compress data")
         self.setWindowModality(Qt.ApplicationModal)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.resize(600,250)
+        # self.resize(600,250)
         #
         self.path_list = path_list
         #

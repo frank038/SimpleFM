@@ -33,7 +33,7 @@ class checkSum(QDialog):
         self.setWindowTitle("Checksum"+" - "+os.path.basename(path))
         self.setWindowModality(Qt.ApplicationModal)
         self.setAttribute(Qt.WA_DeleteOnClose)
-        self.resize(600,300)
+        # self.resize(600,300)
         self.path = path
         #
         chks_list = ["MD5", "SHA256", "SHA1"]
