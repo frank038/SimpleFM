@@ -572,7 +572,7 @@ class listMenu(QDialog):
         self.setWindowTitle("Menu")
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.resize(600, 600)
+        # self.resize(600, 600)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
@@ -721,7 +721,7 @@ The 'Help' button will show this help.
         self.setWindowTitle("Info")
         self.setWindowModality(Qt.ApplicationModal)
         self.setWindowIcon(QIcon("icons/file-manager-red.svg"))
-        self.resize(600, 100)
+        # self.resize(600, 100)
         #
         vbox = QBoxLayout(QBoxLayout.TopToBottom)
         vbox.setContentsMargins(5,5,5,5)
