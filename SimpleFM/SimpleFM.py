@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# version 1.2.1
+# version 1.2.2
 
 from PyQt5.QtCore import (QTimer,QModelIndex,QFileSystemWatcher,QEvent,QObject,QUrl,QFileInfo,QRect,QStorageInfo,QMimeData,QMimeDatabase,QFile,QThread,Qt,pyqtSignal,QSize,QMargins,QDir,QByteArray,QItemSelection,QItemSelectionModel,QPoint)
 from PyQt5.QtWidgets import (QStyleFactory, QTreeWidget,QTreeWidgetItem,QLayout,QHBoxLayout,QHeaderView,QTreeView,QSpacerItem,QScrollArea,QTextEdit,QSizePolicy,qApp,QBoxLayout,QLabel,QPushButton,QDesktopWidget,QApplication,QDialog,QGridLayout,QMessageBox,QLineEdit,QTabWidget,QWidget,QGroupBox,QComboBox,QCheckBox,QProgressBar,QListView,QFileSystemModel,QItemDelegate,QStyle,QFileIconProvider,QAbstractItemView,QFormLayout,QAction,QMenu)
@@ -5123,7 +5123,10 @@ class LView(QBoxLayout):
                 csag = " QMenu::item:!selected {padding: 2px 15px 2px 10px;}"
                 csa = csaa+csab+csac+csad+csae+csaf+csag
                 menu.setStyleSheet(csa)
-            ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
+            try:
+                ipath = self.fileModel.fileInfo(self.selection[0]).absoluteFilePath()
+            except:
+                ipath = ""
             if not os.path.exists(ipath):
                 if not os.path.islink(ipath):
                     MyDialog("Info", "It doesn't exist.", self.window)
