@@ -97,6 +97,7 @@ class listMenu(QWidget):
 
     # an item in the treewidget is clicked
     def fitem(self, item, col):
+        self.LE.setText("")
         # skip categories
         if item.childCount() > 0:
             return
@@ -122,6 +123,17 @@ class listMenu(QWidget):
                 self.fdialog("The program\n"+appExec+"\ncannot be executed.")
             # the program doesn't exist
             else:
+                # self.fdialog("The program\n"+appExec+"\ncannot be found.")
+                # trying to remove options from the command line of some apps, e.g. libreoffice
+                comm_line = []
+                comm_line = appExec.split(" ")
+                if comm_line:
+                    for ff in comm_line:
+                        if shutil.which(ff):
+                            self.Value = appExec
+                            self.LE.setText(appExec)
+                        break
+                    return
                 self.fdialog("The program\n"+appExec+"\ncannot be found.")
     
     # execute the program with the file as argument
