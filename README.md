@@ -1,6 +1,6 @@
 # SimpleFM
 
-A file manager written with PyQt5. There is alse the qt6 version: SimpleFM6.
+A file manager written with PyQt5. There is also the qt6 version: SimpleFM6.
 
 Requirements:
 - python3 at least 3.3
